@@ -48,8 +48,8 @@ export default function PlayGame() {
   useEffect(() => {
     // Shuffle and distribute cards
     const shuffled = [...startupData].sort(() => 0.5 - Math.random());
-    setPlayerDeck(shuffled.slice(0, 5));
-    setAiDeck(shuffled.slice(5, 10));
+    setPlayerDeck(shuffled.slice(0, 10));
+    setAiDeck(shuffled.slice(10, 20));
   }, []);
 
   // Timer for turn-based gameplay
@@ -82,7 +82,7 @@ export default function PlayGame() {
   }, [gameState, battleAttribute]);
 
   const startGame = () => {
-    if (selectedCards.length < 3) return;
+    if (selectedCards.length < 4) return;
 
     setGameState("battle");
     setCurrentRound(1);
@@ -93,7 +93,7 @@ export default function PlayGame() {
   const handleCardSelect = (card: any) => {
     if (selectedCards.includes(card)) {
       setSelectedCards(selectedCards.filter((c) => c !== card));
-    } else if (selectedCards.length < 3) {
+    } else if (selectedCards.length < 4) {
       setSelectedCards([...selectedCards, card]);
     }
   };
@@ -119,7 +119,7 @@ export default function PlayGame() {
 
     // Move to next round or end game
     setTimeout(() => {
-      if (currentRound < 3) {
+      if (currentRound < 4) {
         setCurrentRound(currentRound + 1);
         setBattleAttribute(null);
         setBattleResult(null);
@@ -137,8 +137,8 @@ export default function PlayGame() {
 
     // Reshuffle cards
     const shuffled = [...startupData].sort(() => 0.5 - Math.random());
-    setPlayerDeck(shuffled.slice(0, 5));
-    setAiDeck(shuffled.slice(5, 10));
+    setPlayerDeck(shuffled.slice(0, 10));
+    setAiDeck(shuffled.slice(10, 20));
   };
 
   const shareResult = () => {
@@ -308,7 +308,7 @@ export default function PlayGame() {
             className="flex flex-col h-full"
           >
             <h2 className="text-xl font-bold mb-4">
-              Select 3 Cards for Battle
+              Select 4 Cards for Battle
             </h2>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
@@ -337,14 +337,14 @@ export default function PlayGame() {
               <Button
                 className={cn(
                   "w-full py-6 text-lg font-bold rounded-lg",
-                  selectedCards.length === 3
+                  selectedCards.length === 4
                     ? "bg-gradient-to-r from-green-500 to-emerald-600"
                     : "bg-gray-700"
                 )}
-                disabled={selectedCards.length !== 3}
+                disabled={selectedCards.length !== 4}
                 onClick={startGame}
               >
-                Start Battle ({selectedCards.length}/3)
+                Start Battle ({selectedCards.length}/4)
               </Button>
             </div>
           </motion.div>
@@ -357,7 +357,7 @@ export default function PlayGame() {
             className="flex flex-col h-full"
           >
             <div className="flex justify-between items-center mb-4">
-              <div className="text-lg font-bold">Round {currentRound}/3</div>
+              <div className="text-lg font-bold">Round {currentRound}/4</div>
               <div className="flex items-center space-x-4">
                 <div className="text-blue-400">You: {playerScore}</div>
                 <div className="text-red-400">AI: {aiScore}</div>
@@ -456,7 +456,7 @@ export default function PlayGame() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {Array.from({ length: 3 }).map((_, i) => (
+                  {Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="flex justify-between items-center">
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-full bg-indigo-900 flex items-center justify-center mr-2">
