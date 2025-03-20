@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Gamepad2, Trophy, Library } from "lucide-react";
+import { Sparkles, Gamepad2, Trophy, Library, Rocket } from "lucide-react";
 import { LogoCarousel } from "@/components/ui/logo-carousel";
 import { GradientHeading } from "@/components/ui/gradient-heading";
 import type { SVGProps } from "react";
+import { OrbitingCirclesDemo } from "@/components/ui/orbiting-circles-demo";
 
-// Add these SVG components for Indian startup logos
+// Indian Startup SVG Icons (unchanged)
 function PhonePeIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="#5F259F" {...props}>
@@ -20,19 +21,12 @@ function PhonePeIcon(props: SVGProps<SVGSVGElement>) {
 
 function CREDIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      width="800"
-      height="800"
-      viewBox="0 0 192 192"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      {...props}
-    >
+    <svg width="800" height="800" viewBox="0 0 192 192" fill="none" {...props}>
       <path
         d="M34 22v117l62 31 62-31V22H34z"
         style={{
           fill: "none",
-          stroke: "#000000",
+          stroke: "#fff",
           strokeWidth: 12,
           strokeLinejoin: "round",
         }}
@@ -41,7 +35,7 @@ function CREDIcon(props: SVGProps<SVGSVGElement>) {
         d="M110 69.686H58V127l38 19 38-19V88m0-12V46H52"
         style={{
           fill: "none",
-          stroke: "#000000",
+          stroke: "#fff",
           strokeWidth: 12,
           strokeLinejoin: "round",
         }}
@@ -50,10 +44,9 @@ function CREDIcon(props: SVGProps<SVGSVGElement>) {
         d="M82 88v27l14 7 14-7"
         style={{
           fill: "none",
-          stroke: "#020000",
+          stroke: "#fff",
           strokeWidth: 12,
           strokeLinejoin: "round",
-          strokeOpacity: 1,
         }}
       />
     </svg>
@@ -92,7 +85,6 @@ function RazorpayIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Update the startupLogos array with all icons
 const startupLogos = [
   { name: "PhonePe", id: 1, img: PhonePeIcon },
   { name: "CRED", id: 2, img: CREDIcon },
@@ -105,161 +97,192 @@ const startupLogos = [
 export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCard, setSelectedCard] = useState<number | null>(null);
 
   useEffect(() => {
-    // Simulate loading assets
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
+    const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  const cardVariants = {
+  const buttonVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
     hover: {
       scale: 1.05,
-      rotate: 2,
       transition: { duration: 0.2 },
     },
     tap: { scale: 0.95 },
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-background/90 to-muted/50 dark:from-background/80 dark:to-background">
-      {/* Animated background pattern */}
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px] [mask-image:radial-gradient(white,transparent_85%)]" />
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#ffffff10_1px,transparent_1px)] bg-[size:20px_20px] opacity-30 -z-20" />
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 -z-10"
+        animate={{
+          opacity: [0.1, 0.2, 0.1],
+          scale: [1, 1.02, 1],
+        }}
+        transition={{ duration: 5, repeat: Infinity }}
+      />
 
       <AnimatePresence>
         {isLoading ? (
           <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-0 flex items-center justify-center bg-gray-900"
+            exit={{ opacity: 0, scale: 0.8 }}
           >
             <motion.div
-              animate={{
-                rotate: 360,
-                scale: [1, 1.2, 1],
-              }}
+              animate={{ rotate: 360, scale: [1, 1.3, 1] }}
               transition={{
-                duration: 2,
+                duration: 1.5,
                 repeat: Infinity,
-                ease: "linear",
+                ease: "easeInOut",
               }}
-              className="relative"
             >
-              <Sparkles className="w-16 h-16 text-primary" />
+              <Rocket className="w-20 h-20 text-purple-400" />
               <motion.div
+                className="absolute inset-0 flex items-center justify-center"
                 animate={{ opacity: [0, 1, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="absolute inset-0 text-primary/50"
+                transition={{ duration: 1, repeat: Infinity }}
               >
-                <Sparkles className="w-16 h-16" />
+                <Sparkles className="w-24 h-24 text-pink-400" />
               </motion.div>
             </motion.div>
           </motion.div>
         ) : (
-          <div className="container relative mx-auto px-4 py-16">
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              className="flex flex-col items-center gap-12"
-            >
-              {/* Hero Section */}
+          <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
+            <div className="flex flex-col items-center gap-8 md:gap-12">
+              {/* Hero Section with Improved Layout */}
+              <div className="w-full max-w-4xl mx-auto">
+                <div className="relative">
+                  {/* Main Title */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-4"
+                  >
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-br from-purple-300 via-pink-400 to-blue-400 bg-clip-text text-transparent drop-shadow-2xl">
+                      Startup Card Battle
+                    </h1>
+                    <p className="mt-4 text-lg md:text-xl text-gray-300">
+                      Collect, Trade & Battle with India's Top Startups
+                    </p>
+                  </motion.div>
+
+                  {/* Orbiting Circles Demo */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-8 mb-12"
+                  >
+                    <OrbitingCirclesDemo />
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Action Buttons with Improved Styling and z-index */}
               <motion.div
-                className="text-center space-y-4"
+                className="grid gap-4 w-full max-w-md px-4 relative z-20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
               >
-                <h1 className="text-4xl sm:text-6xl font-bold tracking-tighter bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-                  Unicorn Battle
-                </h1>
-                <p className="text-xl text-muted-foreground">
-                  India's Premier Startup Card Game
-                </p>
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                >
+                  <Button
+                    className="w-full py-6 text-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+                    onClick={() => router.push("/play")}
+                  >
+                    <Gamepad2 className="mr-2 h-5 w-5" />
+                    Play Now
+                  </Button>
+                </motion.div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.div
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
+                  >
+                    <Button
+                      className="w-full py-6 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+                      onClick={() => router.push("/collection")}
+                    >
+                      <Library className="mr-2 h-5 w-5" />
+                      Collection
+                    </Button>
+                  </motion.div>
+
+                  <motion.div
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
+                  >
+                    <Button
+                      className="w-full py-6 text-lg bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white rounded-xl shadow-lg hover:shadow-pink-500/25 transition-all duration-300"
+                      onClick={() => router.push("/leaderboard")}
+                    >
+                      <Trophy className="mr-2 h-5 w-5" />
+                      Rankings
+                    </Button>
+                  </motion.div>
+                </div>
               </motion.div>
 
-              {/* Card Preview */}
+              {/* Game Features */}
               <motion.div
-                className="relative w-full max-w-3xl aspect-[16/9] rounded-lg overflow-hidden"
-                whileHover={{ scale: 1.02 }}
+                className="w-full max-w-4xl mt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary-foreground/20 backdrop-blur-sm" />
-                <div className="absolute inset-0 grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
-                  {startupLogos.slice(0, 4).map((logo, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+                  {[
+                    {
+                      title: "Collect Cards",
+                      description:
+                        "Build your startup portfolio with unique cards",
+                      icon: Library,
+                      color: "from-blue-500/20 to-blue-600/20",
+                    },
+                    {
+                      title: "Battle Others",
+                      description:
+                        "Challenge players in strategic card battles",
+                      icon: Gamepad2,
+                      color: "from-purple-500/20 to-purple-600/20",
+                    },
+                    {
+                      title: "Climb Ranks",
+                      description:
+                        "Rise through the leaderboard and earn rewards",
+                      icon: Trophy,
+                      color: "from-pink-500/20 to-pink-600/20",
+                    },
+                  ].map((feature, index) => (
                     <motion.div
-                      key={logo.id}
-                      variants={cardVariants}
-                      whileHover="hover"
-                      whileTap="tap"
-                      className="bg-card rounded-lg p-4 flex items-center justify-center shadow-lg"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      key={index}
+                      className={`relative p-6 rounded-xl bg-gradient-to-br ${feature.color} backdrop-blur-sm border border-gray-800`}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <logo.img className="w-12 h-12" />
+                      <feature.icon className="h-8 w-8 mb-4 text-white/80" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-gray-300">
+                        {feature.description}
+                      </p>
                     </motion.div>
                   ))}
                 </div>
               </motion.div>
-
-              {/* Action Buttons */}
-              <motion.div
-                className="grid gap-4 w-full max-w-md"
-                variants={containerVariants}
-              >
-                <motion.div variants={cardVariants}>
-                  <Button
-                    className="w-full py-6 text-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => router.push("/play")}
-                  >
-                    <Gamepad2 className="mr-2 h-5 w-5" />
-                    Start Battle
-                  </Button>
-                </motion.div>
-
-                <motion.div variants={cardVariants}>
-                  <Button
-                    className="w-full py-6 text-lg bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                    onClick={() => router.push("/collection")}
-                  >
-                    <Library className="mr-2 h-5 w-5" />
-                    My Collection
-                  </Button>
-                </motion.div>
-
-                <motion.div variants={cardVariants}>
-                  <Button
-                    className="w-full py-6 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
-                    onClick={() => router.push("/leaderboard")}
-                  >
-                    <Trophy className="mr-2 h-5 w-5" />
-                    Leaderboard
-                  </Button>
-                </motion.div>
-              </motion.div>
-
-              {/* Logo Carousel */}
-              <motion.div
-                className="w-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-              >
-                <LogoCarousel columnCount={3} logos={startupLogos} />
-              </motion.div>
-            </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>
