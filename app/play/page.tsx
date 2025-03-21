@@ -9,10 +9,13 @@ import {
   Trophy,
   ArrowLeft,
   Share2,
+  Twitter,
   Zap,
   TrendingUp,
   Users,
   DollarSign,
+  Share,
+  Download,
 } from "lucide-react";
 import {
   Card,
@@ -292,6 +295,41 @@ export default function PlayGame() {
   // Add categories array
   const categories = ["All", "Fintech", "Consumer", "SaaS", "EdTech"];
 
+  const captureAndShare = async () => {
+    const summaryElement = document.getElementById("battle-summary");
+    if (!summaryElement) return;
+
+    try {
+      // Dynamic import of html2canvas
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(summaryElement);
+      const imageUrl = canvas.toDataURL("image/png");
+
+      // Create sharing text
+      const shareText = `🦄 I just ${
+        playerScore > aiScore ? "won" : "played"
+      } a game of Unicorn Battle!\n
+Score: ${playerScore * 100}${playerScore > aiScore ? " +50 bonus!" : ""}\n
+Can you beat my score? 🎮\n
+Play now at [your-game-url]`;
+
+      // For Twitter
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        shareText
+      )}`;
+
+      // Create temporary link for image download
+      const downloadLink = document.createElement("a");
+      downloadLink.href = imageUrl;
+      downloadLink.download = "unicorn-battle-result.png";
+
+      return { imageUrl, twitterUrl, downloadLink };
+    } catch (error) {
+      console.error("Error capturing result:", error);
+      return null;
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Header */}
@@ -315,7 +353,7 @@ export default function PlayGame() {
           >
             <div className="flex flex-col space-y-4 mb-6">
               <h2 className="text-xl font-bold">Select 4 Cards for Battle</h2>
-              
+
               {/* Category Tabs */}
               <Tabs
                 defaultValue="all"
@@ -369,10 +407,12 @@ export default function PlayGame() {
                     )}
 
                     {/* Card Content */}
-                    <div className={cn(
-                      "relative w-full h-full transition-opacity duration-300",
-                      selectedCards.includes(card) && "opacity-80"
-                    )}>
+                    <div
+                      className={cn(
+                        "relative w-full h-full transition-opacity duration-300",
+                        selectedCards.includes(card) && "opacity-80"
+                      )}
+                    >
                       {renderCardFront(card, true, true)}
                     </div>
                   </motion.div>
@@ -391,11 +431,9 @@ export default function PlayGame() {
                 disabled={selectedCards.length !== 4}
                 onClick={startGame}
               >
-                {selectedCards.length === 4 ? (
-                  "Start Battle"
-                ) : (
-                  `Select ${4 - selectedCards.length} More Cards`
-                )}
+                {selectedCards.length === 4
+                  ? "Start Battle"
+                  : `Select ${4 - selectedCards.length} More Cards`}
               </Button>
             </div>
           </motion.div>
@@ -468,121 +506,227 @@ export default function PlayGame() {
 
         {gameState === "result" && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center h-full w-full max-w-[900px] mx-auto px-4"
           >
+            {/* Hero Result Section - Responsive */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="w-20 h-20 mb-4"
+              className="relative w-full bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-8 mb-6 overflow-hidden"
             >
-              {playerScore > aiScore ? (
-                <Trophy className="w-full h-full text-yellow-400" />
-              ) : (
-                <div className="w-full h-full rounded-full bg-red-500 flex items-center justify-center text-4xl">
-                  😢
+              {/* Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-50" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent" />
+
+              {/* Content */}
+              <div className="relative flex items-center justify-between">
+                <div className="space-y-2">
+                  <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                    {playerScore > aiScore
+                      ? "Victory!"
+                      : playerScore === aiScore
+                      ? "Draw!"
+                      : "Nice Try!"}
+                  </h2>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-4xl md:text-5xl font-bold text-white">
+                      {playerScore * 100}
+                    </span>
+                    {playerScore > aiScore && (
+                      <span className="text-xl md:text-2xl font-semibold text-green-400">
+                        +50
+                      </span>
+                    )}
+                    <span className="text-base md:text-lg text-gray-400">
+                      points
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-400 mt-2">
+                    <span className="text-xl">
+                      Rounds Won:{" "}
+                      <span className="text-blue-400 font-bold">
+                        {playerScore}
+                      </span>
+                    </span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-xl">
+                      AI Won:{" "}
+                      <span className="text-red-400 font-bold">{aiScore}</span>
+                    </span>
+                  </div>
                 </div>
-              )}
+
+                {/* Trophy/Emoji with enhanced animation */}
+                <div className="relative">
+                  {playerScore > aiScore ? (
+                    <div className="relative">
+                      <motion.div
+                        animate={{
+                          rotate: [0, -10, 10, -10, 10, 0],
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                        }}
+                      >
+                        <Trophy className="w-20 h-20 md:w-28 md:h-28 text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.3)]" />
+                      </motion.div>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [0, 1.2, 1] }}
+                        transition={{ delay: 0.8 }}
+                        className="absolute -top-3 -right-3 animate-bounce"
+                      >
+                        <span className="text-2xl md:text-3xl">✨</span>
+                      </motion.div>
+                    </div>
+                  ) : (
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-5xl md:text-6xl"
+                    >
+                      {playerScore === aiScore ? "🤝" : "💪"}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
             </motion.div>
 
-            <h2 className="text-2xl font-bold mb-2">
-              {playerScore > aiScore
-                ? "Victory!"
-                : playerScore === aiScore
-                ? "It's a Draw!"
-                : "Defeat!"}
-            </h2>
-
-            <div className="text-xl mb-6">
-              <span className="text-blue-400">{playerScore}</span> -{" "}
-              <span className="text-red-400">{aiScore}</span>
-            </div>
-
-            <Card className="w-full mb-6 bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle>Battle Summary</CardTitle>
-                <CardDescription>Your performance against AI</CardDescription>
+            {/* Battle Summary Card - Enhanced for desktop */}
+            <Card
+              id="battle-summary"
+              className="w-full bg-gray-900/90 border-gray-800 overflow-hidden backdrop-blur-sm"
+            >
+              <CardHeader className="border-b border-gray-800/50 p-4">
+                <CardTitle className="text-xl md:text-2xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                  Battle Summary
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-indigo-900 flex items-center justify-center mr-2">
-                          {i + 1}
+              <div className="p-4 md:p-6 grid gap-3 md:gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + i * 0.1 }}
+                    className={cn(
+                      "relative rounded-xl overflow-hidden",
+                      "bg-gradient-to-r p-[1px]",
+                      selectedCards[i].innovation > aiDeck[i].innovation
+                        ? "from-green-500/30 via-green-500/20 to-green-500/30"
+                        : selectedCards[i].innovation < aiDeck[i].innovation
+                        ? "from-red-500/30 via-red-500/20 to-red-500/30"
+                        : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
+                    )}
+                  >
+                    <div className="relative bg-gray-950/90 rounded-xl p-4 md:p-5">
+                      <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-4 md:gap-6">
+                        {/* Round Number */}
+                        <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400">
+                          R{i + 1}
                         </div>
-                        <span>
-                          {selectedCards[i].name} vs {aiDeck[i].name}
-                        </span>
-                      </div>
-                      <div
-                        className={cn(
-                          "font-bold",
-                          selectedCards[i].innovation > aiDeck[i].innovation
-                            ? "text-green-500"
+
+                        {/* Player Side */}
+                        <div className="min-w-0">
+                          <div className="text-base md:text-lg font-medium text-gray-200 truncate mb-1">
+                            {selectedCards[i].name}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {renderAttributeIcon(
+                              battleAttribute || "innovation"
+                            )}
+                            <span className="text-xl md:text-2xl font-bold text-blue-400">
+                              {selectedCards[i].innovation}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Result Badge */}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "px-3 py-1 text-sm md:text-base font-semibold",
+                            selectedCards[i].innovation > aiDeck[i].innovation
+                              ? "border-green-500/30 bg-green-500/10 text-green-400"
+                              : selectedCards[i].innovation <
+                                aiDeck[i].innovation
+                              ? "border-red-500/30 bg-red-500/10 text-red-400"
+                              : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
+                          )}
+                        >
+                          {selectedCards[i].innovation > aiDeck[i].innovation
+                            ? "WIN"
                             : selectedCards[i].innovation < aiDeck[i].innovation
-                            ? "text-red-500"
-                            : "text-yellow-500"
-                        )}
-                      >
-                        {selectedCards[i].innovation > aiDeck[i].innovation
-                          ? "Win"
-                          : selectedCards[i].innovation < aiDeck[i].innovation
-                          ? "Loss"
-                          : "Draw"}
+                            ? "LOSS"
+                            : "TIE"}
+                        </Badge>
+
+                        {/* AI Side */}
+                        <div className="min-w-0 text-right">
+                          <div className="text-base md:text-lg font-medium text-gray-200 truncate mb-1">
+                            {aiDeck[i].name}
+                          </div>
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-xl md:text-2xl font-bold text-red-400">
+                              {aiDeck[i].innovation}
+                            </span>
+                            {renderAttributeIcon(
+                              battleAttribute || "innovation"
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <div>
-                  Final Score:{" "}
-                  <span className="font-bold">{playerScore * 100}</span>
-                </div>
-                {playerScore > aiScore && (
-                  <div className="text-yellow-500">+50 Bonus!</div>
-                )}
-              </CardFooter>
+                  </motion.div>
+                ))}
+              </div>
             </Card>
 
-            <div className="grid grid-cols-2 gap-4 w-full">
-              <Button variant="outline" className="py-6" onClick={shareResult}>
-                <Share2 className="mr-2 h-4 w-4" />
-                Share Result
+            {/* Action Buttons - Desktop optimized */}
+            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-6">
+              <Button
+                variant="outline"
+                className="relative group py-4 md:py-6 text-lg"
+                onClick={async () => {
+                  const shareData = await captureAndShare();
+                  if (shareData) {
+                    window.open(shareData.twitterUrl, "_blank");
+                    shareData.downloadLink.click();
+                  }
+                }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                  animate={{ x: [-100, 100] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <div className="relative flex items-center justify-center gap-3">
+                  <Twitter className="h-5 w-5 md:h-6 md:w-6" />
+                  <span className="font-medium">Share Result</span>
+                </div>
               </Button>
 
               <Button
-                className="py-6 bg-gradient-to-r from-purple-600 to-indigo-600"
+                className="relative py-4 md:py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 onClick={resetGame}
               >
-                Play Again
+                <div className="relative flex items-center justify-center gap-3">
+                  <span className="font-medium">Play Again</span>
+                  <motion.span
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="text-xl"
+                  >
+                    →
+                  </motion.span>
+                </div>
               </Button>
             </div>
-
-            <AnimatePresence>
-              {showSharePrompt && (
-                <motion.div
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 50 }}
-                  className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg"
-                >
-                  <div className="text-center">
-                    <div className="font-bold mb-2">
-                      Challenge your friends!
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      Screenshot taken! Share your score of {playerScore * 100}
-                      {playerScore > aiScore ? " + 50 bonus" : ""} points and
-                      challenge your friends to beat it!
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         )}
       </main>
