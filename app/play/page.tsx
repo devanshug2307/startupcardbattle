@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/card";
 import { startupData } from "@/lib/game-data";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 export default function PlayGame() {
   const router = useRouter();
@@ -43,6 +45,7 @@ export default function PlayGame() {
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   // Initialize game
   useEffect(() => {
@@ -286,6 +289,9 @@ export default function PlayGame() {
     </div>
   );
 
+  // Add categories array
+  const categories = ["All", "Fintech", "Consumer", "SaaS", "EdTech"];
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Header */}
@@ -307,44 +313,89 @@ export default function PlayGame() {
             animate={{ opacity: 1 }}
             className="flex flex-col h-full"
           >
-            <h2 className="text-xl font-bold mb-4">
-              Select 4 Cards for Battle
-            </h2>
-
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {playerDeck.map((card, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={cn(
-                    "relative h-48 rounded-lg overflow-hidden cursor-pointer",
-                    selectedCards.includes(card) && "ring-4 ring-yellow-500"
-                  )}
-                  onClick={() => handleCardSelect(card)}
-                >
-                  {renderCardFront(card, true, true)}
-                  {selectedCards.includes(card) && (
-                    <div className="absolute top-2 right-2 bg-yellow-500 text-black rounded-full w-6 h-6 flex items-center justify-center font-bold">
-                      {selectedCards.indexOf(card) + 1}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
+            <div className="flex flex-col space-y-4 mb-6">
+              <h2 className="text-xl font-bold">Select 4 Cards for Battle</h2>
+              
+              {/* Category Tabs */}
+              <Tabs
+                defaultValue="all"
+                className="w-full"
+                onValueChange={(value) => setActiveCategory(value)}
+              >
+                <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+                  {categories.map((category) => (
+                    <TabsTrigger
+                      key={category.toLowerCase()}
+                      value={category.toLowerCase()}
+                      className="text-sm"
+                    >
+                      {category}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
             </div>
 
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+              {playerDeck
+                .filter(
+                  (card) =>
+                    activeCategory === "all" ||
+                    card.category.toLowerCase() === activeCategory
+                )
+                .map((card, index) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      "relative h-48 rounded-lg overflow-hidden cursor-pointer transition-all duration-300",
+                      selectedCards.includes(card) && "ring-4 ring-yellow-500"
+                    )}
+                    onClick={() => handleCardSelect(card)}
+                  >
+                    {/* Selection Number */}
+                    {selectedCards.includes(card) && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                                  bg-yellow-500 text-black rounded-full w-12 h-12 
+                                  flex items-center justify-center font-bold text-xl
+                                  shadow-lg z-20"
+                      >
+                        {selectedCards.indexOf(card) + 1}
+                      </motion.div>
+                    )}
+
+                    {/* Card Content */}
+                    <div className={cn(
+                      "relative w-full h-full transition-opacity duration-300",
+                      selectedCards.includes(card) && "opacity-80"
+                    )}>
+                      {renderCardFront(card, true, true)}
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+
+            {/* Selection Stats */}
             <div className="mt-auto">
               <Button
                 className={cn(
-                  "w-full py-6 text-lg font-bold rounded-lg",
+                  "w-full py-6 text-lg font-bold rounded-lg transition-all duration-300",
                   selectedCards.length === 4
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                     : "bg-gray-700"
                 )}
                 disabled={selectedCards.length !== 4}
                 onClick={startGame}
               >
-                Start Battle ({selectedCards.length}/4)
+                {selectedCards.length === 4 ? (
+                  "Start Battle"
+                ) : (
+                  `Select ${4 - selectedCards.length} More Cards`
+                )}
               </Button>
             </div>
           </motion.div>
