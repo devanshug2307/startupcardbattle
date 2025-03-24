@@ -26,7 +26,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { startupData } from "@/lib/game-data";
-import { cn } from "@/lib/utils";
+import {
+  cn,
+  formatRevenue,
+  formatTimeToUnicorn,
+  formatValuation,
+} from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,6 +54,7 @@ export default function PlayGame() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [roundAttributes, setRoundAttributes] = useState<string[]>([]);
 
   // Initialize game
   useEffect(() => {
@@ -68,7 +74,7 @@ export default function PlayGame() {
       }, 1000);
     } else if (isTimerActive && timeLeft === 0) {
       // Auto-select a random attribute if time runs out
-      const attributes = ["innovation", "growth", "userBase", "valuation"];
+      const attributes = ["founded", "revenue", "timeToUnicorn", "valuation"];
       const randomAttr =
         attributes[Math.floor(Math.random() * attributes.length)];
       handleAttributeSelect(randomAttr);
@@ -108,19 +114,37 @@ export default function PlayGame() {
     setBattleAttribute(attribute);
     setIsTimerActive(false);
 
-    // Get current cards for the round
+    // Store the attribute used for this round
+    setRoundAttributes((prev) => [...prev, attribute]);
+
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
 
-    // Compare attribute values
-    if (playerCard[attribute] > aiCard[attribute]) {
+    // Compare values based on attribute type
+    let playerWins = false;
+    let isDraw = false;
+
+    switch (attribute) {
+      case "timeToUnicorn":
+      case "founded":
+        // Lower is better for these attributes
+        playerWins = playerCard[attribute] < aiCard[attribute];
+        isDraw = playerCard[attribute] === aiCard[attribute];
+        break;
+      default:
+        // Higher is better for revenue and valuation
+        playerWins = playerCard[attribute] > aiCard[attribute];
+        isDraw = playerCard[attribute] === aiCard[attribute];
+    }
+
+    if (isDraw) {
+      setBattleResult("draw");
+    } else if (playerWins) {
       setPlayerScore(playerScore + 1);
       setBattleResult("win");
-    } else if (playerCard[attribute] < aiCard[attribute]) {
+    } else {
       setAiScore(aiScore + 1);
       setBattleResult("lose");
-    } else {
-      setBattleResult("draw");
     }
 
     // Move to next round or end game
@@ -140,6 +164,7 @@ export default function PlayGame() {
     setSelectedCards([]);
     setBattleAttribute(null);
     setBattleResult(null);
+    setRoundAttributes([]); // Clear round attributes
 
     // Reshuffle cards
     const shuffled = [...startupData].sort(() => 0.5 - Math.random());
@@ -158,11 +183,11 @@ export default function PlayGame() {
 
   const renderAttributeIcon = (attribute: string) => {
     switch (attribute) {
-      case "innovation":
+      case "founded":
         return <Zap className="w-5 h-5" />;
-      case "growth":
+      case "revenue":
         return <TrendingUp className="w-5 h-5" />;
-      case "userBase":
+      case "timeToUnicorn":
         return <Users className="w-5 h-5" />;
       case "valuation":
         return <DollarSign className="w-5 h-5" />;
@@ -191,24 +216,24 @@ export default function PlayGame() {
           <div
             className={cn(
               "flex justify-between items-center p-1 rounded",
-              battleAttribute === "innovation" && "bg-blue-900"
+              battleAttribute === "founded" && "bg-blue-900"
             )}
             onClick={() =>
               isPlayerCard &&
               gameState === "battle" &&
               !battleAttribute &&
-              handleAttributeSelect("innovation")
+              handleAttributeSelect("founded")
             }
           >
             <div className="flex items-center">
               <Zap className="w-4 h-4 mr-1 text-yellow-400" />
-              <span className="text-xs">Innovation</span>
+              <span className="text-xs">Founded</span>
             </div>
             <div className="font-bold">
-              {showAll || battleAttribute
-                ? card.innovation
+              {showAll || battleAttribute === "founded"
+                ? card.founded
                 : isPlayerCard
-                ? card.innovation
+                ? card.founded
                 : "?"}
             </div>
           </div>
@@ -216,24 +241,24 @@ export default function PlayGame() {
           <div
             className={cn(
               "flex justify-between items-center p-1 rounded",
-              battleAttribute === "growth" && "bg-blue-900"
+              battleAttribute === "revenue" && "bg-blue-900"
             )}
             onClick={() =>
               isPlayerCard &&
               gameState === "battle" &&
               !battleAttribute &&
-              handleAttributeSelect("growth")
+              handleAttributeSelect("revenue")
             }
           >
             <div className="flex items-center">
               <TrendingUp className="w-4 h-4 mr-1 text-green-400" />
-              <span className="text-xs">Growth</span>
+              <span className="text-xs">Revenue</span>
             </div>
             <div className="font-bold">
-              {showAll || battleAttribute
-                ? card.growth
+              {showAll || battleAttribute === "revenue"
+                ? formatRevenue(card.revenue)
                 : isPlayerCard
-                ? card.growth
+                ? formatRevenue(card.revenue)
                 : "?"}
             </div>
           </div>
@@ -241,24 +266,24 @@ export default function PlayGame() {
           <div
             className={cn(
               "flex justify-between items-center p-1 rounded",
-              battleAttribute === "userBase" && "bg-blue-900"
+              battleAttribute === "timeToUnicorn" && "bg-blue-900"
             )}
             onClick={() =>
               isPlayerCard &&
               gameState === "battle" &&
               !battleAttribute &&
-              handleAttributeSelect("userBase")
+              handleAttributeSelect("timeToUnicorn")
             }
           >
             <div className="flex items-center">
               <Users className="w-4 h-4 mr-1 text-blue-400" />
-              <span className="text-xs">User Base</span>
+              <span className="text-xs">Time to Unicorn</span>
             </div>
             <div className="font-bold">
-              {showAll || battleAttribute
-                ? card.userBase
+              {showAll || battleAttribute === "timeToUnicorn"
+                ? formatTimeToUnicorn(card.timeToUnicorn)
                 : isPlayerCard
-                ? card.userBase
+                ? formatTimeToUnicorn(card.timeToUnicorn)
                 : "?"}
             </div>
           </div>
@@ -280,10 +305,10 @@ export default function PlayGame() {
               <span className="text-xs">Valuation</span>
             </div>
             <div className="font-bold">
-              {showAll || battleAttribute
-                ? card.valuation
+              {showAll || battleAttribute === "valuation"
+                ? formatValuation(card.valuation)
                 : isPlayerCard
-                ? card.valuation
+                ? formatValuation(card.valuation)
                 : "?"}
             </div>
           </div>
@@ -327,6 +352,19 @@ Play now at [your-game-url]`;
     } catch (error) {
       console.error("Error capturing result:", error);
       return null;
+    }
+  };
+
+  const formatAttributeValue = (value: number, attribute: string) => {
+    switch (attribute) {
+      case "revenue":
+        return formatRevenue(value);
+      case "timeToUnicorn":
+        return formatTimeToUnicorn(value);
+      case "valuation":
+        return formatValuation(value);
+      default:
+        return value;
     }
   };
 
@@ -617,9 +655,20 @@ Play now at [your-game-url]`;
                     className={cn(
                       "relative rounded-xl overflow-hidden",
                       "bg-gradient-to-r p-[1px]",
-                      selectedCards[i].innovation > aiDeck[i].innovation
+                      roundAttributes[i] === "timeToUnicorn" ||
+                        roundAttributes[i] === "founded"
+                        ? selectedCards[i][roundAttributes[i]] <
+                          aiDeck[i][roundAttributes[i]]
+                          ? "from-green-500/30 via-green-500/20 to-green-500/30"
+                          : selectedCards[i][roundAttributes[i]] >
+                            aiDeck[i][roundAttributes[i]]
+                          ? "from-red-500/30 via-red-500/20 to-red-500/30"
+                          : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
+                        : selectedCards[i][roundAttributes[i]] >
+                          aiDeck[i][roundAttributes[i]]
                         ? "from-green-500/30 via-green-500/20 to-green-500/30"
-                        : selectedCards[i].innovation < aiDeck[i].innovation
+                        : selectedCards[i][roundAttributes[i]] <
+                          aiDeck[i][roundAttributes[i]]
                         ? "from-red-500/30 via-red-500/20 to-red-500/30"
                         : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
                     )}
@@ -637,11 +686,12 @@ Play now at [your-game-url]`;
                             {selectedCards[i].name}
                           </div>
                           <div className="flex items-center gap-2">
-                            {renderAttributeIcon(
-                              battleAttribute || "innovation"
-                            )}
+                            {renderAttributeIcon(roundAttributes[i])}
                             <span className="text-xl md:text-2xl font-bold text-blue-400">
-                              {selectedCards[i].innovation}
+                              {formatAttributeValue(
+                                selectedCards[i][roundAttributes[i]],
+                                roundAttributes[i]
+                              )}
                             </span>
                           </div>
                         </div>
@@ -651,17 +701,38 @@ Play now at [your-game-url]`;
                           variant="outline"
                           className={cn(
                             "px-3 py-1 text-sm md:text-base font-semibold",
-                            selectedCards[i].innovation > aiDeck[i].innovation
+                            roundAttributes[i] === "timeToUnicorn" ||
+                              roundAttributes[i] === "founded"
+                              ? selectedCards[i][roundAttributes[i]] <
+                                aiDeck[i][roundAttributes[i]]
+                                ? "border-green-500/30 bg-green-500/10 text-green-400"
+                                : selectedCards[i][roundAttributes[i]] >
+                                  aiDeck[i][roundAttributes[i]]
+                                ? "border-red-500/30 bg-red-500/10 text-red-400"
+                                : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
+                              : selectedCards[i][roundAttributes[i]] >
+                                aiDeck[i][roundAttributes[i]]
                               ? "border-green-500/30 bg-green-500/10 text-green-400"
-                              : selectedCards[i].innovation <
-                                aiDeck[i].innovation
+                              : selectedCards[i][roundAttributes[i]] <
+                                aiDeck[i][roundAttributes[i]]
                               ? "border-red-500/30 bg-red-500/10 text-red-400"
                               : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
                           )}
                         >
-                          {selectedCards[i].innovation > aiDeck[i].innovation
+                          {roundAttributes[i] === "timeToUnicorn" ||
+                          roundAttributes[i] === "founded"
+                            ? selectedCards[i][roundAttributes[i]] <
+                              aiDeck[i][roundAttributes[i]]
+                              ? "WIN"
+                              : selectedCards[i][roundAttributes[i]] >
+                                aiDeck[i][roundAttributes[i]]
+                              ? "LOSS"
+                              : "TIE"
+                            : selectedCards[i][roundAttributes[i]] >
+                              aiDeck[i][roundAttributes[i]]
                             ? "WIN"
-                            : selectedCards[i].innovation < aiDeck[i].innovation
+                            : selectedCards[i][roundAttributes[i]] <
+                              aiDeck[i][roundAttributes[i]]
                             ? "LOSS"
                             : "TIE"}
                         </Badge>
@@ -673,11 +744,12 @@ Play now at [your-game-url]`;
                           </div>
                           <div className="flex items-center justify-end gap-2">
                             <span className="text-xl md:text-2xl font-bold text-red-400">
-                              {aiDeck[i].innovation}
+                              {formatAttributeValue(
+                                aiDeck[i][roundAttributes[i]],
+                                roundAttributes[i]
+                              )}
                             </span>
-                            {renderAttributeIcon(
-                              battleAttribute || "innovation"
-                            )}
+                            {renderAttributeIcon(roundAttributes[i])}
                           </div>
                         </div>
                       </div>

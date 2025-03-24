@@ -1,28 +1,43 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Star, Zap, TrendingUp, Users, DollarSign, Lock } from "lucide-react"
-import { motion } from "framer-motion"
-import { startupData } from "@/lib/game-data"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Star,
+  Zap,
+  TrendingUp,
+  Users,
+  DollarSign,
+  Lock,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { startupData } from "@/lib/game-data";
+import {
+  cn,
+  formatRevenue,
+  formatTimeToUnicorn,
+  formatValuation,
+} from "@/lib/utils";
 
 export default function Collection() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState("all")
-  const [selectedCard, setSelectedCard] = useState<any>(null)
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("all");
+  const [selectedCard, setSelectedCard] = useState<any>(null);
 
   // Filter cards based on active tab
   const filteredCards =
-    activeTab === "all" ? startupData : startupData.filter((card) => card.category.toLowerCase() === activeTab)
+    activeTab === "all"
+      ? startupData
+      : startupData.filter((card) => card.category.toLowerCase() === activeTab);
 
   // For demo purposes, some cards are locked
-  const unlockedCards = startupData.slice(0, 7)
-  const lockedCards = startupData.slice(7)
+  const unlockedCards = startupData.slice(0, 7);
+  const lockedCards = startupData.slice(7);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
@@ -44,11 +59,16 @@ export default function Collection() {
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold">Collection Progress</h3>
-                <p className="text-sm text-gray-300">7/{startupData.length} Cards Unlocked</p>
+                <p className="text-sm text-gray-300">
+                  7/{startupData.length} Cards Unlocked
+                </p>
               </div>
               <div className="flex">
                 {[1, 2, 3].map((i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star
+                    key={i}
+                    className="h-5 w-5 text-yellow-400 fill-yellow-400"
+                  />
                 ))}
                 {[4, 5].map((i) => (
                   <Star key={i} className="h-5 w-5 text-gray-600" />
@@ -83,7 +103,7 @@ export default function Collection() {
       <div className="flex-grow p-4">
         <div className="grid grid-cols-2 gap-3">
           {filteredCards.map((card, index) => {
-            const isLocked = !unlockedCards.includes(card)
+            const isLocked = !unlockedCards.includes(card);
 
             return (
               <motion.div
@@ -92,7 +112,7 @@ export default function Collection() {
                 whileTap={{ scale: 0.97 }}
                 className={cn(
                   "relative rounded-lg overflow-hidden cursor-pointer h-48",
-                  selectedCard === card && "ring-2 ring-yellow-500",
+                  selectedCard === card && "ring-2 ring-yellow-500"
                 )}
                 onClick={() => setSelectedCard(card)}
               >
@@ -101,7 +121,9 @@ export default function Collection() {
                     <Lock className="h-10 w-10 text-gray-600 mb-2" />
                     <div className="text-center text-gray-400">
                       <div className="font-bold">{card.name}</div>
-                      <div className="text-xs mt-1">Win more battles to unlock</div>
+                      <div className="text-xs mt-1">
+                        Win more battles to unlock
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -111,9 +133,21 @@ export default function Collection() {
                     </div>
                     <div className="p-3 flex-grow flex flex-col justify-between">
                       <div className="flex justify-between items-start">
-                        <div className="text-xs text-gray-300">{card.category}</div>
-                        <Badge variant="outline" className="text-xs bg-indigo-900 border-indigo-700">
-                          Lvl {card.innovation + card.growth + card.userBase + card.valuation > 30 ? "Rare" : "Common"}
+                        <div className="text-xs text-gray-300">
+                          {card.category}
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-indigo-900 border-indigo-700"
+                        >
+                          Lvl{" "}
+                          {card.founded +
+                            card.revenue +
+                            card.timeToUnicorn +
+                            card.valuation >
+                          30
+                            ? "Rare"
+                            : "Common"}
                         </Badge>
                       </div>
 
@@ -121,25 +155,29 @@ export default function Collection() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
                             <Zap className="w-4 h-4 mr-1 text-yellow-400" />
-                            <span className="text-xs">Innovation</span>
+                            <span className="text-xs">Founded</span>
                           </div>
-                          <div className="font-bold">{card.innovation}</div>
+                          <div className="font-bold">{card.founded}</div>
                         </div>
 
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
                             <TrendingUp className="w-4 h-4 mr-1 text-green-400" />
-                            <span className="text-xs">Growth</span>
+                            <span className="text-xs">Revenue</span>
                           </div>
-                          <div className="font-bold">{card.growth}</div>
+                          <div className="font-bold">
+                            {formatRevenue(card.revenue)}
+                          </div>
                         </div>
 
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
                             <Users className="w-4 h-4 mr-1 text-blue-400" />
-                            <span className="text-xs">User Base</span>
+                            <span className="text-xs">Time to Unicorn</span>
                           </div>
-                          <div className="font-bold">{card.userBase}</div>
+                          <div className="font-bold">
+                            {formatTimeToUnicorn(card.timeToUnicorn)}
+                          </div>
                         </div>
 
                         <div className="flex justify-between items-center">
@@ -147,14 +185,16 @@ export default function Collection() {
                             <DollarSign className="w-4 h-4 mr-1 text-purple-400" />
                             <span className="text-xs">Valuation</span>
                           </div>
-                          <div className="font-bold">{card.valuation}</div>
+                          <div className="font-bold">
+                            {formatValuation(card.valuation)}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
               </motion.div>
-            )
+            );
           })}
         </div>
       </div>
@@ -172,7 +212,11 @@ export default function Collection() {
               <h3 className="text-xl font-bold">{selectedCard.name}</h3>
               <p className="text-sm text-gray-400">{selectedCard.category}</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setSelectedCard(null)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedCard(null)}
+            >
               Close
             </Button>
           </div>
@@ -180,9 +224,16 @@ export default function Collection() {
           <div className="mb-4">
             <h4 className="font-semibold mb-2">Card Description</h4>
             <p className="text-sm text-gray-300">
-              {selectedCard.name} is a leading {selectedCard.category.toLowerCase()} startup known for its
-              {selectedCard.innovation > 7 ? " innovative approach" : " reliable service"} and
-              {selectedCard.growth > 7 ? " rapid growth" : " steady performance"} in the market.
+              {selectedCard.name} is a leading{" "}
+              {selectedCard.category.toLowerCase()} startup known for its
+              {selectedCard.founded > 7
+                ? " early establishment"
+                : " recent founding"}{" "}
+              and
+              {selectedCard.revenue > 7
+                ? " strong revenue growth"
+                : " steady revenue"}{" "}
+              in the market.
             </p>
           </div>
 
@@ -196,27 +247,27 @@ export default function Collection() {
                 <br />
                 Best Attribute:{" "}
                 {Math.max(
-                  selectedCard.innovation,
-                  selectedCard.growth,
-                  selectedCard.userBase,
-                  selectedCard.valuation,
-                ) === selectedCard.innovation
-                  ? "Innovation"
+                  selectedCard.founded,
+                  selectedCard.revenue,
+                  selectedCard.timeToUnicorn,
+                  selectedCard.valuation
+                ) === selectedCard.founded
+                  ? "Founded"
                   : Math.max(
-                        selectedCard.innovation,
-                        selectedCard.growth,
-                        selectedCard.userBase,
-                        selectedCard.valuation,
-                      ) === selectedCard.growth
-                    ? "Growth"
-                    : Math.max(
-                          selectedCard.innovation,
-                          selectedCard.growth,
-                          selectedCard.userBase,
-                          selectedCard.valuation,
-                        ) === selectedCard.userBase
-                      ? "User Base"
-                      : "Valuation"}
+                      selectedCard.founded,
+                      selectedCard.revenue,
+                      selectedCard.timeToUnicorn,
+                      selectedCard.valuation
+                    ) === selectedCard.revenue
+                  ? "Revenue"
+                  : Math.max(
+                      selectedCard.founded,
+                      selectedCard.revenue,
+                      selectedCard.timeToUnicorn,
+                      selectedCard.valuation
+                    ) === selectedCard.timeToUnicorn
+                  ? "Time to Unicorn"
+                  : "Valuation"}
               </div>
             </div>
 
@@ -227,7 +278,10 @@ export default function Collection() {
                 Acquired: 3 days ago
                 <br />
                 Power Level:{" "}
-                {selectedCard.innovation + selectedCard.growth + selectedCard.userBase + selectedCard.valuation}
+                {selectedCard.founded +
+                  selectedCard.revenue +
+                  selectedCard.timeToUnicorn +
+                  selectedCard.valuation}
               </div>
             </div>
           </div>
@@ -235,8 +289,8 @@ export default function Collection() {
           <Button
             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600"
             onClick={() => {
-              setSelectedCard(null)
-              router.push("/play")
+              setSelectedCard(null);
+              router.push("/play");
             }}
           >
             Battle with this Card
@@ -244,6 +298,5 @@ export default function Collection() {
         </motion.div>
       )}
     </div>
-  )
+  );
 }
-
