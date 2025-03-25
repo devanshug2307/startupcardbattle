@@ -42,7 +42,7 @@ import {
 } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 
 // First, let's add proper type definitions at the top of the file
 type StartupCard = {
@@ -191,10 +191,86 @@ export default function PlayGame() {
     setAiDeck(shuffled.slice(10, 20));
   };
 
-  const shareResult = () => {
-    setShowSharePrompt(true);
+  const generateShareText = () => {
+    // Get the most valuable startup from player's selected cards
+    const bestStartup = selectedCards.reduce((prev, curr) =>
+      curr.valuation > prev.valuation ? curr : prev
+    );
 
-    // In a real app, this would generate a shareable image or link
+    // Create an engaging header with battle result
+    const resultEmoji =
+      playerScore > aiScore ? "🏆" : playerScore === aiScore ? "🤝" : "💪";
+    const header =
+      `Epic battle with ${bestStartup.name} ${resultEmoji}\n` +
+      `${"⭐".repeat(playerScore)}${" " + playerScore}-${aiScore} • ${
+        selectedCards.length
+      } Unicorns\n\n`;
+
+    // Generate battle summary with emojis and startup names
+    const rounds = roundAttributes
+      .map((attr, i) => {
+        const playerValue = selectedCards[i][attr];
+        const aiValue = aiDeck[i][attr];
+
+        // Get attribute emoji
+        const attrEmoji = {
+          founded: "⚡",
+          revenue: "📈",
+          timeToUnicorn: "🦄",
+          valuation: "💰",
+        }[attr];
+
+        // Determine winner and get appropriate emoji
+        let result = "";
+        if (attr === "timeToUnicorn" || attr === "founded") {
+          result =
+            playerValue < aiValue ? "🟩" : playerValue > aiValue ? "🟥" : "🟨";
+        } else {
+          result =
+            playerValue > aiValue ? "🟩" : playerValue < aiValue ? "🟥" : "🟨";
+        }
+
+        // Add startup name only for wins
+        const isWin =
+          attr === "timeToUnicorn" || attr === "founded"
+            ? playerValue < aiValue
+            : playerValue > aiValue;
+
+        return `${attrEmoji} ${result}${
+          isWin ? ` ${selectedCards[i].name}` : ""
+        }`;
+      })
+      .join("\n");
+
+    // Add viral call-to-action
+    const footer =
+      "\n\nThink you can do better? 💪\n" +
+      "Play Startup Card Battle at startupcards.game 🚀";
+
+    return header + rounds + footer;
+  };
+
+  const shareResult = async () => {
+    const shareText = generateShareText();
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          text: shareText,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareText);
+        setShowSharePrompt(true);
+      }
+    } else {
+      // Fallback to clipboard
+      await navigator.clipboard.writeText(shareText);
+      setShowSharePrompt(true);
+    }
+
+    // Hide prompt after delay
     setTimeout(() => {
       setShowSharePrompt(false);
     }, 3000);
@@ -564,44 +640,95 @@ export default function PlayGame() {
     </Tabs>
   </div>;
 
+  // const captureAndShare = async () => {
+  //   const battleSummary = document.getElementById('battle-summary');
+
+  //   if (!battleSummary) return null;
+
+  //   try {
+  //     const canvas = await html2canvas(battleSummary, {
+  //       backgroundColor: '#111827', // Dark background matching the card
+  //       scale: 2, // Higher quality
+  //     });
+
+  //     // Convert to blob
+  //     const blob = await new Promise<Blob>((resolve) => {
+  //       canvas.toBlob((blob) => {
+  //         resolve(blob!);
+  //       }, 'image/png');
+  //     });
+
+  //     // Create sharing data
+  //     const file = new File([blob], 'battle-summary.png', { type: 'image/png' });
+
+  //     // Create object URL for download
+  //     const downloadUrl = URL.createObjectURL(blob);
+  //     const downloadLink = document.createElement('a');
+  //     downloadLink.href = downloadUrl;
+  //     downloadLink.download = 'startup-battle-summary.png';
+
+  //     // Create Twitter share URL
+  //     const twitterText = encodeURIComponent('Check out my Startup Card Battle results! Can you beat my score? 🎮✨ #StartupCardBattle');
+  //     const twitterUrl = `https://twitter.com/intent/tweet?text=${twitterText}`;
+
+  //     return {
+  //       file,
+  //       downloadLink,
+  //       twitterUrl,
+  //     };
+  //   } catch (error) {
+  //     console.error('Error capturing battle summary:', error);
+  //     return null;
+  //   }
+  // };
   const captureAndShare = async () => {
-    const battleSummary = document.getElementById('battle-summary');
-    
+    const battleSummary = document.getElementById("battle-summary");
+
     if (!battleSummary) return null;
 
     try {
       const canvas = await html2canvas(battleSummary, {
-        backgroundColor: '#111827', // Dark background matching the card
-        scale: 2, // Higher quality
+        backgroundColor: "#111827",
+        scale: 2,
       });
 
       // Convert to blob
       const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((blob) => {
           resolve(blob!);
-        }, 'image/png');
+        }, "image/png");
       });
 
       // Create sharing data
-      const file = new File([blob], 'battle-summary.png', { type: 'image/png' });
-      
+      const file = new File([blob], "battle-summary.png", {
+        type: "image/png",
+      });
+
       // Create object URL for download
       const downloadUrl = URL.createObjectURL(blob);
-      const downloadLink = document.createElement('a');
+      const downloadLink = document.createElement("a");
       downloadLink.href = downloadUrl;
-      downloadLink.download = 'startup-battle-summary.png';
+      downloadLink.download = "startup-battle-summary.png";
+
+      // Create share text
+      const shareText = `Check out my Startup Card Battle results! 🎮✨
+Score: ${playerScore * 100} points
+Rounds Won: ${playerScore} vs AI: ${aiScore}
+
+Can you beat my score? #StartupCardBattle`;
 
       // Create Twitter share URL
-      const twitterText = encodeURIComponent('Check out my Startup Card Battle results! Can you beat my score? 🎮✨ #StartupCardBattle');
+      const twitterText = encodeURIComponent(shareText);
       const twitterUrl = `https://twitter.com/intent/tweet?text=${twitterText}`;
 
       return {
         file,
         downloadLink,
         twitterUrl,
+        shareText,
       };
     } catch (error) {
-      console.error('Error capturing battle summary:', error);
+      console.error("Error capturing battle summary:", error);
       return null;
     }
   };
@@ -819,23 +946,38 @@ export default function PlayGame() {
   );
 
   // Add this function before the PlayGame component
-  const shareViaMobileAPI = async (file: File) => {
+  // const shareViaMobileAPI = async (file: File) => {
+  //   if (navigator.share) {
+  //     try {
+  //       await navigator.share({
+  //         files: [file],
+  //         title: "Startup Card Battle Results",
+  //         text: "Check out my Startup Card Battle results! Can you beat my score? 🎮✨",
+  //       });
+  //       return true;
+  //     } catch (error) {
+  //       console.error("Error sharing:", error);
+  //       return false;
+  //     }
+  //   }
+  //   return false;
+  // };
+  const shareViaMobileAPI = async (file: File, text: string) => {
     if (navigator.share) {
       try {
         await navigator.share({
           files: [file],
-          title: 'Startup Card Battle Results',
-          text: 'Check out my Startup Card Battle results! Can you beat my score? 🎮✨',
+          title: "Startup Card Battle Results",
+          text: text,
         });
         return true;
       } catch (error) {
-        console.error('Error sharing:', error);
+        console.error("Error sharing:", error);
         return false;
       }
     }
     return false;
   };
-
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Streamlined Header */}
@@ -1283,7 +1425,7 @@ export default function PlayGame() {
                 </div>
               </Button>
 
-              <Button
+              {/* <Button
                 variant="outline"
                 className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
                 onClick={async () => {
@@ -1291,13 +1433,23 @@ export default function PlayGame() {
                   if (shareData) {
                     const shared = await shareViaMobileAPI(shareData.file);
                     if (!shared) {
-                      window.open(shareData.twitterUrl, '_blank');
+                      window.open(shareData.twitterUrl, "_blank");
                     }
                   }
                 }}
               >
                 <div className="relative flex items-center justify-center gap-3">
                   <Share className="h-5 w-5 md:h-6 md:w-6" />
+                  <span className="font-medium">Share</span>
+                </div>
+              </Button> */}
+              <Button
+                variant="outline"
+                className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
+                onClick={shareResult}
+              >
+                <div className="relative flex items-center justify-center gap-3">
+                  <Share2 className="h-5 w-5 md:h-6 md:w-6" />
                   <span className="font-medium">Share</span>
                 </div>
               </Button>
@@ -1320,13 +1472,15 @@ export default function PlayGame() {
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 50 }}
-                  className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg"
+                  className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg z-50"
                 >
                   <div className="text-center">
-                    <div className="font-bold mb-2">Share your victory!</div>
+                    <div className="font-bold mb-2">
+                      Battle summary copied! 📋
+                    </div>
                     <div className="text-sm text-gray-400">
-                      Battle summary and leaderboard position captured!
-                      Challenge your friends to beat your score!
+                      Share your results with friends and challenge them to beat
+                      your score!
                     </div>
                   </div>
                 </motion.div>
