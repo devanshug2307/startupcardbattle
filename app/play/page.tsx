@@ -16,6 +16,14 @@ import {
   DollarSign,
   Share,
   Download,
+  Layout,
+  Banknote,
+  ShoppingBag,
+  Cloud,
+  GraduationCap,
+  Swords,
+  Shield,
+  InfoIcon,
 } from "lucide-react";
 import {
   Card,
@@ -35,14 +43,24 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
+// First, let's add proper type definitions at the top of the file
+type StartupCard = {
+  name: string;
+  category: string;
+  founded: number;
+  revenue: number;
+  timeToUnicorn: number;
+  valuation: number;
+};
+
 export default function PlayGame() {
   const router = useRouter();
   const [gameState, setGameState] = useState<"select" | "battle" | "result">(
     "select"
   );
-  const [playerDeck, setPlayerDeck] = useState<any[]>([]);
-  const [aiDeck, setAiDeck] = useState<any[]>([]);
-  const [selectedCards, setSelectedCards] = useState<any[]>([]);
+  const [playerDeck, setPlayerDeck] = useState<StartupCard[]>([]);
+  const [aiDeck, setAiDeck] = useState<StartupCard[]>([]);
+  const [selectedCards, setSelectedCards] = useState<StartupCard[]>([]);
   const [currentRound, setCurrentRound] = useState(1);
   const [playerScore, setPlayerScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
@@ -102,7 +120,7 @@ export default function PlayGame() {
     setAiScore(0);
   };
 
-  const handleCardSelect = (card: any) => {
+  const handleCardSelect = (card: StartupCard) => {
     if (selectedCards.includes(card)) {
       setSelectedCards(selectedCards.filter((c) => c !== card));
     } else if (selectedCards.length < 4) {
@@ -196,129 +214,354 @@ export default function PlayGame() {
     }
   };
 
-  const renderCardFront = (card: any, isPlayerCard = true, showAll = false) => (
-    <div
+  // Update the CardComponent with the new design
+  const CardComponent = ({ card, isSelected, onSelect }) => (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{
+        scale: 1.05,
+        y: -8,
+        transition: { duration: 0.2 },
+      }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onSelect}
       className={cn(
-        "relative w-full h-full rounded-lg overflow-hidden bg-gradient-to-br from-indigo-900 to-purple-900 flex flex-col",
-        battleResult === "win" && isPlayerCard && "ring-4 ring-green-500",
-        battleResult === "lose" && !isPlayerCard && "ring-4 ring-green-500",
-        battleResult === "lose" && isPlayerCard && "ring-4 ring-red-500",
-        battleResult === "win" && !isPlayerCard && "ring-4 ring-red-500"
+        "relative aspect-[3/4] rounded-2xl cursor-pointer overflow-hidden",
+        "group transition-transform duration-300",
+        isSelected
+          ? "ring-4 ring-purple-500/50 shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+          : "ring-2 ring-purple-900/50 hover:ring-purple-700/50 shadow-xl"
       )}
     >
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 text-white font-bold text-center">
-        {card.name}
-      </div>
-      <div className="p-3 flex-grow flex flex-col justify-between">
-        <div className="text-xs text-gray-300 mb-2">{card.category}</div>
+      {/* Holographic Effect */}
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+      />
+      <div
+        className="absolute inset-0 opacity-[0.02] group-hover:opacity-[0.04] 
+                    mix-blend-overlay z-10 card-holographic pointer-events-none"
+      />
 
-        <div className="space-y-2">
-          <div
-            className={cn(
-              "flex justify-between items-center p-1 rounded",
-              battleAttribute === "founded" && "bg-blue-900"
-            )}
-            onClick={() =>
-              isPlayerCard &&
-              gameState === "battle" &&
-              !battleAttribute &&
-              handleAttributeSelect("founded")
-            }
+      {/* Selection Overlay */}
+      <AnimatePresence>
+        {isSelected && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20"
           >
-            <div className="flex items-center">
-              <Zap className="w-4 h-4 mr-1 text-yellow-400" />
-              <span className="text-xs">Founded</span>
-            </div>
-            <div className="font-bold">
-              {showAll || battleAttribute === "founded"
-                ? card.founded
-                : isPlayerCard
-                ? card.founded
-                : "?"}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20" />
+            <motion.div
+              animate={{
+                opacity: [0.3, 0.6, 0.3],
+                scale: [1, 1.05, 1],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"
+            />
+
+            {/* Selection Badge */}
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full 
+                       bg-gradient-to-r from-purple-500 to-pink-500
+                       flex items-center justify-center text-white font-bold
+                       shadow-lg z-20 ring-2 ring-white/20"
+            >
+              {selectedCards.indexOf(card) + 1}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Card Content */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+        {/* Card Frame */}
+        <div className="absolute inset-[2px] rounded-xl overflow-hidden">
+          {/* Top Banner */}
+          <div
+            className="relative h-24 bg-gradient-to-br from-purple-600/90 to-blue-600/90 
+                        overflow-hidden p-3"
+          >
+            <div className="absolute inset-0 card-circuit-pattern opacity-20 pointer-events-none" />
+
+            {/* Company Name & Category */}
+            <div className="relative z-10">
+              <div className="flex items-start justify-between">
+                <h3 className="font-bold text-xl text-white drop-shadow-lg">
+                  {card.name}
+                </h3>
+                <Badge
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-white backdrop-blur-sm
+                           px-2 py-0.5 text-xs font-medium"
+                >
+                  {card.category}
+                </Badge>
+              </div>
+
+              {/* Startup Level */}
+              <div className="mt-2 flex items-center gap-1">
+                {Array.from({
+                  length: Math.min(
+                    5,
+                    Math.ceil((card.revenue + card.valuation) / 4)
+                  ),
+                }).map((_, i) => (
+                  <motion.div
+                    key={`${card.name}-level-${i}`}
+                    initial={false}
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{
+                      duration: 1,
+                      delay: i * 0.1,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                    }}
+                    className="w-2 h-2 rounded-full bg-white/80"
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          <div
-            className={cn(
-              "flex justify-between items-center p-1 rounded",
-              battleAttribute === "revenue" && "bg-blue-900"
-            )}
-            onClick={() =>
-              isPlayerCard &&
-              gameState === "battle" &&
-              !battleAttribute &&
-              handleAttributeSelect("revenue")
-            }
-          >
-            <div className="flex items-center">
-              <TrendingUp className="w-4 h-4 mr-1 text-green-400" />
-              <span className="text-xs">Revenue</span>
-            </div>
-            <div className="font-bold">
-              {showAll || battleAttribute === "revenue"
-                ? formatRevenue(card.revenue)
-                : isPlayerCard
-                ? formatRevenue(card.revenue)
-                : "?"}
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              "flex justify-between items-center p-1 rounded",
-              battleAttribute === "timeToUnicorn" && "bg-blue-900"
-            )}
-            onClick={() =>
-              isPlayerCard &&
-              gameState === "battle" &&
-              !battleAttribute &&
-              handleAttributeSelect("timeToUnicorn")
-            }
-          >
-            <div className="flex items-center">
-              <Users className="w-4 h-4 mr-1 text-blue-400" />
-              <span className="text-xs">Time to Unicorn</span>
-            </div>
-            <div className="font-bold">
-              {showAll || battleAttribute === "timeToUnicorn"
-                ? formatTimeToUnicorn(card.timeToUnicorn)
-                : isPlayerCard
-                ? formatTimeToUnicorn(card.timeToUnicorn)
-                : "?"}
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              "flex justify-between items-center p-1 rounded",
-              battleAttribute === "valuation" && "bg-blue-900"
-            )}
-            onClick={() =>
-              isPlayerCard &&
-              gameState === "battle" &&
-              !battleAttribute &&
-              handleAttributeSelect("valuation")
-            }
-          >
-            <div className="flex items-center">
-              <DollarSign className="w-4 h-4 mr-1 text-purple-400" />
-              <span className="text-xs">Valuation</span>
-            </div>
-            <div className="font-bold">
-              {showAll || battleAttribute === "valuation"
-                ? formatValuation(card.valuation)
-                : isPlayerCard
-                ? formatValuation(card.valuation)
-                : "?"}
+          {/* Stats Grid */}
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+              {[
+                {
+                  key: "revenue",
+                  label: "Revenue",
+                  value: formatRevenue(card.revenue),
+                  icon: TrendingUp,
+                  color: "from-green-500 to-emerald-600",
+                  textColor: "text-green-400",
+                },
+                {
+                  key: "founded",
+                  label: "Founded",
+                  value: card.founded,
+                  icon: Zap,
+                  color: "from-yellow-500 to-orange-600",
+                  textColor: "text-yellow-400",
+                },
+                {
+                  key: "timeToUnicorn",
+                  label: "Time to 🦄",
+                  value: formatTimeToUnicorn(card.timeToUnicorn),
+                  icon: Users,
+                  color: "from-blue-500 to-cyan-600",
+                  textColor: "text-blue-400",
+                },
+                {
+                  key: "valuation",
+                  label: "Valuation",
+                  value: formatValuation(card.valuation),
+                  icon: DollarSign,
+                  color: "from-purple-500 to-pink-600",
+                  textColor: "text-purple-400",
+                },
+              ].map((stat) => (
+                <motion.button
+                  key={`${card.name}-${stat.key}`}
+                  disabled={true}
+                  whileHover={{ scale: 1.02 }}
+                  className={cn(
+                    "relative rounded-lg sm:rounded-xl overflow-hidden p-[1px]",
+                    "bg-gradient-to-br",
+                    stat.color
+                  )}
+                >
+                  <div className="relative bg-gray-900/90 rounded-lg sm:rounded-xl p-1.5 sm:p-2">
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 text-[10px] sm:text-xs truncate",
+                        stat.textColor
+                      )}
+                    >
+                      <stat.icon className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{stat.label}</span>
+                    </div>
+                    <div className="font-bold text-[11px] sm:text-sm text-white mt-0.5 sm:mt-1 truncate">
+                      {stat.value}
+                    </div>
+                  </div>
+                </motion.button>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
-  // Add categories array
-  const categories = ["All", "Fintech", "Consumer", "SaaS", "EdTech"];
+  // First, let's define better category data with custom colors and icons
+  const categories = [
+    {
+      name: "All",
+      icon: Layout,
+      colors: {
+        from: "from-blue-600/20",
+        to: "to-purple-600/20",
+        iconColor: "text-blue-400",
+        activeBg: "from-blue-600/10 via-purple-600/10 to-purple-600/10",
+        activeText: "text-blue-300",
+        border: "border-blue-500/20",
+      },
+    },
+    {
+      name: "Fintech",
+      icon: Banknote,
+      colors: {
+        from: "from-emerald-600/20",
+        to: "to-teal-600/20",
+        iconColor: "text-emerald-400",
+        activeBg: "from-emerald-600/10 via-teal-600/10 to-teal-600/10",
+        activeText: "text-emerald-300",
+        border: "border-emerald-500/20",
+      },
+    },
+    {
+      name: "Consumer",
+      icon: ShoppingBag,
+      colors: {
+        from: "from-orange-600/20",
+        to: "to-rose-600/20",
+        iconColor: "text-orange-400",
+        activeBg: "from-orange-600/10 via-rose-600/10 to-rose-600/10",
+        activeText: "text-orange-300",
+        border: "border-orange-500/20",
+      },
+    },
+    {
+      name: "SaaS",
+      icon: Cloud,
+      colors: {
+        from: "from-indigo-600/20",
+        to: "to-violet-600/20",
+        iconColor: "text-indigo-400",
+        activeBg: "from-indigo-600/10 via-violet-600/10 to-violet-600/10",
+        activeText: "text-indigo-300",
+        border: "border-indigo-500/20",
+      },
+    },
+    {
+      name: "EdTech",
+      icon: GraduationCap,
+      colors: {
+        from: "from-pink-600/20",
+        to: "to-rose-600/20",
+        iconColor: "text-pink-400",
+        activeBg: "from-pink-600/10 via-rose-600/10 to-rose-600/10",
+        activeText: "text-pink-300",
+        border: "border-pink-500/20",
+      },
+    },
+  ];
+
+  // Update the category navigation section
+  <div className="mb-6">
+    <Tabs
+      defaultValue="all"
+      className="w-full"
+      onValueChange={(value) => setActiveCategory(value)}
+    >
+      <TabsList className="w-full max-w-2xl mx-auto grid grid-cols-5 bg-gray-900/50 backdrop-blur-xl p-2 rounded-2xl border border-gray-800/50 gap-2">
+        {categories.map((category) => {
+          const isActive = activeCategory === category.name.toLowerCase();
+          return (
+            <TabsTrigger
+              key={`category-${category.name.toLowerCase()}`}
+              value={category.name.toLowerCase()}
+              className={cn(
+                "relative overflow-hidden transition-all duration-300",
+                "rounded-xl py-3 px-1",
+                "hover:bg-gray-800/50",
+                isActive ? "bg-gradient-to-b" : "bg-transparent",
+                isActive && category.colors.from,
+                isActive && category.colors.to,
+                isActive ? category.colors.activeText : "text-gray-400"
+              )}
+            >
+              <div className="relative">
+                <motion.div
+                  initial={false}
+                  animate={{
+                    y: isActive ? 0 : 10,
+                    opacity: isActive ? 1 : 0.7,
+                  }}
+                  className="flex flex-col items-center gap-2"
+                >
+                  {/* Icon Container */}
+                  <div
+                    className={cn(
+                      "p-2 rounded-lg transition-colors duration-300",
+                      isActive ? "bg-gray-900/60" : "bg-transparent",
+                      category.colors.iconColor
+                    )}
+                  >
+                    <category.icon className="w-5 h-5" />
+                  </div>
+
+                  {/* Category Name */}
+                  <span
+                    className={cn(
+                      "text-sm font-medium transition-colors duration-300",
+                      isActive ? "text-white" : "text-gray-400"
+                    )}
+                  >
+                    {category.name}
+                  </span>
+                </motion.div>
+
+                {/* Active Indicator */}
+                {isActive && (
+                  <>
+                    {/* Glowing background effect */}
+                    <motion.div
+                      layoutId="categoryGlow"
+                      className={cn(
+                        "absolute inset-0 opacity-20 blur-xl",
+                        "bg-gradient-to-b",
+                        category.colors.from,
+                        category.colors.to
+                      )}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.6,
+                      }}
+                    />
+
+                    {/* Bottom border indicator */}
+                    <motion.div
+                      layoutId="categoryIndicator"
+                      className={cn(
+                        "absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5",
+                        "bg-gradient-to-r",
+                        category.colors.from,
+                        category.colors.to
+                      )}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.6,
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
+    </Tabs>
+  </div>;
 
   const captureAndShare = async () => {
     const summaryElement = document.getElementById("battle-summary");
@@ -330,11 +573,15 @@ export default function PlayGame() {
       const canvas = await html2canvas(summaryElement);
       const imageUrl = canvas.toDataURL("image/png");
 
-      // Create sharing text
+      // Get player's leaderboard position from local storage or default to a position
+      const playerPosition = localStorage.getItem("playerPosition") || "4"; // Default position if not found
+
+      // Create sharing text with leaderboard position
       const shareText = `🦄 I just ${
         playerScore > aiScore ? "won" : "played"
       } a game of Unicorn Battle!\n
 Score: ${playerScore * 100}${playerScore > aiScore ? " +50 bonus!" : ""}\n
+Currently #${playerPosition} on the leaderboard! 🏆\n
 Can you beat my score? 🎮\n
 Play now at [your-game-url]`;
 
@@ -368,112 +615,348 @@ Play now at [your-game-url]`;
     }
   };
 
+  // Add this floating counter component
+  const FloatingCounter = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-purple-900/90 to-pink-900/90 
+                 backdrop-blur-md rounded-full px-6 py-3 shadow-xl border border-purple-500/20"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex -space-x-2">
+          {selectedCards.map((card, index) => (
+            <motion.div
+              key={`card-${card.name}-${index}`}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 
+                       flex items-center justify-center text-white font-bold ring-2 ring-black"
+            >
+              {index + 1}
+            </motion.div>
+          ))}
+          {Array.from({ length: 4 - selectedCards.length }).map((_, index) => (
+            <div
+              key={`empty-${index}`}
+              className="w-8 h-8 rounded-full bg-gray-800/80 ring-2 ring-black"
+            />
+          ))}
+        </div>
+        <span className="text-sm font-medium">
+          {4 - selectedCards.length}{" "}
+          {4 - selectedCards.length === 1 ? "Card" : "Cards"} Left
+        </span>
+      </div>
+    </motion.div>
+  );
+
+  // Update the BattleCard component with a more engaging design
+  const BattleCard = ({
+    card,
+    isPlayer = true,
+  }: {
+    card: StartupCard;
+    isPlayer?: boolean;
+  }) => (
+    <motion.div
+      className={cn(
+        "relative h-full rounded-2xl overflow-hidden transition-all duration-300",
+        "group hover:scale-105",
+        battleResult === "win" &&
+          isPlayer &&
+          "ring-4 ring-green-500/50 shadow-[0_0_40px_rgba(34,197,94,0.4)]",
+        battleResult === "lose" &&
+          !isPlayer &&
+          "ring-4 ring-green-500/50 shadow-[0_0_40px_rgba(34,197,94,0.4)]",
+        battleResult === "lose" &&
+          isPlayer &&
+          "ring-4 ring-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]",
+        battleResult === "win" &&
+          !isPlayer &&
+          "ring-4 ring-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]"
+      )}
+    >
+      {/* Card Frame */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+        {/* Holographic Effect */}
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[1]"
+        />
+        <div
+          className="absolute inset-0 opacity-[0.02] group-hover:opacity-[0.04] 
+                      mix-blend-overlay z-[2] card-holographic pointer-events-none"
+        />
+
+        {/* Top Banner */}
+        <div
+          className="relative h-24 bg-gradient-to-br from-purple-600/90 to-blue-600/90 
+                      overflow-hidden p-3 z-[3]"
+        >
+          <div className="absolute inset-0 card-circuit-pattern opacity-20" />
+
+          {/* Company Name & Category */}
+          <div className="relative z-[4]">
+            <div className="flex items-start justify-between">
+              <h3 className="font-bold text-xl text-white drop-shadow-lg">
+                {isPlayer || battleAttribute ? card.name : "???"}
+              </h3>
+              <div
+                className="bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded-full
+                            border border-white/20 text-white text-xs font-medium"
+              >
+                {isPlayer || battleAttribute ? card.category : "???"}
+              </div>
+            </div>
+
+            {/* Startup Level */}
+            <div className="mt-2 flex items-center gap-1">
+              {Array.from({
+                length: Math.min(
+                  5,
+                  Math.ceil((card.revenue + card.valuation) / 4)
+                ),
+              }).map((_, i) => (
+                <motion.div
+                  key={`${card.name}-level-${i}`}
+                  initial={false}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{
+                    duration: 1,
+                    delay: i * 0.1,
+                    repeat: Infinity,
+                    repeatDelay: 2,
+                  }}
+                  className="w-2 h-2 rounded-full bg-white/80"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 z-[5]">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+            {[
+              {
+                key: "revenue",
+                label: "Revenue",
+                value: formatRevenue(card.revenue),
+                icon: TrendingUp,
+                color: "from-green-500 to-emerald-600",
+                textColor: "text-green-400",
+              },
+              {
+                key: "founded",
+                label: "Founded",
+                value: card.founded,
+                icon: Zap,
+                color: "from-yellow-500 to-orange-600",
+                textColor: "text-yellow-400",
+              },
+              {
+                key: "timeToUnicorn",
+                label: "Time to 🦄",
+                value: formatTimeToUnicorn(card.timeToUnicorn),
+                icon: Users,
+                color: "from-blue-500 to-cyan-600",
+                textColor: "text-blue-400",
+              },
+              {
+                key: "valuation",
+                label: "Valuation",
+                value: formatValuation(card.valuation),
+                icon: DollarSign,
+                color: "from-purple-500 to-pink-600",
+                textColor: "text-purple-400",
+              },
+            ].map((stat) => (
+              <div
+                key={`${card.name}-${stat.key}`}
+                onClick={() => {
+                  if (isPlayer && !battleAttribute) {
+                    handleAttributeSelect(stat.key);
+                  }
+                }}
+                className={cn(
+                  "relative rounded-lg sm:rounded-xl overflow-hidden p-[1px]",
+                  "bg-gradient-to-br",
+                  stat.color,
+                  isPlayer &&
+                    !battleAttribute &&
+                    "hover:ring-2 hover:ring-white/20 cursor-pointer",
+                  battleAttribute === stat.key && "ring-2 ring-white/50",
+                  (!isPlayer || battleAttribute) &&
+                    "opacity-90 pointer-events-none",
+                  "z-[6]" // Ensure stats are clickable
+                )}
+              >
+                <div className="relative bg-gray-900/90 rounded-lg sm:rounded-xl p-1.5 sm:p-2">
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 text-[10px] sm:text-xs truncate",
+                      stat.textColor
+                    )}
+                  >
+                    <stat.icon className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{stat.label}</span>
+                  </div>
+                  <div className="font-bold text-[11px] sm:text-sm text-white mt-0.5 sm:mt-1 truncate">
+                    {!isPlayer && !battleAttribute ? "???" : stat.value}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Header */}
-      <header className="p-4 flex justify-between items-center">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
-          <ArrowLeft className="h-6 w-6" />
-        </Button>
-
-        <h1 className="text-xl font-bold">Unicorn Battle</h1>
-
-        <div className="w-6"></div>
+      {/* Streamlined Header */}
+      <header className="sticky top-0 z-40 px-3 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800/50">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-bold">Unicorn Battle</h1>
+          <div className="w-5" />
+        </div>
       </header>
 
-      {/* Game Content */}
-      <main className="flex-grow p-4 flex flex-col">
+      {/* Optimized Game Content */}
+      <main className="flex-grow px-3 py-2">
         {gameState === "select" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col h-full"
+            className="flex flex-col space-y-3 max-w-7xl mx-auto"
           >
-            <div className="flex flex-col space-y-4 mb-6">
-              <h2 className="text-xl font-bold">Select 4 Cards for Battle</h2>
+            {/* Compact Strategy Tips */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <InfoIcon className="w-4 h-4 text-blue-400" />
+                </div>
+                <div className="flex-1 text-sm">
+                  <span className="text-blue-400 font-medium">Pro Tips: </span>
+                  <span className="text-gray-400">
+                    Balance attributes • Check synergies • Higher isn't always
+                    better
+                  </span>
+                </div>
+              </div>
+            </motion.div>
 
-              {/* Category Tabs */}
+            {/* Streamlined Category Navigation */}
+            <div className="overflow-x-auto -mx-3 px-3">
               <Tabs
                 defaultValue="all"
                 className="w-full"
                 onValueChange={(value) => setActiveCategory(value)}
               >
-                <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
-                  {categories.map((category) => (
-                    <TabsTrigger
-                      key={category.toLowerCase()}
-                      value={category.toLowerCase()}
-                      className="text-sm"
-                    >
-                      {category}
-                    </TabsTrigger>
-                  ))}
+                <TabsList className="inline-flex w-auto min-w-full sm:w-full bg-gray-900/50 p-1 rounded-xl gap-1">
+                  {categories.map((category) => {
+                    const isActive =
+                      activeCategory === category.name.toLowerCase();
+                    return (
+                      <TabsTrigger
+                        key={`category-${category.name.toLowerCase()}`}
+                        value={category.name.toLowerCase()}
+                        className={cn(
+                          "flex-1 min-w-[80px] relative py-2 px-3 rounded-lg transition-all duration-300",
+                          isActive ? "bg-gradient-to-b" : "bg-transparent",
+                          isActive && category.colors.from,
+                          isActive && category.colors.to
+                        )}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <category.icon
+                            className={cn(
+                              "w-4 h-4 transition-colors",
+                              isActive
+                                ? category.colors.iconColor
+                                : "text-gray-400"
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "text-sm font-medium",
+                              isActive ? "text-white" : "text-gray-400"
+                            )}
+                          >
+                            {category.name}
+                          </span>
+                        </div>
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeCategory"
+                            className="absolute inset-0 rounded-lg bg-gradient-to-b opacity-10"
+                            transition={{ type: "spring", bounce: 0.2 }}
+                          />
+                        )}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
               </Tabs>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+            {/* Optimized Card Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-16">
               {playerDeck
                 .filter(
                   (card) =>
                     activeCategory === "all" ||
                     card.category.toLowerCase() === activeCategory
                 )
-                .map((card, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={cn(
-                      "relative h-48 rounded-lg overflow-hidden cursor-pointer transition-all duration-300",
-                      selectedCards.includes(card) && "ring-4 ring-yellow-500"
-                    )}
-                    onClick={() => handleCardSelect(card)}
-                  >
-                    {/* Selection Number */}
-                    {selectedCards.includes(card) && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                                  bg-yellow-500 text-black rounded-full w-12 h-12 
-                                  flex items-center justify-center font-bold text-xl
-                                  shadow-lg z-20"
-                      >
-                        {selectedCards.indexOf(card) + 1}
-                      </motion.div>
-                    )}
-
-                    {/* Card Content */}
-                    <div
-                      className={cn(
-                        "relative w-full h-full transition-opacity duration-300",
-                        selectedCards.includes(card) && "opacity-80"
-                      )}
-                    >
-                      {renderCardFront(card, true, true)}
-                    </div>
-                  </motion.div>
+                .map((card) => (
+                  <CardComponent
+                    key={`card-${card.name}`}
+                    card={card}
+                    isSelected={selectedCards.includes(card)}
+                    onSelect={() => handleCardSelect(card)}
+                  />
                 ))}
             </div>
 
-            {/* Selection Stats */}
-            <div className="mt-auto">
-              <Button
-                className={cn(
-                  "w-full py-6 text-lg font-bold rounded-lg transition-all duration-300",
-                  selectedCards.length === 4
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                    : "bg-gray-700"
-                )}
-                disabled={selectedCards.length !== 4}
-                onClick={startGame}
-              >
-                {selectedCards.length === 4
-                  ? "Start Battle"
-                  : `Select ${4 - selectedCards.length} More Cards`}
-              </Button>
-            </div>
+            {/* Floating Elements */}
+            <FloatingCounter />
+
+            {/* Start Battle Button */}
+            <AnimatePresence>
+              {selectedCards.length === 4 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  className="fixed bottom-4 left-0 right-0 px-3 z-50"
+                >
+                  <Button
+                    className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r 
+                             from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600
+                             shadow-lg shadow-purple-500/20"
+                    onClick={startGame}
+                  >
+                    <motion.div
+                      className="flex items-center justify-center gap-2"
+                      animate={{ scale: [1, 1.03, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Swords className="w-5 h-5" />
+                      <span>Start Battle</span>
+                    </motion.div>
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 
@@ -481,9 +964,9 @@ Play now at [your-game-url]`;
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col h-full"
+            className="flex flex-col space-y-4"
           >
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center">
               <div className="text-lg font-bold">Round {currentRound}/4</div>
               <div className="flex items-center space-x-4">
                 <div className="text-blue-400">You: {playerScore}</div>
@@ -501,42 +984,41 @@ Play now at [your-game-url]`;
               </div>
             )}
 
-            <div className="flex flex-col space-y-4 mb-4">
-              <AnimatePresence>
-                {battleResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className={cn(
-                      "text-center py-2 rounded-lg font-bold",
-                      battleResult === "win" && "bg-green-600",
-                      battleResult === "lose" && "bg-red-600",
-                      battleResult === "draw" && "bg-yellow-600"
-                    )}
-                  >
-                    {battleResult === "win" && "You win this round!"}
-                    {battleResult === "lose" && "AI wins this round!"}
-                    {battleResult === "draw" && "It's a draw!"}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <AnimatePresence>
+              {battleResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className={cn(
+                    "text-center py-2 rounded-lg font-bold",
+                    battleResult === "win" && "bg-green-600",
+                    battleResult === "lose" && "bg-red-600",
+                    battleResult === "draw" && "bg-yellow-600"
+                  )}
+                >
+                  {battleResult === "win" && "You win this round!"}
+                  {battleResult === "lose" && "AI wins this round!"}
+                  {battleResult === "draw" && "It's a draw!"}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="h-64">
-                  {renderCardFront(selectedCards[currentRound - 1], true)}
-                </div>
-                <div className="h-64">
-                  {renderCardFront(aiDeck[currentRound - 1], false)}
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-64">
+                <BattleCard
+                  card={selectedCards[currentRound - 1]}
+                  isPlayer={true}
+                />
+              </div>
+              <div className="h-64">
+                <BattleCard card={aiDeck[currentRound - 1]} isPlayer={false} />
               </div>
             </div>
 
             {!battleAttribute && (
-              <div className="mt-auto">
-                <div className="text-center mb-2">
-                  Tap an attribute on your card to battle
-                </div>
+              <div className="mt-auto text-center text-sm text-gray-400">
+                Tap an attribute on your card to battle
               </div>
             )}
           </motion.div>
@@ -648,7 +1130,9 @@ Play now at [your-game-url]`;
               <div className="p-4 md:p-6 grid gap-3 md:gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <motion.div
-                    key={i}
+                    key={`${i}-${roundAttributes[i]}-${
+                      selectedCards[i][roundAttributes[i]]
+                    }-${aiDeck[i][roundAttributes[i]]}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 + i * 0.1 }}
@@ -760,45 +1244,69 @@ Play now at [your-game-url]`;
             </Card>
 
             {/* Action Buttons - Desktop optimized */}
-            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-6">
+            <div className="grid grid-cols-3 gap-4 w-full max-w-2xl mx-auto mt-6">
               <Button
                 variant="outline"
-                className="relative group py-4 md:py-6 text-lg"
+                className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
                 onClick={async () => {
                   const shareData = await captureAndShare();
                   if (shareData) {
-                    window.open(shareData.twitterUrl, "_blank");
                     shareData.downloadLink.click();
                   }
                 }}
               >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity"
-                  animate={{ x: [-100, 100] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
                 <div className="relative flex items-center justify-center gap-3">
-                  <Twitter className="h-5 w-5 md:h-6 md:w-6" />
-                  <span className="font-medium">Share Result</span>
+                  <Download className="h-5 w-5 md:h-6 md:w-6" />
+                  <span className="font-medium">Download</span>
                 </div>
               </Button>
 
               <Button
-                className="relative py-4 md:py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                onClick={resetGame}
+                variant="outline"
+                className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
+                onClick={async () => {
+                  const shareData = await captureAndShare();
+                  if (shareData) {
+                    window.open(shareData.twitterUrl, "_blank");
+                  }
+                }}
               >
                 <div className="relative flex items-center justify-center gap-3">
-                  <span className="font-medium">Play Again</span>
-                  <motion.span
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="text-xl"
-                  >
-                    →
-                  </motion.span>
+                  <Share className="h-5 w-5 md:h-6 md:w-6" />
+                  <span className="font-medium">Share</span>
+                </div>
+              </Button>
+
+              <Button
+                className="col-span-1 py-4 md:py-6 text-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
+                onClick={resetGame}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <Swords className="h-5 w-5 md:h-6 md:w-6" />
+                  <span>Play Again</span>
                 </div>
               </Button>
             </div>
+
+            {/* Share Prompt with enhanced message */}
+            <AnimatePresence>
+              {showSharePrompt && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg"
+                >
+                  <div className="text-center">
+                    <div className="font-bold mb-2">Share your victory!</div>
+                    <div className="text-sm text-gray-400">
+                      Battle summary and leaderboard position captured!
+                      Challenge your friends to beat your score!
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </main>

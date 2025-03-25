@@ -257,7 +257,7 @@ export default function Home() {
                   </Button>
                 </motion.div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* <div className="grid grid-cols-2 gap-4">
                   {[
                     {
                       title: "Collection",
@@ -289,7 +289,7 @@ export default function Home() {
                       </Button>
                     </motion.div>
                   ))}
-                </div>
+                </div> */}
               </motion.div>
 
               {/* Feature Cards */}
