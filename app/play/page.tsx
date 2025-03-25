@@ -42,6 +42,7 @@ import {
 } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import html2canvas from 'html2canvas';
 
 // First, let's add proper type definitions at the top of the file
 type StartupCard = {
@@ -564,40 +565,43 @@ export default function PlayGame() {
   </div>;
 
   const captureAndShare = async () => {
-    const summaryElement = document.getElementById("battle-summary");
-    if (!summaryElement) return;
+    const battleSummary = document.getElementById('battle-summary');
+    
+    if (!battleSummary) return null;
 
     try {
-      // Dynamic import of html2canvas
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(summaryElement);
-      const imageUrl = canvas.toDataURL("image/png");
+      const canvas = await html2canvas(battleSummary, {
+        backgroundColor: '#111827', // Dark background matching the card
+        scale: 2, // Higher quality
+      });
 
-      // Get player's leaderboard position from local storage or default to a position
-      const playerPosition = localStorage.getItem("playerPosition") || "4"; // Default position if not found
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!);
+        }, 'image/png');
+      });
 
-      // Create sharing text with leaderboard position
-      const shareText = `🦄 I just ${
-        playerScore > aiScore ? "won" : "played"
-      } a game of Unicorn Battle!\n
-Score: ${playerScore * 100}${playerScore > aiScore ? " +50 bonus!" : ""}\n
-Currently #${playerPosition} on the leaderboard! 🏆\n
-Can you beat my score? 🎮\n
-Play now at [your-game-url]`;
+      // Create sharing data
+      const file = new File([blob], 'battle-summary.png', { type: 'image/png' });
+      
+      // Create object URL for download
+      const downloadUrl = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = downloadUrl;
+      downloadLink.download = 'startup-battle-summary.png';
 
-      // For Twitter
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-        shareText
-      )}`;
+      // Create Twitter share URL
+      const twitterText = encodeURIComponent('Check out my Startup Card Battle results! Can you beat my score? 🎮✨ #StartupCardBattle');
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${twitterText}`;
 
-      // Create temporary link for image download
-      const downloadLink = document.createElement("a");
-      downloadLink.href = imageUrl;
-      downloadLink.download = "unicorn-battle-result.png";
-
-      return { imageUrl, twitterUrl, downloadLink };
+      return {
+        file,
+        downloadLink,
+        twitterUrl,
+      };
     } catch (error) {
-      console.error("Error capturing result:", error);
+      console.error('Error capturing battle summary:', error);
       return null;
     }
   };
@@ -813,6 +817,24 @@ Play now at [your-game-url]`;
       </div>
     </motion.div>
   );
+
+  // Add this function before the PlayGame component
+  const shareViaMobileAPI = async (file: File) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'Startup Card Battle Results',
+          text: 'Check out my Startup Card Battle results! Can you beat my score? 🎮✨',
+        });
+        return true;
+      } catch (error) {
+        console.error('Error sharing:', error);
+        return false;
+      }
+    }
+    return false;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
@@ -1267,7 +1289,10 @@ Play now at [your-game-url]`;
                 onClick={async () => {
                   const shareData = await captureAndShare();
                   if (shareData) {
-                    window.open(shareData.twitterUrl, "_blank");
+                    const shared = await shareViaMobileAPI(shareData.file);
+                    if (!shared) {
+                      window.open(shareData.twitterUrl, '_blank');
+                    }
                   }
                 }}
               >
