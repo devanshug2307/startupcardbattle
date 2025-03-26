@@ -24,6 +24,7 @@ import {
   Swords,
   Shield,
   InfoIcon,
+  Calendar,
 } from "lucide-react";
 import {
   Card,
@@ -52,6 +53,7 @@ type StartupCard = {
   revenue: number;
   timeToUnicorn: number;
   valuation: number;
+  [key: string]: string | number; // Add index signature to allow string indexing
 };
 
 export default function PlayGame() {
@@ -130,6 +132,7 @@ export default function PlayGame() {
   };
 
   const handleAttributeSelect = (attribute: string) => {
+    console.log("Selected attribute:", attribute); // Add this for debugging
     setBattleAttribute(attribute);
     setIsTimerActive(false);
 
@@ -191,6 +194,17 @@ export default function PlayGame() {
     setAiDeck(shuffled.slice(10, 20));
   };
 
+  // Add this function to handle moving to the next round
+  const handleNextRound = () => {
+    if (currentRound < 4) {
+      setCurrentRound(currentRound + 1);
+      setBattleAttribute(null);
+      setBattleResult(null);
+    } else {
+      setGameState("result");
+    }
+  };
+
   const generateShareText = () => {
     // Get the most valuable startup from player's selected cards
     const bestStartup = selectedCards.reduce((prev, curr) =>
@@ -202,7 +216,7 @@ export default function PlayGame() {
       playerScore > aiScore ? "🏆" : playerScore === aiScore ? "🤝" : "💪";
     const header =
       `Epic battle with ${bestStartup.name} ${resultEmoji}\n` +
-      `${"⭐".repeat(playerScore)}${" " + playerScore}-${aiScore} • ${
+      `${"⭐".repeat(playerScore)}-${aiScore} • ${
         selectedCards.length
       } Unicorns\n\n`;
 
@@ -292,7 +306,15 @@ export default function PlayGame() {
   };
 
   // Update the CardComponent with the new design
-  const CardComponent = ({ card, isSelected, onSelect }) => (
+  const CardComponent = ({
+    card,
+    isSelected,
+    onSelect,
+  }: {
+    card: StartupCard;
+    isSelected: boolean;
+    onSelect: () => void;
+  }) => (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.9 }}
@@ -640,47 +662,6 @@ export default function PlayGame() {
     </Tabs>
   </div>;
 
-  // const captureAndShare = async () => {
-  //   const battleSummary = document.getElementById('battle-summary');
-
-  //   if (!battleSummary) return null;
-
-  //   try {
-  //     const canvas = await html2canvas(battleSummary, {
-  //       backgroundColor: '#111827', // Dark background matching the card
-  //       scale: 2, // Higher quality
-  //     });
-
-  //     // Convert to blob
-  //     const blob = await new Promise<Blob>((resolve) => {
-  //       canvas.toBlob((blob) => {
-  //         resolve(blob!);
-  //       }, 'image/png');
-  //     });
-
-  //     // Create sharing data
-  //     const file = new File([blob], 'battle-summary.png', { type: 'image/png' });
-
-  //     // Create object URL for download
-  //     const downloadUrl = URL.createObjectURL(blob);
-  //     const downloadLink = document.createElement('a');
-  //     downloadLink.href = downloadUrl;
-  //     downloadLink.download = 'startup-battle-summary.png';
-
-  //     // Create Twitter share URL
-  //     const twitterText = encodeURIComponent('Check out my Startup Card Battle results! Can you beat my score? 🎮✨ #StartupCardBattle');
-  //     const twitterUrl = `https://twitter.com/intent/tweet?text=${twitterText}`;
-
-  //     return {
-  //       file,
-  //       downloadLink,
-  //       twitterUrl,
-  //     };
-  //   } catch (error) {
-  //     console.error('Error capturing battle summary:', error);
-  //     return null;
-  //   }
-  // };
   const captureAndShare = async () => {
     const battleSummary = document.getElementById("battle-summary");
 
@@ -902,22 +883,22 @@ Can you beat my score? #StartupCardBattle`;
                 color: "from-purple-500 to-pink-600",
                 textColor: "text-purple-400",
               },
-            ].map((stat) => (
+            ].map((attr) => (
               <div
-                key={`${card.name}-${stat.key}`}
+                key={`${card.name}-${attr.key}`}
                 onClick={() => {
                   if (isPlayer && !battleAttribute) {
-                    handleAttributeSelect(stat.key);
+                    handleAttributeSelect(attr.key);
                   }
                 }}
                 className={cn(
                   "relative rounded-lg sm:rounded-xl overflow-hidden p-[1px]",
                   "bg-gradient-to-br",
-                  stat.color,
+                  attr.color,
                   isPlayer &&
                     !battleAttribute &&
                     "hover:ring-2 hover:ring-white/20 cursor-pointer",
-                  battleAttribute === stat.key && "ring-2 ring-white/50",
+                  battleAttribute === attr.key && "ring-2 ring-white/50",
                   (!isPlayer || battleAttribute) &&
                     "opacity-90 pointer-events-none",
                   "z-[6]" // Ensure stats are clickable
@@ -927,14 +908,14 @@ Can you beat my score? #StartupCardBattle`;
                   <div
                     className={cn(
                       "flex items-center gap-1 text-[10px] sm:text-xs truncate",
-                      stat.textColor
+                      attr.textColor
                     )}
                   >
-                    <stat.icon className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{stat.label}</span>
+                    <attr.icon className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{attr.label}</span>
                   </div>
                   <div className="font-bold text-[11px] sm:text-sm text-white mt-0.5 sm:mt-1 truncate">
-                    {!isPlayer && !battleAttribute ? "???" : stat.value}
+                    {!isPlayer && !battleAttribute ? "???" : attr.value}
                   </div>
                 </div>
               </div>
@@ -946,22 +927,6 @@ Can you beat my score? #StartupCardBattle`;
   );
 
   // Add this function before the PlayGame component
-  // const shareViaMobileAPI = async (file: File) => {
-  //   if (navigator.share) {
-  //     try {
-  //       await navigator.share({
-  //         files: [file],
-  //         title: "Startup Card Battle Results",
-  //         text: "Check out my Startup Card Battle results! Can you beat my score? 🎮✨",
-  //       });
-  //       return true;
-  //     } catch (error) {
-  //       console.error("Error sharing:", error);
-  //       return false;
-  //     }
-  //   }
-  //   return false;
-  // };
   const shareViaMobileAPI = async (file: File, text: string) => {
     if (navigator.share) {
       try {
@@ -1126,65 +1091,497 @@ Can you beat my score? #StartupCardBattle`;
 
         {gameState === "battle" && (
           <motion.div
+            className="w-full max-w-4xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col space-y-4"
+            exit={{ opacity: 0 }}
           >
-            <div className="flex justify-between items-center">
-              <div className="text-lg font-bold">Round {currentRound}/4</div>
-              <div className="flex items-center space-x-4">
-                <div className="text-blue-400">You: {playerScore}</div>
-                <div className="text-red-400">AI: {aiScore}</div>
-              </div>
-            </div>
+            {/* Battle Arena */}
+            <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] rounded-xl overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border border-purple-500/20">
+              {/* Animated background effects */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#ffffff08_1px,transparent_1px)] bg-[size:16px_16px] opacity-50" />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(130,71,229,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(130,71,229,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
 
-            {!battleAttribute && (
-              <div className="mb-4">
-                <div className="flex justify-between mb-1">
-                  <span>Select an attribute</span>
-                  <span>{timeLeft}s</span>
+              {/* Battle status bar */}
+              <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-center bg-gray-900/80 backdrop-blur-sm border-b border-purple-500/20 z-10">
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-medium text-gray-300">
+                    Round {currentRound}/4
+                  </div>
+                  <div className="h-2 w-24 bg-gray-800 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
+                      style={{ width: `${(currentRound / 4) * 100}%` }}
+                    />
+                  </div>
                 </div>
-                <Progress value={(timeLeft / 15) * 100} className="h-2" />
-              </div>
-            )}
 
-            <AnimatePresence>
-              {battleResult && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={cn(
-                    "text-center py-2 rounded-lg font-bold",
-                    battleResult === "win" && "bg-green-600",
-                    battleResult === "lose" && "bg-red-600",
-                    battleResult === "draw" && "bg-yellow-600"
-                  )}
-                >
-                  {battleResult === "win" && "You win this round!"}
-                  {battleResult === "lose" && "AI wins this round!"}
-                  {battleResult === "draw" && "It's a draw!"}
-                </motion.div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center">
+                    <div className="text-sm font-medium text-blue-400">
+                      You: {playerScore}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500">vs</div>
+                  <div className="flex items-center">
+                    <div className="text-sm font-medium text-red-400">
+                      AI: {aiScore}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timer */}
+              {!battleAttribute && (
+                <div className="absolute top-14 left-1/2 -translate-x-1/2 z-10">
+                  <div className="flex flex-col items-center">
+                    <div className="text-sm text-gray-400 mb-1">
+                      Choose an attribute
+                    </div>
+                    <div className="w-16 h-16 rounded-full bg-gray-800/80 border border-purple-500/30 flex items-center justify-center">
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <span className="text-2xl font-bold text-purple-400">
+                          {timeLeft}
+                        </span>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="h-64">
-                <BattleCard
-                  card={selectedCards[currentRound - 1]}
-                  isPlayer={true}
-                />
+              {/* Battle area */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="w-full flex flex-col md:flex-row items-center justify-between px-4 md:px-12 gap-6 md:gap-10">
+                  {/* Player Card */}
+                  <motion.div
+                    className="w-full md:w-2/5"
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="relative">
+                      {/* Player label */}
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-500/80 px-3 py-1 rounded-full text-xs font-medium text-white z-10">
+                        YOU
+                      </div>
+
+                      {/* Card container */}
+                      <div className="relative w-full aspect-[3/4] max-w-[220px] mx-auto">
+                        {/* Card background with retro design */}
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-900/90 to-blue-950/90 border-2 border-blue-500/50 overflow-hidden card-shine">
+                          <div className="absolute inset-0 card-circuit-pattern opacity-10" />
+
+                          {/* Card content */}
+                          <div className="relative h-full flex flex-col p-3">
+                            {/* Card header */}
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                                {selectedCards[currentRound - 1].category}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 text-blue-400" />
+                                <span className="text-xs text-gray-300">
+                                  {selectedCards[currentRound - 1].founded}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Card name */}
+                            <div className="text-center my-2">
+                              <h3 className="text-lg font-bold text-white">
+                                {selectedCards[currentRound - 1].name}
+                              </h3>
+                            </div>
+
+                            {/* Card attributes */}
+                            <div className="flex-grow grid grid-cols-2 gap-2 mt-2">
+                              {[
+                                {
+                                  name: "Valuation",
+                                  value: formatValuation(
+                                    selectedCards[currentRound - 1].valuation
+                                  ),
+                                  icon: DollarSign,
+                                  color: "purple",
+                                  key: "valuation",
+                                },
+                                {
+                                  name: "Revenue",
+                                  value: formatRevenue(
+                                    selectedCards[currentRound - 1].revenue
+                                  ),
+                                  icon: TrendingUp,
+                                  color: "green",
+                                  key: "revenue",
+                                },
+                                {
+                                  name: "Time to Unicorn",
+                                  value: formatTimeToUnicorn(
+                                    selectedCards[currentRound - 1]
+                                      .timeToUnicorn
+                                  ),
+                                  icon: Zap,
+                                  color: "yellow",
+                                  key: "timeToUnicorn",
+                                },
+                                {
+                                  name: "Founded",
+                                  value:
+                                    selectedCards[
+                                      currentRound - 1
+                                    ].founded.toString(),
+                                  icon: Calendar,
+                                  color: "blue",
+                                  key: "founded",
+                                },
+                              ].map((attr) => (
+                                <motion.div
+                                  key={attr.key}
+                                  className={cn(
+                                    "rounded-lg p-2 flex flex-col items-center justify-center cursor-pointer",
+                                    !battleAttribute
+                                      ? [
+                                          attr.color === "purple" &&
+                                            "bg-purple-500/20 hover:bg-purple-500/40",
+                                          attr.color === "green" &&
+                                            "bg-green-500/20 hover:bg-green-500/40",
+                                          attr.color === "yellow" &&
+                                            "bg-yellow-500/20 hover:bg-yellow-500/40",
+                                          attr.color === "blue" &&
+                                            "bg-blue-500/20 hover:bg-blue-500/40",
+                                        ]
+                                      : battleAttribute === attr.key
+                                      ? [
+                                          attr.color === "purple" &&
+                                            "bg-purple-500/50 ring-2 ring-purple-400",
+                                          attr.color === "green" &&
+                                            "bg-green-500/50 ring-2 ring-green-400",
+                                          attr.color === "yellow" &&
+                                            "bg-yellow-500/50 ring-2 ring-yellow-400",
+                                          attr.color === "blue" &&
+                                            "bg-blue-500/50 ring-2 ring-blue-400",
+                                        ]
+                                      : "bg-gray-500/10 opacity-50"
+                                  )}
+                                  onClick={() =>
+                                    !battleAttribute &&
+                                    handleAttributeSelect(attr.key)
+                                  }
+                                  whileHover={
+                                    !battleAttribute ? { scale: 1.05 } : {}
+                                  }
+                                  whileTap={
+                                    !battleAttribute ? { scale: 0.95 } : {}
+                                  }
+                                >
+                                  <attr.icon
+                                    className={cn(
+                                      "h-4 w-4 mb-1",
+                                      attr.color === "purple" &&
+                                        "text-purple-400",
+                                      attr.color === "green" &&
+                                        "text-green-400",
+                                      attr.color === "yellow" &&
+                                        "text-yellow-400",
+                                      attr.color === "blue" && "text-blue-400"
+                                    )}
+                                  />
+                                  <div className="text-[10px] text-gray-400">
+                                    {attr.name}
+                                  </div>
+                                  <div className="text-xs font-semibold text-white">
+                                    {attr.value}
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* AI Card */}
+                  <motion.div
+                    className="w-full md:w-2/5"
+                    initial={{ x: 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="relative">
+                      {/* AI label */}
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500/80 px-3 py-1 rounded-full text-xs font-medium text-white z-10">
+                        AI
+                      </div>
+
+                      {/* Card container */}
+                      <div className="relative w-full aspect-[3/4] max-w-[220px] mx-auto">
+                        {/* Card background with retro design */}
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-900/90 to-red-950/90 border-2 border-red-500/50 overflow-hidden card-shine">
+                          <div className="absolute inset-0 card-circuit-pattern opacity-10" />
+
+                          {/* Card content */}
+                          <div className="relative h-full flex flex-col p-3">
+                            {/* Card header */}
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="text-xs font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300">
+                                {aiDeck[currentRound - 1].category}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 text-red-400" />
+                                <span className="text-xs text-gray-300">
+                                  {battleAttribute
+                                    ? aiDeck[currentRound - 1].founded
+                                    : "?"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Card name */}
+                            <div className="text-center my-2">
+                              <h3 className="text-lg font-bold text-white">
+                                {aiDeck[currentRound - 1].name}
+                              </h3>
+                            </div>
+
+                            {/* Card attributes - hidden until revealed */}
+                            <div className="flex-grow grid grid-cols-2 gap-2 mt-2">
+                              {[
+                                {
+                                  name: "Valuation",
+                                  value: formatValuation(
+                                    aiDeck[currentRound - 1].valuation
+                                  ),
+                                  icon: DollarSign,
+                                  color: "purple",
+                                  key: "valuation",
+                                },
+                                {
+                                  name: "Revenue",
+                                  value: formatRevenue(
+                                    aiDeck[currentRound - 1].revenue
+                                  ),
+                                  icon: TrendingUp,
+                                  color: "green",
+                                  key: "revenue",
+                                },
+                                {
+                                  name: "Time to Unicorn",
+                                  value: formatTimeToUnicorn(
+                                    aiDeck[currentRound - 1].timeToUnicorn
+                                  ),
+                                  icon: Zap,
+                                  color: "yellow",
+                                  key: "timeToUnicorn",
+                                },
+                                {
+                                  name: "Founded",
+                                  value:
+                                    aiDeck[currentRound - 1].founded.toString(),
+                                  icon: Calendar,
+                                  color: "blue",
+                                  key: "founded",
+                                },
+                              ].map((attr) => (
+                                <motion.div
+                                  key={attr.key}
+                                  className={cn(
+                                    "rounded-lg p-2 flex flex-col items-center justify-center",
+                                    !battleAttribute
+                                      ? [
+                                          attr.color === "purple" &&
+                                            "bg-purple-500/20",
+                                          attr.color === "green" &&
+                                            "bg-green-500/20",
+                                          attr.color === "yellow" &&
+                                            "bg-yellow-500/20",
+                                          attr.color === "blue" &&
+                                            "bg-blue-500/20",
+                                        ]
+                                      : battleAttribute === attr.key
+                                      ? [
+                                          attr.color === "purple" &&
+                                            "bg-purple-500/50 ring-2 ring-purple-400",
+                                          attr.color === "green" &&
+                                            "bg-green-500/50 ring-2 ring-green-400",
+                                          attr.color === "yellow" &&
+                                            "bg-yellow-500/50 ring-2 ring-yellow-400",
+                                          attr.color === "blue" &&
+                                            "bg-blue-500/50 ring-2 ring-blue-400",
+                                        ]
+                                      : "bg-gray-500/10 opacity-50"
+                                  )}
+                                >
+                                  <attr.icon
+                                    className={cn(
+                                      "h-4 w-4 mb-1",
+                                      attr.color === "purple" &&
+                                        "text-purple-400",
+                                      attr.color === "green" &&
+                                        "text-green-400",
+                                      attr.color === "yellow" &&
+                                        "text-yellow-400",
+                                      attr.color === "blue" && "text-blue-400"
+                                    )}
+                                  />
+                                  <div className="text-[10px] text-gray-400">
+                                    {attr.name}
+                                  </div>
+                                  <div className="text-xs font-semibold text-white">
+                                    {battleAttribute ? attr.value : "?"}
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Battle result animation */}
+                <AnimatePresence>
+                  {battleResult && (
+                    <motion.div
+                      className="absolute inset-0 pointer-events-none z-20"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      {battleResult === "win" && (
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                        >
+                          <div className="relative">
+                            <motion.div
+                              className="absolute -inset-20 rounded-full bg-gradient-to-r from-green-500/0 via-green-500/20 to-green-500/0 blur-xl"
+                              animate={{
+                                scale: [1, 1.5, 1],
+                                opacity: [0, 0.5, 0],
+                              }}
+                              transition={{ duration: 1.5 }}
+                            />
+                            <motion.div
+                              className="text-6xl font-bold text-green-500"
+                              animate={{
+                                y: [0, -20, 0],
+                                scale: [1, 1.2, 1],
+                              }}
+                              transition={{ duration: 1 }}
+                            >
+                              WIN!
+                            </motion.div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {battleResult === "lose" && (
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                        >
+                          <div className="relative">
+                            <motion.div
+                              className="absolute -inset-20 rounded-full bg-gradient-to-r from-red-500/0 via-red-500/20 to-red-500/0 blur-xl"
+                              animate={{
+                                scale: [1, 1.5, 1],
+                                opacity: [0, 0.5, 0],
+                              }}
+                              transition={{ duration: 1.5 }}
+                            />
+                            <motion.div
+                              className="text-6xl font-bold text-red-500"
+                              animate={{
+                                y: [0, -20, 0],
+                                scale: [1, 1.2, 1],
+                              }}
+                              transition={{ duration: 1 }}
+                            >
+                              LOSE!
+                            </motion.div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {battleResult === "draw" && (
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                        >
+                          <div className="relative">
+                            <motion.div
+                              className="absolute -inset-20 rounded-full bg-gradient-to-r from-yellow-500/0 via-yellow-500/20 to-yellow-500/0 blur-xl"
+                              animate={{
+                                scale: [1, 1.5, 1],
+                                opacity: [0, 0.5, 0],
+                              }}
+                              transition={{ duration: 1.5 }}
+                            />
+                            <motion.div
+                              className="text-6xl font-bold text-yellow-500"
+                              animate={{
+                                y: [0, -20, 0],
+                                scale: [1, 1.2, 1],
+                              }}
+                              transition={{ duration: 1 }}
+                            >
+                              DRAW!
+                            </motion.div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              <div className="h-64">
-                <BattleCard card={aiDeck[currentRound - 1]} isPlayer={false} />
+
+              {/* Battle controls */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-900/80 backdrop-blur-sm border-t border-purple-500/20 z-10">
+                {battleAttribute ? (
+                  <motion.button
+                    className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleNextRound}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {currentRound < 4 ? "Next Round" : "See Results"}
+                  </motion.button>
+                ) : (
+                  <div className="text-center text-sm text-gray-400">
+                    Select an attribute to battle with
+                  </div>
+                )}
               </div>
             </div>
 
-            {!battleAttribute && (
-              <div className="mt-auto text-center text-sm text-gray-400">
-                Tap an attribute on your card to battle
+            {/* Battle tips */}
+            <div className="mt-4 p-3 rounded-lg bg-gray-900/50 border border-purple-500/20">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <InfoIcon className="h-4 w-4 text-purple-400" />
+                <span>
+                  <span className="text-purple-400 font-medium">
+                    Battle Tip:
+                  </span>{" "}
+                  For Valuation & Revenue, higher values win. For Founded Year &
+                  Time to Unicorn, lower values win.
+                </span>
               </div>
-            )}
+            </div>
           </motion.div>
         )}
 
@@ -1425,24 +1822,6 @@ Can you beat my score? #StartupCardBattle`;
                 </div>
               </Button>
 
-              {/* <Button
-                variant="outline"
-                className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
-                onClick={async () => {
-                  const shareData = await captureAndShare();
-                  if (shareData) {
-                    const shared = await shareViaMobileAPI(shareData.file);
-                    if (!shared) {
-                      window.open(shareData.twitterUrl, "_blank");
-                    }
-                  }
-                }}
-              >
-                <div className="relative flex items-center justify-center gap-3">
-                  <Share className="h-5 w-5 md:h-6 md:w-6" />
-                  <span className="font-medium">Share</span>
-                </div>
-              </Button> */}
               <Button
                 variant="outline"
                 className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
