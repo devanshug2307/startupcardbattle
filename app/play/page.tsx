@@ -81,8 +81,8 @@ export default function PlayGame() {
   useEffect(() => {
     // Shuffle and distribute cards
     const shuffled = [...startupData].sort(() => 0.5 - Math.random());
-    setPlayerDeck(shuffled.slice(0, 10));
-    setAiDeck(shuffled.slice(10, 20));
+    setPlayerDeck(shuffled.slice(0, 10) as StartupCard[]);
+    setAiDeck(shuffled.slice(10, 20) as StartupCard[]);
   }, []);
 
   // Timer for turn-based gameplay
@@ -190,8 +190,8 @@ export default function PlayGame() {
 
     // Reshuffle cards
     const shuffled = [...startupData].sort(() => 0.5 - Math.random());
-    setPlayerDeck(shuffled.slice(0, 10));
-    setAiDeck(shuffled.slice(10, 20));
+    setPlayerDeck(shuffled.slice(0, 10) as StartupCard[]);
+    setAiDeck(shuffled.slice(10, 20) as StartupCard[]);
   };
 
   // Add this function to handle moving to the next round
@@ -305,7 +305,7 @@ export default function PlayGame() {
     }
   };
 
-  // Update the CardComponent with the new design
+  // Update the CardComponent to fix the animation issue
   const CardComponent = ({
     card,
     isSelected,
@@ -316,9 +316,6 @@ export default function PlayGame() {
     onSelect: () => void;
   }) => (
     <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
       whileHover={{
         scale: 1.05,
         y: -8,
@@ -334,14 +331,20 @@ export default function PlayGame() {
           : "ring-2 ring-purple-900/50 hover:ring-purple-700/50 shadow-xl"
       )}
     >
-      {/* Holographic Effect */}
+      {/* Holographic Effect - Only show on hover or when selected */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+        className={cn(
+          "absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 transition-opacity duration-300 z-10",
+          isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        )}
       />
       <div
-        className="absolute inset-0 opacity-[0.02] group-hover:opacity-[0.04] 
-                    mix-blend-overlay z-10 card-holographic pointer-events-none"
+        className={cn(
+          "absolute inset-0 mix-blend-overlay z-10 card-holographic pointer-events-none transition-opacity duration-300",
+          isSelected
+            ? "opacity-[0.04]"
+            : "opacity-[0.02] group-hover:opacity-[0.04]"
+        )}
       />
 
       {/* Selection Overlay */}
@@ -412,16 +415,8 @@ export default function PlayGame() {
                     Math.ceil((card.revenue + card.valuation) / 4)
                   ),
                 }).map((_, i) => (
-                  <motion.div
+                  <div
                     key={`${card.name}-level-${i}`}
-                    initial={false}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{
-                      duration: 1,
-                      delay: i * 0.1,
-                      repeat: Infinity,
-                      repeatDelay: 2,
-                    }}
                     className="w-2 h-2 rounded-full bg-white/80"
                   />
                 ))}
@@ -714,14 +709,17 @@ Can you beat my score? #StartupCardBattle`;
     }
   };
 
-  const formatAttributeValue = (value: number, attribute: string) => {
+  const formatAttributeValue = (value: string | number, attribute: string) => {
+    // First convert to number if it's a string
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+
     switch (attribute) {
       case "revenue":
-        return formatRevenue(value);
+        return formatRevenue(numValue);
       case "timeToUnicorn":
-        return formatTimeToUnicorn(value);
+        return formatTimeToUnicorn(numValue);
       case "valuation":
-        return formatValuation(value);
+        return formatValuation(numValue);
       default:
         return value;
     }
@@ -830,16 +828,8 @@ Can you beat my score? #StartupCardBattle`;
                   Math.ceil((card.revenue + card.valuation) / 4)
                 ),
               }).map((_, i) => (
-                <motion.div
+                <div
                   key={`${card.name}-level-${i}`}
-                  initial={false}
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{
-                    duration: 1,
-                    delay: i * 0.1,
-                    repeat: Infinity,
-                    repeatDelay: 2,
-                  }}
                   className="w-2 h-2 rounded-full bg-white/80"
                 />
               ))}
@@ -871,7 +861,7 @@ Can you beat my score? #StartupCardBattle`;
                 key: "timeToUnicorn",
                 label: "Time to 🦄",
                 value: formatTimeToUnicorn(card.timeToUnicorn),
-                icon: Users,
+                icon: Zap,
                 color: "from-blue-500 to-cyan-600",
                 textColor: "text-blue-400",
               },
@@ -1678,7 +1668,7 @@ Can you beat my score? #StartupCardBattle`;
               </div>
             </motion.div>
 
-            {/* Battle Summary Card - Enhanced for desktop */}
+            {/* Battle Summary Card - Enhanced for desktop and mobile */}
             <Card
               id="battle-summary"
               className="w-full bg-gray-900/90 border-gray-800 overflow-hidden backdrop-blur-sm"
@@ -1688,7 +1678,7 @@ Can you beat my score? #StartupCardBattle`;
                   Battle Summary
                 </CardTitle>
               </CardHeader>
-              <div className="p-4 md:p-6 grid gap-3 md:gap-4">
+              <div className="p-3 md:p-6 grid gap-2 md:gap-4 max-h-[60vh] overflow-y-auto">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <motion.div
                     key={`${i}-${roundAttributes[i]}-${
@@ -1718,21 +1708,21 @@ Can you beat my score? #StartupCardBattle`;
                         : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
                     )}
                   >
-                    <div className="relative bg-gray-950/90 rounded-xl p-4 md:p-5">
-                      <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-4 md:gap-6">
+                    <div className="relative bg-gray-950/90 rounded-xl p-3 md:p-5">
+                      <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-6">
                         {/* Round Number */}
-                        <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400">
+                        <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
                           R{i + 1}
                         </div>
 
                         {/* Player Side */}
                         <div className="min-w-0">
-                          <div className="text-base md:text-lg font-medium text-gray-200 truncate mb-1">
+                          <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
                             {selectedCards[i].name}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 md:gap-2">
                             {renderAttributeIcon(roundAttributes[i])}
-                            <span className="text-xl md:text-2xl font-bold text-blue-400">
+                            <span className="text-base md:text-2xl font-bold text-blue-400">
                               {formatAttributeValue(
                                 selectedCards[i][roundAttributes[i]],
                                 roundAttributes[i]
@@ -1745,7 +1735,7 @@ Can you beat my score? #StartupCardBattle`;
                         <Badge
                           variant="outline"
                           className={cn(
-                            "px-3 py-1 text-sm md:text-base font-semibold",
+                            "px-2 py-0.5 md:px-3 md:py-1 text-xs md:text-base font-semibold",
                             roundAttributes[i] === "timeToUnicorn" ||
                               roundAttributes[i] === "founded"
                               ? selectedCards[i][roundAttributes[i]] <
@@ -1784,11 +1774,11 @@ Can you beat my score? #StartupCardBattle`;
 
                         {/* AI Side */}
                         <div className="min-w-0 text-right">
-                          <div className="text-base md:text-lg font-medium text-gray-200 truncate mb-1">
+                          <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
                             {aiDeck[i].name}
                           </div>
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-xl md:text-2xl font-bold text-red-400">
+                          <div className="flex items-center justify-end gap-1 md:gap-2">
+                            <span className="text-base md:text-2xl font-bold text-red-400">
                               {formatAttributeValue(
                                 aiDeck[i][roundAttributes[i]],
                                 roundAttributes[i]
@@ -1804,41 +1794,25 @@ Can you beat my score? #StartupCardBattle`;
               </div>
             </Card>
 
-            {/* Action Buttons - Desktop optimized */}
-            <div className="grid grid-cols-3 gap-4 w-full max-w-2xl mx-auto mt-6">
+            {/* Action Buttons - Fixed position for mobile */}
+            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-4 mb-16 px-4">
               <Button
                 variant="outline"
-                className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
-                onClick={async () => {
-                  const shareData = await captureAndShare();
-                  if (shareData) {
-                    shareData.downloadLink.click();
-                  }
-                }}
-              >
-                <div className="relative flex items-center justify-center gap-3">
-                  <Download className="h-5 w-5 md:h-6 md:w-6" />
-                  <span className="font-medium">Download</span>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="relative py-4 md:py-6 text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
+                className="relative py-3 md:py-6 text-base md:text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
                 onClick={shareResult}
               >
-                <div className="relative flex items-center justify-center gap-3">
-                  <Share2 className="h-5 w-5 md:h-6 md:w-6" />
+                <div className="relative flex items-center justify-center gap-2">
+                  <Share2 className="h-4 w-4 md:h-6 md:w-6" />
                   <span className="font-medium">Share</span>
                 </div>
               </Button>
 
               <Button
-                className="col-span-1 py-4 md:py-6 text-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
+                className="col-span-1 py-3 md:py-6 text-base md:text-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
                 onClick={resetGame}
               >
-                <div className="flex items-center justify-center gap-3">
-                  <Swords className="h-5 w-5 md:h-6 md:w-6" />
+                <div className="flex items-center justify-center gap-2">
+                  <Swords className="h-4 w-4 md:h-6 md:w-6" />
                   <span>Play Again</span>
                 </div>
               </Button>
