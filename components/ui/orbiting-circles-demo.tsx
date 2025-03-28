@@ -6,6 +6,7 @@ import {
   Rocket,
   HelpCircle,
   Clock,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -31,6 +32,7 @@ export function OrbitingCirclesDemo() {
   const [isCardFlipped, setIsCardFlipped] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [hasShownInitialHelp, setHasShownInitialHelp] = useState(false);
   const router = useRouter();
 
   // Check if mobile on mount and window resize
@@ -40,6 +42,18 @@ export function OrbitingCirclesDemo() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Add this effect to show help automatically
+  useEffect(() => {
+    if (!hasShownInitialHelp) {
+      const timer = setTimeout(() => {
+        setShowHelp(true);
+        setHasShownInitialHelp(true);
+      }, 3000); // Changed from 2000 to 3000 to show after 3 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasShownInitialHelp]);
 
   // Startup data with retro gaming stats
   const startupData: StartupData[] = [
@@ -199,7 +213,10 @@ export function OrbitingCirclesDemo() {
   };
 
   return (
-    <div className="relative min-h-[600px] w-full overflow-hidden px-4 sm:px-6">
+    <div
+      id="orbiting-circles-demo"
+      className="relative min-h-[600px] w-full overflow-hidden px-4 sm:px-6"
+    >
       {/* Enhanced Retro Grid Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a0066_1px,transparent_1px),linear-gradient(to_bottom,#2a0066_1px,transparent_1px)] bg-[size:24px_24px] sm:bg-[size:32px_32px] opacity-20">
@@ -236,21 +253,33 @@ export function OrbitingCirclesDemo() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 z-50 flex items-center justify-center px-4"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
             >
+              {/* Backdrop */}
               <motion.div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={() => setShowHelp(false)}
               />
+
+              {/* Modal Content */}
               <motion.div
-                className="relative bg-gradient-to-b from-purple-900/90 to-indigo-900/90 p-6 rounded-lg max-w-lg w-full pixel-corners"
+                className="relative bg-gradient-to-b from-purple-900/90 to-indigo-900/90 p-4 sm:p-6 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
                 initial={{ y: 20 }}
                 animate={{ y: 0 }}
               >
+                {/* Close button */}
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="absolute top-2 right-2 p-2 text-purple-300 hover:text-purple-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
                 <h3 className="text-xl font-bold text-white mb-6 pixel-text text-center">
                   How to Play
                 </h3>
-                <div className="space-y-8">
+
+                <div className="space-y-6">
                   {helpSteps.map((step, index) => (
                     <motion.div
                       key={step.title}
@@ -261,12 +290,12 @@ export function OrbitingCirclesDemo() {
                     >
                       <div className="flex items-start gap-4">
                         <motion.div
-                          className={`p-3 rounded-lg bg-gradient-to-br ${step.color}`}
+                          className={`flex-shrink-0 p-3 rounded-lg bg-gradient-to-br ${step.color}`}
                           whileHover={{ scale: 1.05 }}
                         >
-                          <step.icon className="w-6 h-6 text-white" />
+                          <step.icon className="w-5 h-5 text-white" />
                         </motion.div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <h4 className="text-white font-semibold mb-1">
                             {step.title}
                           </h4>
@@ -283,37 +312,22 @@ export function OrbitingCirclesDemo() {
                           </motion.div>
                         </div>
                       </div>
-
-                      {index < helpSteps.length - 1 && (
-                        <motion.div
-                          className="absolute left-6 top-full h-8 w-px bg-gradient-to-b from-purple-500/50 to-transparent"
-                          initial={{ scaleY: 0 }}
-                          animate={{ scaleY: 1 }}
-                          transition={{ delay: index * 0.15 + 0.5 }}
-                        />
-                      )}
                     </motion.div>
                   ))}
                 </div>
 
-                <div className="mt-8 space-y-4">
-                  <div className="text-sm text-purple-200/70 bg-purple-950/30 p-3 rounded-lg">
-                    <span className="text-purple-400 font-medium">
-                      Pro Tip:{" "}
-                    </span>
-                    Study your opponent's cards and predict their strategy to
-                    gain the upper hand!
-                  </div>
+                {/* Add this before the bottom padding div */}
+                <motion.button
+                  className="w-full mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-lg font-semibold"
+                  onClick={() => setShowHelp(false)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Got it!
+                </motion.button>
 
-                  <motion.button
-                    className="w-full pixel-btn bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 text-sm font-bold uppercase"
-                    onClick={() => setShowHelp(false)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Ready to Battle!
-                  </motion.button>
-                </div>
+                {/* Bottom padding */}
+                <div className="h-4" />
               </motion.div>
             </motion.div>
           )}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Gamepad2, Trophy, Library, Rocket } from "lucide-react";
+import { Sparkles, Gamepad2, Trophy, Library, Rocket, HelpCircle } from "lucide-react";
 import { LogoCarousel } from "@/components/ui/logo-carousel";
 import { GradientHeading } from "@/components/ui/gradient-heading";
 import type { SVGProps } from "react";
@@ -222,6 +222,30 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+              </motion.div>
+
+              {/* How to Play */}
+              <motion.div
+                className="w-full max-w-md mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
+                <motion.button
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-purple-500/20"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    const orbitingCirclesDemo = document.querySelector('#orbiting-circles-demo');
+                    if (orbitingCirclesDemo) {
+                      const helpButton = orbitingCirclesDemo.querySelector('button');
+                      helpButton?.click();
+                    }
+                  }}
+                >
+                  <HelpCircle className="w-5 h-5" />
+                  <span className="font-semibold">How to Play</span>
+                </motion.button>
               </motion.div>
 
               {/* Feature Cards */}
