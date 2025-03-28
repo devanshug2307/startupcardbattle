@@ -25,6 +25,8 @@ import {
   Shield,
   InfoIcon,
   Calendar,
+  ChevronDown,
+  Lightbulb,
 } from "lucide-react";
 import {
   Card,
@@ -44,6 +46,11 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import html2canvas from "html2canvas";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 
 // First, let's add proper type definitions at the top of the file
 type StartupCard = {
@@ -55,6 +62,17 @@ type StartupCard = {
   valuation: number;
   [key: string]: string | number; // Add index signature to allow string indexing
 };
+
+// Add these types at the top of the file
+interface Category {
+  name: string;
+  icon: LucideIcon;
+  colors: {
+    from: string;
+    to: string;
+    iconColor: string;
+  };
+}
 
 export default function PlayGame() {
   const router = useRouter();
@@ -495,65 +513,41 @@ export default function PlayGame() {
   );
 
   // First, let's define better category data with custom colors and icons
-  const categories = [
+  const categories: Category[] = [
     {
       name: "All",
       icon: Layout,
       colors: {
-        from: "from-blue-600/20",
+        from: "from-purple-500/20",
         to: "to-purple-600/20",
-        iconColor: "text-blue-400",
-        activeBg: "from-blue-600/10 via-purple-600/10 to-purple-600/10",
-        activeText: "text-blue-300",
-        border: "border-blue-500/20",
+        iconColor: "text-purple-400",
       },
     },
     {
       name: "Fintech",
       icon: Banknote,
       colors: {
-        from: "from-emerald-600/20",
-        to: "to-teal-600/20",
-        iconColor: "text-emerald-400",
-        activeBg: "from-emerald-600/10 via-teal-600/10 to-teal-600/10",
-        activeText: "text-emerald-300",
-        border: "border-emerald-500/20",
+        from: "from-blue-500/20",
+        to: "to-blue-600/20",
+        iconColor: "text-blue-400",
       },
     },
     {
       name: "Consumer",
       icon: ShoppingBag,
       colors: {
-        from: "from-orange-600/20",
-        to: "to-rose-600/20",
-        iconColor: "text-orange-400",
-        activeBg: "from-orange-600/10 via-rose-600/10 to-rose-600/10",
-        activeText: "text-orange-300",
-        border: "border-orange-500/20",
+        from: "from-pink-500/20",
+        to: "to-pink-600/20",
+        iconColor: "text-pink-400",
       },
     },
     {
       name: "SaaS",
       icon: Cloud,
       colors: {
-        from: "from-indigo-600/20",
-        to: "to-violet-600/20",
+        from: "from-indigo-500/20",
+        to: "to-indigo-600/20",
         iconColor: "text-indigo-400",
-        activeBg: "from-indigo-600/10 via-violet-600/10 to-violet-600/10",
-        activeText: "text-indigo-300",
-        border: "border-indigo-500/20",
-      },
-    },
-    {
-      name: "EdTech",
-      icon: GraduationCap,
-      colors: {
-        from: "from-pink-600/20",
-        to: "to-rose-600/20",
-        iconColor: "text-pink-400",
-        activeBg: "from-pink-600/10 via-rose-600/10 to-rose-600/10",
-        activeText: "text-pink-300",
-        border: "border-pink-500/20",
       },
     },
   ];
@@ -952,127 +946,216 @@ Can you beat my score? #StartupCardBattle`;
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col space-y-3 max-w-7xl mx-auto"
+            className="flex flex-col space-y-3 max-w-7xl mx-auto px-4"
           >
-            {/* Compact Strategy Tips */}
+            {/* Quick Tutorial Tooltip */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl p-3"
+              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-3 sm:p-4 max-w-3xl mx-auto w-full"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <InfoIcon className="w-4 h-4 text-blue-400" />
+              <div className="flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs sm:text-sm text-blue-200">
+                  Select 4 cards to build your battle deck. Choose wisely - different attributes matter in different rounds!
+                </p>
                 </div>
-                <div className="flex-1 text-sm">
-                  <span className="text-blue-400 font-medium">Pro Tips: </span>
-                  <span className="text-gray-400">
-                    Balance attributes • Check synergies • Higher isn't always
-                    better
+            </motion.div>
+
+            {/* Desktop Layout Container */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+              {/* Left Column - Stats & Info */}
+              <div className="lg:col-span-3 space-y-3">
+            {/* Compact Header with Progress */}
+                <div className="text-center sm:text-left bg-gray-900/50 rounded-xl p-4">
+                  <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+                Build Your Battle Deck
+              </h1>
+                  <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
+                    <div className="h-2 w-32 bg-gray-800 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${(selectedCards.length / 4) * 100}%` }}
+                  />
+                </div>
+                    <span className="text-sm font-medium text-purple-300">
+                  {selectedCards.length}/4
                   </span>
                 </div>
               </div>
-            </motion.div>
 
-            {/* Streamlined Category Navigation */}
-            <div className="overflow-x-auto -mx-3 px-3">
-              <Tabs
-                defaultValue="all"
-                className="w-full"
-                onValueChange={(value) => setActiveCategory(value)}
-              >
-                <TabsList className="inline-flex w-auto min-w-full sm:w-full bg-gray-900/50 p-1 rounded-xl gap-1">
-                  {categories.map((category) => {
-                    const isActive =
-                      activeCategory === category.name.toLowerCase();
-                    return (
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+              {[
+                {
+                  label: "Deck Power",
+                  value: selectedCards.length ? 
+                    Math.round(selectedCards.reduce((acc, card) => acc + card.valuation, 0) / selectedCards.length) : 
+                    "-",
+                  icon: Zap,
+                      color: "text-yellow-400",
+                      bg: "bg-yellow-500/10"
+                },
+                {
+                  label: "Categories",
+                  value: selectedCards.length ?
+                    `${new Set(selectedCards.map(card => card.category)).size}/4` : 
+                    "-",
+                  icon: Layout,
+                      color: "text-blue-400",
+                      bg: "bg-blue-500/10"
+                },
+                {
+                  label: "Avg Year",
+                  value: selectedCards.length ?
+                    Math.round(selectedCards.reduce((acc, card) => acc + card.founded, 0) / selectedCards.length) : 
+                    "-",
+                  icon: Calendar,
+                      color: "text-green-400",
+                      bg: "bg-green-500/10"
+                }
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                      className={`${stat.bg} rounded-lg p-3 border border-gray-800`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <stat.icon className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-300">{stat.label}</span>
+                  </div>
+                      <div className={`text-lg font-bold mt-1 ${stat.color}`}>
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Battle Tips Accordion */}
+              <Collapsible>
+                <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-purple-400" />
+                        <span className="text-sm font-medium text-purple-200">Battle Tips</span>
+                    </div>
+                      <ChevronDown className="w-4 h-4 text-purple-400" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <div className="grid grid-cols-1 gap-2 p-2">
+                  {[
+                    {
+                      tip: "Higher valuation wins valuation rounds",
+                      icon: "💰",
+                      color: "bg-green-500/10"
+                    },
+                    {
+                      tip: "Newer startups win founding year rounds",
+                      icon: "📅",
+                      color: "bg-blue-500/10"
+                    },
+                    {
+                      tip: "Faster unicorns win speed rounds",
+                      icon: "⚡",
+                      color: "bg-yellow-500/10"
+                    },
+                    {
+                      tip: "Higher revenue wins revenue rounds",
+                      icon: "📈",
+                      color: "bg-pink-500/10"
+                    }
+                    ].map((tip) => (
+                      <div
+                        key={tip.tip}
+                          className={`flex items-start gap-2 ${tip.color} rounded-lg p-3`}
+                      >
+                          <span className="text-xl">{tip.icon}</span>
+                          <span className="text-sm leading-tight text-gray-300">{tip.tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+              </div>
+
+              {/* Right Column - Categories & Cards */}
+              <div className="lg:col-span-9 space-y-3">
+                {/* Enhanced Category Navigation */}
+                <div className="bg-gray-900/50 rounded-lg p-2">
+                  <Tabs defaultValue="all" className="w-full" onValueChange={setActiveCategory}>
+                    <TabsList className="grid grid-cols-4 gap-2">
+                      {categories.map((category) => (
                       <TabsTrigger
-                        key={`category-${category.name.toLowerCase()}`}
+                          key={category.name}
                         value={category.name.toLowerCase()}
-                        className={cn(
-                          "flex-1 min-w-[80px] relative py-2 px-3 rounded-lg transition-all duration-300",
-                          isActive ? "bg-gradient-to-b" : "bg-transparent",
-                          isActive && category.colors.from,
-                          isActive && category.colors.to
-                        )}
+                          className="relative px-3 py-2 rounded-md data-[state=active]:bg-gradient-to-r from-purple-500/20 to-pink-500/20"
                       >
                         <div className="flex items-center justify-center gap-2">
-                          <category.icon
-                            className={cn(
-                              "w-4 h-4 transition-colors",
-                              isActive
-                                ? category.colors.iconColor
-                                : "text-gray-400"
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              "text-sm font-medium",
-                              isActive ? "text-white" : "text-gray-400"
-                            )}
-                          >
-                            {category.name}
-                          </span>
+                            <category.icon className="w-4 h-4" />
+                            <span className="text-sm">{category.name}</span>
                         </div>
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeCategory"
-                            className="absolute inset-0 rounded-lg bg-gradient-to-b opacity-10"
-                            transition={{ type: "spring", bounce: 0.2 }}
-                          />
-                        )}
                       </TabsTrigger>
-                    );
-                  })}
+                      ))}
                 </TabsList>
               </Tabs>
             </div>
 
-            {/* Optimized Card Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-16">
+            {/* Card Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-20">
               {playerDeck
-                .filter(
-                  (card) =>
-                    activeCategory === "all" ||
-                    card.category.toLowerCase() === activeCategory
-                )
-                .map((card) => (
+                .filter(card => activeCategory === "all" || card.category.toLowerCase() === activeCategory)
+                .map((card, index) => (
+                  <motion.div
+                    key={card.name}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="relative"
+                  >
                   <CardComponent
-                    key={`card-${card.name}`}
                     card={card}
                     isSelected={selectedCards.includes(card)}
                     onSelect={() => handleCardSelect(card)}
                   />
-                ))}
-            </div>
 
-            {/* Floating Elements */}
-            <FloatingCounter />
+                    {/* Selection Number */}
+                    <AnimatePresence>
+                      {selectedCards.includes(card) && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold shadow-lg"
+                        >
+                            {selectedCards.indexOf(card) + 1}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+                </div>
+              </div>
+            </div>
 
             {/* Start Battle Button */}
             <AnimatePresence>
               {selectedCards.length === 4 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 50 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 50 }}
-                  className="fixed bottom-4 left-0 right-0 px-3 z-50"
+                  exit={{ opacity: 0, y: 20 }}
+                  className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-96 z-50"
                 >
-                  <Button
-                    className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r 
-                             from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600
-                             shadow-lg shadow-purple-500/20"
+                  <motion.button
                     onClick={startGame}
-                  >
-                    <motion.div
-                      className="flex items-center justify-center gap-2"
-                      animate={{ scale: [1, 1.03, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium text-base shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     >
                       <Swords className="w-5 h-5" />
                       <span>Start Battle</span>
-                    </motion.div>
-                  </Button>
+                  </motion.button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1423,7 +1506,7 @@ Can you beat my score? #StartupCardBattle`;
                                     {attr.name}
                                   </div>
                                   <div className="text-xs font-semibold text-white">
-                                    {battleAttribute ? attr.value : "?"}
+                                    {attr.value}
                                   </div>
                                 </motion.div>
                               ))}
