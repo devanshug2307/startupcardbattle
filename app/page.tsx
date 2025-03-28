@@ -156,7 +156,7 @@ export default function Home() {
 
           {/* Content Container */}
           <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
-            <div className="flex flex-col items-center gap-8 md:gap-12">
+            <div className="flex flex-col items-center gap-8">
               {/* Hero Section */}
               <div className="w-full max-w-4xl mx-auto">
                 <div className="relative">
@@ -184,112 +184,44 @@ export default function Home() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="relative mt-12 mb-16"
+                    className="relative mt-12"
                   >
-                    {/* Background Glow */}
-                    <div className="absolute inset-0 -z-10">
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] bg-purple-900/30 rounded-full blur-[80px]" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] bg-indigo-900/30 rounded-full blur-[60px]" />
-                    </div>
-
-                    {/* Demo Container */}
-                    <div className="relative transform scale-[0.8] sm:scale-100 transition-transform duration-300">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-indigo-900/20 rounded-full animate-pulse" />
-                      <div className="relative z-10">
-                        <OrbitingCirclesDemo />
-                      </div>
-                      <div className="absolute inset-0 border border-purple-500/20 rounded-full blur-sm" />
-                      <div className="absolute inset-[-2px] border border-indigo-500/10 rounded-full blur-md" />
-                    </div>
-
-                    {/* Floating Particles */}
-                    <motion.div
-                      className="absolute inset-0 pointer-events-none"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      {[...Array(30)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute w-1 h-1 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"
-                          initial={{
-                            x: Math.random() * 200 - 100,
-                            y: Math.random() * 200 - 100,
-                            scale: 0,
-                          }}
-                          animate={{
-                            x: Math.random() * 400 - 200,
-                            y: Math.random() * 400 - 200,
-                            scale: [0, 1, 0],
-                          }}
-                          transition={{
-                            duration: Math.random() * 3 + 2,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                            ease: "easeInOut",
-                          }}
-                        />
-                      ))}
-                    </motion.div>
+                    <OrbitingCirclesDemo />
                   </motion.div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Latest Updates */}
               <motion.div
-                className="grid gap-4 w-full max-w-md px-4 relative z-20"
+                className="w-full max-w-4xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.9 }}
               >
-                <motion.div
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                >
-                  <Button
-                    className="w-full py-6 text-lg bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white rounded-xl shadow-lg shadow-purple-900/30 hover:shadow-purple-700/40 transition-all duration-300 border border-purple-700/50"
-                    onClick={() => router.push("/play")}
-                  >
-                    <Gamepad2 className="mr-2 h-5 w-5" />
-                    Play Now
-                  </Button>
-                </motion.div>
-
-                {/* <div className="grid grid-cols-2 gap-4">
-                  {[
-                    {
-                      title: "Collection",
-                      icon: Library,
-                      path: "/collection",
-                      className:
-                        "from-indigo-700 to-indigo-800 hover:from-indigo-800 hover:to-indigo-900 shadow-indigo-900/30 hover:shadow-indigo-700/40 border-indigo-700/50",
-                    },
-                    {
-                      title: "Rankings",
-                      icon: Trophy,
-                      path: "/leaderboard",
-                      className:
-                        "from-violet-700 to-violet-800 hover:from-violet-800 hover:to-violet-900 shadow-violet-900/30 hover:shadow-violet-700/40 border-violet-700/50",
-                    },
-                  ].map((item) => (
-                    <motion.div
-                      key={item.title}
-                      variants={buttonVariants}
-                      whileHover="hover"
-                      whileTap="tap"
-                    >
-                      <Button
-                        className={`w-full py-6 text-lg bg-gradient-to-r text-white rounded-xl shadow-lg transition-all duration-300 border ${item.className}`}
-                        onClick={() => router.push(item.path)}
+                <div className="bg-purple-900/20 border border-purple-700/20 rounded-xl p-4">
+                  <h3 className="text-lg font-bold text-purple-300 mb-3 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Latest Updates
+                  </h3>
+                  <div className="space-y-2">
+                    {[
+                      "New Startup Cards: Introducing 5 new unicorn startups!",
+                      "Weekend Tournament: Compete for exclusive rewards",
+                      "Balance Update: Adjusted valuation metrics for better gameplay",
+                    ].map((update, i) => (
+                      <motion.div
+                        key={i}
+                        className="flex items-center gap-2 text-sm text-purple-200"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 + 1 }}
                       >
-                        <item.icon className="mr-2 h-5 w-5" />
-                        {item.title}
-                      </Button>
-                    </motion.div>
-                  ))}
-                </div> */}
+                        <div className="h-2 w-2 rounded-full bg-purple-500" />
+                        {update}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
               </motion.div>
 
               {/* Feature Cards */}
