@@ -27,6 +27,7 @@ import {
   Calendar,
   ChevronDown,
   Lightbulb,
+  Rocket,
 } from "lucide-react";
 import {
   Card,
@@ -73,6 +74,32 @@ interface Category {
     iconColor: string;
   };
 }
+
+// Add these new animation variants at the top
+const battleAnimationVariants = {
+  playerAttack: {
+    x: [0, 100, 0],
+    rotate: [0, 15, 0],
+    transition: { duration: 0.5 },
+  },
+  aiAttack: {
+    x: [0, -100, 0],
+    rotate: [0, -15, 0],
+    transition: { duration: 0.5 },
+  },
+  shake: {
+    x: [0, -10, 10, -10, 10, 0],
+    transition: { duration: 0.4 },
+  },
+  hover: {
+    y: [0, -10, 0],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
 
 export default function PlayGame() {
   const router = useRouter();
@@ -927,6 +954,297 @@ Can you beat my score? #StartupCardBattle`;
     }
     return false;
   };
+
+  // Update the battle phase render function
+  const renderBattlePhase = () => {
+    return (
+      <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900">
+        {/* Battle Arena */}
+        <div className="relative max-w-lg mx-auto px-3 py-4">
+          {/* Top Battle HUD - Simplified for Mobile */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Player Score */}
+            <div className="flex items-center gap-2 bg-blue-950/50 rounded-lg px-3 py-1.5">
+              <div className="text-blue-400 text-sm">You</div>
+              <div className="text-xl font-bold text-white">{playerScore}</div>
+            </div>
+
+            {/* Round Indicator */}
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4].map((round) => (
+                <div
+                  key={round}
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    round === currentRound
+                      ? "bg-purple-500 animate-pulse"
+                      : round < currentRound
+                      ? "bg-purple-700"
+                      : "bg-gray-700"
+                  )}
+                />
+              ))}
+            </div>
+
+            {/* AI Score */}
+            <div className="flex items-center gap-2 bg-red-950/50 rounded-lg px-3 py-1.5">
+              <div className="text-xl font-bold text-white">{aiScore}</div>
+              <div className="text-red-400 text-sm">AI</div>
+            </div>
+          </div>
+
+          {/* Battle Guide Tooltip */}
+          {!battleAttribute && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-3 mb-4 border border-purple-500/20"
+            >
+              <div className="flex items-start gap-2">
+                <div className="flex-shrink-0 mt-1">
+                  <Lightbulb className="w-4 h-4 text-yellow-400" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="text-purple-300 font-medium">Your Turn!</div>
+                  <div className="text-gray-400 text-xs space-y-1">
+                    <p>🎯 Select an attribute to battle with AI</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="w-3 h-3 text-green-400" />
+                        <span className="text-green-400">Higher wins:</span>
+                        <span>Valuation, Revenue</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-blue-400" />
+                        <span className="text-blue-400">Lower wins:</span>
+                        <span>Founded, Time to Unicorn</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 text-xs text-purple-400 font-medium">
+                  {timeLeft}s
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Cards Battle Area - Stacked on Mobile */}
+          <div className="space-y-4">
+            {/* Player Card */}
+            <motion.div
+              variants={battleAnimationVariants}
+              animate={
+                battleResult === "win"
+                  ? "playerAttack"
+                  : battleResult === "lose"
+                  ? "shake"
+                  : "hover"
+              }
+              className="relative z-10"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur-lg" />
+              <div className="relative bg-gray-900/90 backdrop-blur-sm rounded-xl border border-blue-500/30 p-4">
+                {/* Company Info */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-500/20 p-2.5 flex items-center justify-center">
+                    <img
+                      src={`/icons/${selectedCards[
+                        currentRound - 1
+                      ].name.toLowerCase()}.png`}
+                      alt={selectedCards[currentRound - 1].name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      {selectedCards[currentRound - 1].name}
+                    </h3>
+                    <div className="text-sm text-blue-400">
+                      {selectedCards[currentRound - 1].category}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {["valuation", "revenue", "founded", "timeToUnicorn"].map(
+                    (attr) => (
+                      <motion.button
+                        key={attr}
+                        whileHover={!battleAttribute ? { scale: 1.02 } : {}}
+                        whileTap={!battleAttribute ? { scale: 0.98 } : {}}
+                        onClick={() =>
+                          !battleAttribute && handleAttributeSelect(attr)
+                        }
+                        disabled={!!battleAttribute}
+                        className={cn(
+                          "relative p-3 rounded-lg transition-all",
+                          battleAttribute === attr
+                            ? "bg-blue-500/30 ring-2 ring-blue-400"
+                            : "bg-gray-800/50",
+                          !battleAttribute && "active:bg-gray-700/50",
+                          battleAttribute &&
+                            battleAttribute !== attr &&
+                            "opacity-50"
+                        )}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={cn(
+                              "text-blue-400 mb-1",
+                              !battleAttribute && "animate-bounce"
+                            )}
+                          >
+                            {attr === "valuation" && (
+                              <DollarSign className="w-4 h-4" />
+                            )}
+                            {attr === "revenue" && (
+                              <TrendingUp className="w-4 h-4" />
+                            )}
+                            {attr === "founded" && (
+                              <Calendar className="w-4 h-4" />
+                            )}
+                            {attr === "timeToUnicorn" && (
+                              <Rocket className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {attr.split(/(?=[A-Z])/).join(" ")}
+                          </div>
+                          <div className="text-sm font-bold text-white mt-1">
+                            {formatAttributeValue(
+                              selectedCards[currentRound - 1][attr],
+                              attr
+                            )}
+                          </div>
+                        </div>
+                      </motion.button>
+                    )
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* VS Badge */}
+            <div className="relative flex justify-center">
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-full p-0.5"
+              >
+                <div className="bg-gray-900 rounded-full px-4 py-1">
+                  <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+                    VS
+                  </span>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* AI Card */}
+            <motion.div
+              variants={battleAnimationVariants}
+              animate={
+                battleResult === "lose"
+                  ? "aiAttack"
+                  : battleResult === "win"
+                  ? "shake"
+                  : "hover"
+              }
+              className="relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl blur-lg" />
+              <div className="relative bg-gray-900/90 backdrop-blur-sm rounded-xl border border-red-500/30 p-4">
+                {/* AI Info */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 p-2.5 flex items-center justify-center">
+                    <Swords className="w-6 h-6 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      {aiDeck[currentRound - 1].name}
+                    </h3>
+                    <div className="text-sm text-red-400">
+                      {aiDeck[currentRound - 1].category}
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Stats Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {["valuation", "revenue", "founded", "timeToUnicorn"].map(
+                    (attr) => (
+                      <div
+                        key={attr}
+                        className={cn(
+                          "relative p-3 rounded-lg",
+                          battleAttribute === attr
+                            ? "bg-red-500/30 ring-2 ring-red-400"
+                            : "bg-gray-800/50"
+                        )}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div className="text-red-400 mb-1">
+                            {attr === "valuation" && (
+                              <DollarSign className="w-4 h-4" />
+                            )}
+                            {attr === "revenue" && (
+                              <TrendingUp className="w-4 h-4" />
+                            )}
+                            {attr === "founded" && (
+                              <Calendar className="w-4 h-4" />
+                            )}
+                            {attr === "timeToUnicorn" && (
+                              <Rocket className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {attr.split(/(?=[A-Z])/).join(" ")}
+                          </div>
+                          <div className="text-sm font-bold text-white mt-1">
+                            {battleAttribute === attr ? (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                              >
+                                {formatAttributeValue(
+                                  aiDeck[currentRound - 1][attr],
+                                  attr
+                                )}
+                              </motion.div>
+                            ) : (
+                              <span className="text-red-400">?</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Timer */}
+          {!battleAttribute && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="fixed bottom-4 left-1/2 -translate-x-1/2"
+            >
+              <div className="bg-gray-900/90 backdrop-blur-sm rounded-full px-4 py-2 border border-purple-500/30">
+                <div className="text-purple-400 font-bold">{timeLeft}s</div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Streamlined Header */}
@@ -957,183 +1275,213 @@ Can you beat my score? #StartupCardBattle`;
               <div className="flex items-start gap-2">
                 <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                 <p className="text-xs sm:text-sm text-blue-200">
-                  Select 4 cards to build your battle deck. Choose wisely - different attributes matter in different rounds!
+                  Select 4 cards to build your battle deck. Choose wisely -
+                  different attributes matter in different rounds!
                 </p>
-                </div>
+              </div>
             </motion.div>
 
             {/* Desktop Layout Container */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
               {/* Left Column - Stats & Info */}
               <div className="lg:col-span-3 space-y-3">
-            {/* Compact Header with Progress */}
+                {/* Compact Header with Progress */}
                 <div className="text-center sm:text-left bg-gray-900/50 rounded-xl p-4">
                   <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
-                Build Your Battle Deck
-              </h1>
+                    Build Your Battle Deck
+                  </h1>
                   <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
                     <div className="h-2 w-32 bg-gray-800 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                    initial={{ width: "0%" }}
-                    animate={{ width: `${(selectedCards.length / 4) * 100}%` }}
-                  />
-                </div>
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                        initial={{ width: "0%" }}
+                        animate={{
+                          width: `${(selectedCards.length / 4) * 100}%`,
+                        }}
+                      />
+                    </div>
                     <span className="text-sm font-medium text-purple-300">
-                  {selectedCards.length}/4
-                  </span>
+                      {selectedCards.length}/4
+                    </span>
+                  </div>
                 </div>
-              </div>
 
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-              {[
-                {
-                  label: "Deck Power",
-                  value: selectedCards.length ? 
-                    Math.round(selectedCards.reduce((acc, card) => acc + card.valuation, 0) / selectedCards.length) : 
-                    "-",
-                  icon: Zap,
+                  {[
+                    {
+                      label: "Deck Power",
+                      value: selectedCards.length
+                        ? Math.round(
+                            selectedCards.reduce(
+                              (acc, card) => acc + card.valuation,
+                              0
+                            ) / selectedCards.length
+                          )
+                        : "-",
+                      icon: Zap,
                       color: "text-yellow-400",
-                      bg: "bg-yellow-500/10"
-                },
-                {
-                  label: "Categories",
-                  value: selectedCards.length ?
-                    `${new Set(selectedCards.map(card => card.category)).size}/4` : 
-                    "-",
-                  icon: Layout,
+                      bg: "bg-yellow-500/10",
+                    },
+                    {
+                      label: "Categories",
+                      value: selectedCards.length
+                        ? `${
+                            new Set(selectedCards.map((card) => card.category))
+                              .size
+                          }/4`
+                        : "-",
+                      icon: Layout,
                       color: "text-blue-400",
-                      bg: "bg-blue-500/10"
-                },
-                {
-                  label: "Avg Year",
-                  value: selectedCards.length ?
-                    Math.round(selectedCards.reduce((acc, card) => acc + card.founded, 0) / selectedCards.length) : 
-                    "-",
-                  icon: Calendar,
+                      bg: "bg-blue-500/10",
+                    },
+                    {
+                      label: "Avg Year",
+                      value: selectedCards.length
+                        ? Math.round(
+                            selectedCards.reduce(
+                              (acc, card) => acc + card.founded,
+                              0
+                            ) / selectedCards.length
+                          )
+                        : "-",
+                      icon: Calendar,
                       color: "text-green-400",
-                      bg: "bg-green-500/10"
-                }
-              ].map((stat) => (
-                <div
-                  key={stat.label}
+                      bg: "bg-green-500/10",
+                    },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
                       className={`${stat.bg} rounded-lg p-3 border border-gray-800`}
                     >
                       <div className="flex items-center gap-2">
                         <stat.icon className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-300">{stat.label}</span>
-                  </div>
-                      <div className={`text-lg font-bold mt-1 ${stat.color}`}>
-                    {stat.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Battle Tips Accordion */}
-              <Collapsible>
-                <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
-                    <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-purple-400" />
-                        <span className="text-sm font-medium text-purple-200">Battle Tips</span>
-                    </div>
-                      <ChevronDown className="w-4 h-4 text-purple-400" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                    <div className="grid grid-cols-1 gap-2 p-2">
-                  {[
-                    {
-                      tip: "Higher valuation wins valuation rounds",
-                      icon: "💰",
-                      color: "bg-green-500/10"
-                    },
-                    {
-                      tip: "Newer startups win founding year rounds",
-                      icon: "📅",
-                      color: "bg-blue-500/10"
-                    },
-                    {
-                      tip: "Faster unicorns win speed rounds",
-                      icon: "⚡",
-                      color: "bg-yellow-500/10"
-                    },
-                    {
-                      tip: "Higher revenue wins revenue rounds",
-                      icon: "📈",
-                      color: "bg-pink-500/10"
-                    }
-                    ].map((tip) => (
-                      <div
-                        key={tip.tip}
-                          className={`flex items-start gap-2 ${tip.color} rounded-lg p-3`}
-                      >
-                          <span className="text-xl">{tip.icon}</span>
-                          <span className="text-sm leading-tight text-gray-300">{tip.tip}</span>
+                        <span className="text-sm text-gray-300">
+                          {stat.label}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                      <div className={`text-lg font-bold mt-1 ${stat.color}`}>
+                        {stat.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Battle Tips Accordion */}
+                <Collapsible>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-purple-400" />
+                        <span className="text-sm font-medium text-purple-200">
+                          Battle Tips
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-purple-400" />
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-1 gap-2 p-2">
+                      {[
+                        {
+                          tip: "Higher valuation wins valuation rounds",
+                          icon: "💰",
+                          color: "bg-green-500/10",
+                        },
+                        {
+                          tip: "Newer startups win founding year rounds",
+                          icon: "📅",
+                          color: "bg-blue-500/10",
+                        },
+                        {
+                          tip: "Faster unicorns win speed rounds",
+                          icon: "⚡",
+                          color: "bg-yellow-500/10",
+                        },
+                        {
+                          tip: "Higher revenue wins revenue rounds",
+                          icon: "📈",
+                          color: "bg-pink-500/10",
+                        },
+                      ].map((tip) => (
+                        <div
+                          key={tip.tip}
+                          className={`flex items-start gap-2 ${tip.color} rounded-lg p-3`}
+                        >
+                          <span className="text-xl">{tip.icon}</span>
+                          <span className="text-sm leading-tight text-gray-300">
+                            {tip.tip}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
 
               {/* Right Column - Categories & Cards */}
               <div className="lg:col-span-9 space-y-3">
                 {/* Enhanced Category Navigation */}
                 <div className="bg-gray-900/50 rounded-lg p-2">
-                  <Tabs defaultValue="all" className="w-full" onValueChange={setActiveCategory}>
+                  <Tabs
+                    defaultValue="all"
+                    className="w-full"
+                    onValueChange={setActiveCategory}
+                  >
                     <TabsList className="grid grid-cols-4 gap-2">
                       {categories.map((category) => (
-                      <TabsTrigger
+                        <TabsTrigger
                           key={category.name}
-                        value={category.name.toLowerCase()}
+                          value={category.name.toLowerCase()}
                           className="relative px-3 py-2 rounded-md data-[state=active]:bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                      >
-                        <div className="flex items-center justify-center gap-2">
+                        >
+                          <div className="flex items-center justify-center gap-2">
                             <category.icon className="w-4 h-4" />
                             <span className="text-sm">{category.name}</span>
-                        </div>
-                      </TabsTrigger>
+                          </div>
+                        </TabsTrigger>
                       ))}
-                </TabsList>
-              </Tabs>
-            </div>
+                    </TabsList>
+                  </Tabs>
+                </div>
 
-            {/* Card Grid */}
+                {/* Card Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-20">
-              {playerDeck
-                .filter(card => activeCategory === "all" || card.category.toLowerCase() === activeCategory)
-                .map((card, index) => (
-                  <motion.div
-                    key={card.name}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="relative"
-                  >
-                  <CardComponent
-                    card={card}
-                    isSelected={selectedCards.includes(card)}
-                    onSelect={() => handleCardSelect(card)}
-                  />
+                  {playerDeck
+                    .filter(
+                      (card) =>
+                        activeCategory === "all" ||
+                        card.category.toLowerCase() === activeCategory
+                    )
+                    .map((card, index) => (
+                      <motion.div
+                        key={card.name}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="relative"
+                      >
+                        <CardComponent
+                          card={card}
+                          isSelected={selectedCards.includes(card)}
+                          onSelect={() => handleCardSelect(card)}
+                        />
 
-                    {/* Selection Number */}
-                    <AnimatePresence>
-                      {selectedCards.includes(card) && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.5 }}
+                        {/* Selection Number */}
+                        <AnimatePresence>
+                          {selectedCards.includes(card) && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.5 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.5 }}
                               className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold shadow-lg"
-                        >
-                            {selectedCards.indexOf(card) + 1}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                ))}
+                            >
+                              {selectedCards.indexOf(card) + 1}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))}
                 </div>
               </div>
             </div>
@@ -1152,9 +1500,9 @@ Can you beat my score? #StartupCardBattle`;
                     className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium text-base shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    >
-                      <Swords className="w-5 h-5" />
-                      <span>Start Battle</span>
+                  >
+                    <Swords className="w-5 h-5" />
+                    <span>Start Battle</span>
                   </motion.button>
                 </motion.div>
               )}
@@ -1162,501 +1510,7 @@ Can you beat my score? #StartupCardBattle`;
           </motion.div>
         )}
 
-        {gameState === "battle" && (
-          <motion.div
-            className="w-full max-w-4xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* Battle Arena */}
-            <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] rounded-xl overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border border-purple-500/20">
-              {/* Animated background effects */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#ffffff08_1px,transparent_1px)] bg-[size:16px_16px] opacity-50" />
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(130,71,229,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(130,71,229,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
-
-              {/* Battle status bar */}
-              <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-center bg-gray-900/80 backdrop-blur-sm border-b border-purple-500/20 z-10">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-medium text-gray-300">
-                    Round {currentRound}/4
-                  </div>
-                  <div className="h-2 w-24 bg-gray-800 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
-                      style={{ width: `${(currentRound / 4) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center">
-                    <div className="text-sm font-medium text-blue-400">
-                      You: {playerScore}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">vs</div>
-                  <div className="flex items-center">
-                    <div className="text-sm font-medium text-red-400">
-                      AI: {aiScore}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Timer */}
-              {!battleAttribute && (
-                <div className="absolute top-14 left-1/2 -translate-x-1/2 z-10">
-                  <div className="flex flex-col items-center">
-                    <div className="text-sm text-gray-400 mb-1">
-                      Choose an attribute
-                    </div>
-                    <div className="w-16 h-16 rounded-full bg-gray-800/80 border border-purple-500/30 flex items-center justify-center">
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.1, 1],
-                        }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        <span className="text-2xl font-bold text-purple-400">
-                          {timeLeft}
-                        </span>
-                      </motion.div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Battle area */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="w-full flex flex-col md:flex-row items-center justify-between px-4 md:px-12 gap-6 md:gap-10">
-                  {/* Player Card */}
-                  <motion.div
-                    className="w-full md:w-2/5"
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="relative">
-                      {/* Player label */}
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-500/80 px-3 py-1 rounded-full text-xs font-medium text-white z-10">
-                        YOU
-                      </div>
-
-                      {/* Card container */}
-                      <div className="relative w-full aspect-[3/4] max-w-[220px] mx-auto">
-                        {/* Card background with retro design */}
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-900/90 to-blue-950/90 border-2 border-blue-500/50 overflow-hidden card-shine">
-                          <div className="absolute inset-0 card-circuit-pattern opacity-10" />
-
-                          {/* Card content */}
-                          <div className="relative h-full flex flex-col p-3">
-                            {/* Card header */}
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">
-                                {selectedCards[currentRound - 1].category}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 text-blue-400" />
-                                <span className="text-xs text-gray-300">
-                                  {selectedCards[currentRound - 1].founded}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Card name */}
-                            <div className="text-center my-2">
-                              <h3 className="text-lg font-bold text-white">
-                                {selectedCards[currentRound - 1].name}
-                              </h3>
-                            </div>
-
-                            {/* Card attributes */}
-                            <div className="flex-grow grid grid-cols-2 gap-2 mt-2">
-                              {[
-                                {
-                                  name: "Valuation",
-                                  value: formatValuation(
-                                    selectedCards[currentRound - 1].valuation
-                                  ),
-                                  icon: DollarSign,
-                                  color: "purple",
-                                  key: "valuation",
-                                },
-                                {
-                                  name: "Revenue",
-                                  value: formatRevenue(
-                                    selectedCards[currentRound - 1].revenue
-                                  ),
-                                  icon: TrendingUp,
-                                  color: "green",
-                                  key: "revenue",
-                                },
-                                {
-                                  name: "Time to Unicorn",
-                                  value: formatTimeToUnicorn(
-                                    selectedCards[currentRound - 1]
-                                      .timeToUnicorn
-                                  ),
-                                  icon: Zap,
-                                  color: "yellow",
-                                  key: "timeToUnicorn",
-                                },
-                                {
-                                  name: "Founded",
-                                  value:
-                                    selectedCards[
-                                      currentRound - 1
-                                    ].founded.toString(),
-                                  icon: Calendar,
-                                  color: "blue",
-                                  key: "founded",
-                                },
-                              ].map((attr) => (
-                                <motion.div
-                                  key={attr.key}
-                                  className={cn(
-                                    "rounded-lg p-2 flex flex-col items-center justify-center cursor-pointer",
-                                    !battleAttribute
-                                      ? [
-                                          attr.color === "purple" &&
-                                            "bg-purple-500/20 hover:bg-purple-500/40",
-                                          attr.color === "green" &&
-                                            "bg-green-500/20 hover:bg-green-500/40",
-                                          attr.color === "yellow" &&
-                                            "bg-yellow-500/20 hover:bg-yellow-500/40",
-                                          attr.color === "blue" &&
-                                            "bg-blue-500/20 hover:bg-blue-500/40",
-                                        ]
-                                      : battleAttribute === attr.key
-                                      ? [
-                                          attr.color === "purple" &&
-                                            "bg-purple-500/50 ring-2 ring-purple-400",
-                                          attr.color === "green" &&
-                                            "bg-green-500/50 ring-2 ring-green-400",
-                                          attr.color === "yellow" &&
-                                            "bg-yellow-500/50 ring-2 ring-yellow-400",
-                                          attr.color === "blue" &&
-                                            "bg-blue-500/50 ring-2 ring-blue-400",
-                                        ]
-                                      : "bg-gray-500/10 opacity-50"
-                                  )}
-                                  onClick={() =>
-                                    !battleAttribute &&
-                                    handleAttributeSelect(attr.key)
-                                  }
-                                  whileHover={
-                                    !battleAttribute ? { scale: 1.05 } : {}
-                                  }
-                                  whileTap={
-                                    !battleAttribute ? { scale: 0.95 } : {}
-                                  }
-                                >
-                                  <attr.icon
-                                    className={cn(
-                                      "h-4 w-4 mb-1",
-                                      attr.color === "purple" &&
-                                        "text-purple-400",
-                                      attr.color === "green" &&
-                                        "text-green-400",
-                                      attr.color === "yellow" &&
-                                        "text-yellow-400",
-                                      attr.color === "blue" && "text-blue-400"
-                                    )}
-                                  />
-                                  <div className="text-[10px] text-gray-400">
-                                    {attr.name}
-                                  </div>
-                                  <div className="text-xs font-semibold text-white">
-                                    {attr.value}
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* AI Card */}
-                  <motion.div
-                    className="w-full md:w-2/5"
-                    initial={{ x: 50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="relative">
-                      {/* AI label */}
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500/80 px-3 py-1 rounded-full text-xs font-medium text-white z-10">
-                        AI
-                      </div>
-
-                      {/* Card container */}
-                      <div className="relative w-full aspect-[3/4] max-w-[220px] mx-auto">
-                        {/* Card background with retro design */}
-                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-900/90 to-red-950/90 border-2 border-red-500/50 overflow-hidden card-shine">
-                          <div className="absolute inset-0 card-circuit-pattern opacity-10" />
-
-                          {/* Card content */}
-                          <div className="relative h-full flex flex-col p-3">
-                            {/* Card header */}
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="text-xs font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300">
-                                {aiDeck[currentRound - 1].category}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 text-red-400" />
-                                <span className="text-xs text-gray-300">
-                                  {battleAttribute
-                                    ? aiDeck[currentRound - 1].founded
-                                    : "?"}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Card name */}
-                            <div className="text-center my-2">
-                              <h3 className="text-lg font-bold text-white">
-                                {aiDeck[currentRound - 1].name}
-                              </h3>
-                            </div>
-
-                            {/* Card attributes - hidden until revealed */}
-                            <div className="flex-grow grid grid-cols-2 gap-2 mt-2">
-                              {[
-                                {
-                                  name: "Valuation",
-                                  value: formatValuation(
-                                    aiDeck[currentRound - 1].valuation
-                                  ),
-                                  icon: DollarSign,
-                                  color: "purple",
-                                  key: "valuation",
-                                },
-                                {
-                                  name: "Revenue",
-                                  value: formatRevenue(
-                                    aiDeck[currentRound - 1].revenue
-                                  ),
-                                  icon: TrendingUp,
-                                  color: "green",
-                                  key: "revenue",
-                                },
-                                {
-                                  name: "Time to Unicorn",
-                                  value: formatTimeToUnicorn(
-                                    aiDeck[currentRound - 1].timeToUnicorn
-                                  ),
-                                  icon: Zap,
-                                  color: "yellow",
-                                  key: "timeToUnicorn",
-                                },
-                                {
-                                  name: "Founded",
-                                  value:
-                                    aiDeck[currentRound - 1].founded.toString(),
-                                  icon: Calendar,
-                                  color: "blue",
-                                  key: "founded",
-                                },
-                              ].map((attr) => (
-                                <motion.div
-                                  key={attr.key}
-                                  className={cn(
-                                    "rounded-lg p-2 flex flex-col items-center justify-center",
-                                    !battleAttribute
-                                      ? [
-                                          attr.color === "purple" &&
-                                            "bg-purple-500/20",
-                                          attr.color === "green" &&
-                                            "bg-green-500/20",
-                                          attr.color === "yellow" &&
-                                            "bg-yellow-500/20",
-                                          attr.color === "blue" &&
-                                            "bg-blue-500/20",
-                                        ]
-                                      : battleAttribute === attr.key
-                                      ? [
-                                          attr.color === "purple" &&
-                                            "bg-purple-500/50 ring-2 ring-purple-400",
-                                          attr.color === "green" &&
-                                            "bg-green-500/50 ring-2 ring-green-400",
-                                          attr.color === "yellow" &&
-                                            "bg-yellow-500/50 ring-2 ring-yellow-400",
-                                          attr.color === "blue" &&
-                                            "bg-blue-500/50 ring-2 ring-blue-400",
-                                        ]
-                                      : "bg-gray-500/10 opacity-50"
-                                  )}
-                                >
-                                  <attr.icon
-                                    className={cn(
-                                      "h-4 w-4 mb-1",
-                                      attr.color === "purple" &&
-                                        "text-purple-400",
-                                      attr.color === "green" &&
-                                        "text-green-400",
-                                      attr.color === "yellow" &&
-                                        "text-yellow-400",
-                                      attr.color === "blue" && "text-blue-400"
-                                    )}
-                                  />
-                                  <div className="text-[10px] text-gray-400">
-                                    {attr.name}
-                                  </div>
-                                  <div className="text-xs font-semibold text-white">
-                                    {attr.value}
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Battle result animation */}
-                <AnimatePresence>
-                  {battleResult && (
-                    <motion.div
-                      className="absolute inset-0 pointer-events-none z-20"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      {battleResult === "win" && (
-                        <motion.div
-                          className="absolute inset-0 flex items-center justify-center"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                        >
-                          <div className="relative">
-                            <motion.div
-                              className="absolute -inset-20 rounded-full bg-gradient-to-r from-green-500/0 via-green-500/20 to-green-500/0 blur-xl"
-                              animate={{
-                                scale: [1, 1.5, 1],
-                                opacity: [0, 0.5, 0],
-                              }}
-                              transition={{ duration: 1.5 }}
-                            />
-                            <motion.div
-                              className="text-6xl font-bold text-green-500"
-                              animate={{
-                                y: [0, -20, 0],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{ duration: 1 }}
-                            >
-                              WIN!
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {battleResult === "lose" && (
-                        <motion.div
-                          className="absolute inset-0 flex items-center justify-center"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                        >
-                          <div className="relative">
-                            <motion.div
-                              className="absolute -inset-20 rounded-full bg-gradient-to-r from-red-500/0 via-red-500/20 to-red-500/0 blur-xl"
-                              animate={{
-                                scale: [1, 1.5, 1],
-                                opacity: [0, 0.5, 0],
-                              }}
-                              transition={{ duration: 1.5 }}
-                            />
-                            <motion.div
-                              className="text-6xl font-bold text-red-500"
-                              animate={{
-                                y: [0, -20, 0],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{ duration: 1 }}
-                            >
-                              LOSE!
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {battleResult === "draw" && (
-                        <motion.div
-                          className="absolute inset-0 flex items-center justify-center"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                        >
-                          <div className="relative">
-                            <motion.div
-                              className="absolute -inset-20 rounded-full bg-gradient-to-r from-yellow-500/0 via-yellow-500/20 to-yellow-500/0 blur-xl"
-                              animate={{
-                                scale: [1, 1.5, 1],
-                                opacity: [0, 0.5, 0],
-                              }}
-                              transition={{ duration: 1.5 }}
-                            />
-                            <motion.div
-                              className="text-6xl font-bold text-yellow-500"
-                              animate={{
-                                y: [0, -20, 0],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{ duration: 1 }}
-                            >
-                              DRAW!
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Battle controls */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-900/80 backdrop-blur-sm border-t border-purple-500/20 z-10">
-                {battleAttribute ? (
-                  <motion.button
-                    className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleNextRound}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {currentRound < 4 ? "Next Round" : "See Results"}
-                  </motion.button>
-                ) : (
-                  <div className="text-center text-sm text-gray-400">
-                    Select an attribute to battle with
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Battle tips */}
-            <div className="mt-4 p-3 rounded-lg bg-gray-900/50 border border-purple-500/20">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <InfoIcon className="h-4 w-4 text-purple-400" />
-                <span>
-                  <span className="text-purple-400 font-medium">
-                    Battle Tip:
-                  </span>{" "}
-                  For Valuation & Revenue, higher values win. For Founded Year &
-                  Time to Unicorn, lower values win.
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        {gameState === "battle" && renderBattlePhase()}
 
         {gameState === "result" && (
           <motion.div
