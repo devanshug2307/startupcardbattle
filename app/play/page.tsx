@@ -101,6 +101,37 @@ const battleAnimationVariants = {
   },
 };
 
+// Add these utility functions at the top of your file or in a separate utils file
+function getDateSeed() {
+  const now = new Date();
+  return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+}
+
+function seededRandom(seed: number) {
+  // Simple seedable random function
+  let t = (seed += 0x6d2b79f5);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+function deterministicShuffle(array: any[], seed: number) {
+  // Create a copy of the array to avoid modifying the original
+  const result = [...array];
+  let currentSeed = seed;
+
+  // Fisher-Yates shuffle with seeded random
+  for (let i = result.length - 1; i > 0; i--) {
+    // Generate random index based on the seed
+    currentSeed = Math.floor(seededRandom(currentSeed) * 1000000);
+    const j = Math.floor(seededRandom(currentSeed) * (i + 1));
+    // Swap elements
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
+}
+
 export default function PlayGame() {
   const router = useRouter();
   const [gameState, setGameState] = useState<"select" | "battle" | "result">(
@@ -121,13 +152,32 @@ export default function PlayGame() {
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [roundAttributes, setRoundAttributes] = useState<string[]>([]);
+  const [currentDay, setCurrentDay] = useState(0);
 
   // Initialize game
   useEffect(() => {
-    // Shuffle and distribute cards
-    const shuffled = [...startupData].sort(() => 0.5 - Math.random());
+    // Get today's date-based seed
+    const dateSeed = getDateSeed();
+
+    // Shuffle using deterministic algorithm based on the date
+    const shuffled = deterministicShuffle(startupData, dateSeed);
+
+    // Always assign the same cards to player and AI for a given day
     setPlayerDeck(shuffled.slice(0, 10) as StartupCard[]);
     setAiDeck(shuffled.slice(10, 20) as StartupCard[]);
+
+    // Calculate days since/until March 31, 2025
+    const launchDate = new Date("2025-03-31T00:00:00");
+    const now = new Date();
+    const dayDiff = Math.floor(
+      (now.getTime() - launchDate.getTime()) / 86400000
+    );
+
+    // If we're before launch date, dayDiff will be negative
+    // After launch date, it will be 0 (launch day) or positive
+    const dayNumber = dayDiff < 0 ? -1 : dayDiff + 1; // +1 so launch day is Day 1
+
+    setCurrentDay(dayNumber);
   }, []);
 
   // Timer for turn-based gameplay
@@ -251,62 +301,64 @@ export default function PlayGame() {
   };
 
   const generateShareText = () => {
-    // Get the most valuable startup from player's selected cards
-    const bestStartup = selectedCards.reduce((prev, curr) =>
-      curr.valuation > prev.valuation ? curr : prev
-    );
+    // Handle pre-launch period
+    if (currentDay < 1) {
+      // Before official launch
+      const launchDate = new Date("2025-03-31T00:00:00");
+      const now = new Date();
+      const daysToLaunch = Math.ceil(
+        (launchDate.getTime() - now.getTime()) / 86400000
+      );
 
-    // Create an engaging header with battle result
+      return `🚀 Startup Battle launches in ${daysToLaunch} days!\n\nI'm playing the preview version. Join me at startupcards.game #StartupBattle`;
+    }
+
+    // Add a result emoji based on game outcome
     const resultEmoji =
       playerScore > aiScore ? "🏆" : playerScore === aiScore ? "🤝" : "💪";
-    const header =
-      `Epic battle with ${bestStartup.name} ${resultEmoji}\n` +
-      `${"⭐".repeat(playerScore)}-${aiScore} • ${
-        selectedCards.length
-      } Unicorns\n\n`;
 
-    // Generate battle summary with emojis and startup names
-    const rounds = roundAttributes
+    // Create header with win/loss indicator
+    const header = `Startup Battle #${currentDay} ${playerScore}/4 ${resultEmoji}\n\n`;
+
+    // Keep the grid generation code the same
+    const grid = roundAttributes
       .map((attr, i) => {
         const playerValue = selectedCards[i][attr];
         const aiValue = aiDeck[i][attr];
+        const isLowerBetter = attr === "timeToUnicorn" || attr === "founded";
 
-        // Get attribute emoji
-        const attrEmoji = {
-          founded: "⚡",
-          revenue: "📈",
+        // Determine outcome
+        const outcome = isLowerBetter
+          ? playerValue < aiValue
+            ? "🟩"
+            : playerValue > aiValue
+            ? "🟥"
+            : "🟨"
+          : playerValue > aiValue
+          ? "🟩"
+          : playerValue < aiValue
+          ? "🟥"
+          : "🟨";
+
+        // Attribute icon
+        const attrIcon = {
+          founded: "🚀",
+          revenue: "💸",
           timeToUnicorn: "🦄",
           valuation: "💰",
         }[attr];
 
-        // Determine winner and get appropriate emoji
-        let result = "";
-        if (attr === "timeToUnicorn" || attr === "founded") {
-          result =
-            playerValue < aiValue ? "🟩" : playerValue > aiValue ? "🟥" : "🟨";
-        } else {
-          result =
-            playerValue > aiValue ? "🟩" : playerValue < aiValue ? "🟥" : "🟨";
-        }
+        // Show startup name only for wins (green squares)
+        const startupName = outcome === "🟩" ? ` ${selectedCards[i].name}` : "";
 
-        // Add startup name only for wins
-        const isWin =
-          attr === "timeToUnicorn" || attr === "founded"
-            ? playerValue < aiValue
-            : playerValue > aiValue;
-
-        return `${attrEmoji} ${result}${
-          isWin ? ` ${selectedCards[i].name}` : ""
-        }`;
+        return `${attrIcon} ${outcome}${startupName}`;
       })
       .join("\n");
 
-    // Add viral call-to-action
-    const footer =
-      "\n\nThink you can do better? 💪\n" +
-      "Play Startup Card Battle at startupcards.game 🚀";
+    // Add a more direct challenge in the footer
+    const footer = `\n\nCan you beat my ${playerScore}/4 at startupcards.game? #StartupBattle`;
 
-    return header + rounds + footer;
+    return header + grid + footer;
   };
 
   const shareResult = async () => {
@@ -411,17 +463,15 @@ export default function PlayGame() {
               className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"
             />
 
-            {/* Selection Badge */}
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
+            {/* Selection Badge - Static version without animations */}
+            <div
               className="absolute top-3 right-3 w-8 h-8 rounded-full 
                        bg-gradient-to-r from-purple-500 to-pink-500
                        flex items-center justify-center text-white font-bold
                        shadow-lg z-20 ring-2 ring-white/20"
             >
               {selectedCards.indexOf(card) + 1}
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1466,20 +1516,6 @@ Can you beat my score? #StartupCardBattle`;
                           isSelected={selectedCards.includes(card)}
                           onSelect={() => handleCardSelect(card)}
                         />
-
-                        {/* Selection Number */}
-                        <AnimatePresence>
-                          {selectedCards.includes(card) && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.5 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.5 }}
-                              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold shadow-lg"
-                            >
-                              {selectedCards.indexOf(card) + 1}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                       </motion.div>
                     ))}
                 </div>
@@ -1776,6 +1812,16 @@ Can you beat my score? #StartupCardBattle`;
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Preview Message */}
+            {currentDay < 1 && (
+              <div className="fixed bottom-4 left-4 right-4 bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg shadow-lg">
+                <p className="text-center text-white font-bold">
+                  Playing preview version! Official daily challenges launch on
+                  March 31, 2025.
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
       </main>
