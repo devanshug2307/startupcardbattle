@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -495,9 +495,10 @@ const PixelAttackEffect = ({ isPlayer = true, isActive = false }) => (
   </AnimatePresence>
 );
 
-export default function PlayGame() {
+// Assuming your main content is in a component, let's wrap it in Suspense
+function PlayContent() {
+  const searchParams = useSearchParams()
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [gameState, setGameState] = useState<"select" | "battle" | "result">(
     "select"
   );
@@ -2755,4 +2756,12 @@ Can you beat my score? #StartupCardBattle`;
       </div>
     </div>
   );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PlayContent />
+    </Suspense>
+  )
 }
