@@ -34,6 +34,8 @@ export function OrbitingCirclesDemo() {
   const [showHelp, setShowHelp] = useState(false);
   const [hasShownInitialHelp, setHasShownInitialHelp] = useState(false);
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
 
   // Check if mobile on mount and window resize
   useEffect(() => {
@@ -54,6 +56,26 @@ export function OrbitingCirclesDemo() {
       return () => clearTimeout(timer);
     }
   }, [hasShownInitialHelp]);
+
+  useEffect(() => {
+    setMounted(true);
+    // Update dimensions after mount
+    setDimensions({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+
+    // Add resize handler
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Startup data with retro gaming stats
   const startupData: StartupData[] = [
@@ -211,6 +233,49 @@ export function OrbitingCirclesDemo() {
       },
     },
   };
+
+  // Helper function to generate deterministic positions
+  const getParticlePosition = (
+    index: number,
+    total: number,
+    isPercentage = false
+  ) => {
+    if (!mounted) {
+      // During SSR and initial render, use deterministic positions
+      const x = ((index + 1) / (total + 1)) * 100;
+      const y = (index * index) % 100;
+      return isPercentage
+        ? {
+            x: `${x}%`,
+            y: `${y}%`,
+          }
+        : {
+            x: (dimensions.width * x) / 100,
+            y: (dimensions.height * y) / 100,
+          };
+    }
+    // After mounting, use random positions
+    return isPercentage
+      ? {
+          x: `${Math.random() * 100}%`,
+          y: `${Math.random() * 100}%`,
+        }
+      : {
+          x: Math.random() * dimensions.width,
+          y: Math.random() * dimensions.height,
+        };
+  };
+
+  const getParticleScale = (index: number) => {
+    if (!mounted) {
+      // Deterministic scale during SSR
+      return 0.5 + (index % 5) / 10;
+    }
+    return Math.random() * 0.5 + 0.5;
+  };
+
+  const particleCount = isMobile ? 25 : 50;
+  const starCount = isMobile ? 20 : 40;
 
   return (
     <div
@@ -681,67 +746,78 @@ export function OrbitingCirclesDemo() {
 
       {/* Enhanced Floating Particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(isMobile ? 15 : 30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-              scale: 0,
-            }}
-            animate={{
-              x: [
-                Math.random() * window.innerWidth,
-                Math.random() * window.innerWidth,
-                Math.random() * window.innerWidth,
-              ],
-              y: [
-                Math.random() * window.innerHeight,
-                Math.random() * window.innerHeight,
-                Math.random() * window.innerHeight,
-              ],
-              opacity: [0.2, 0.8, 0.2],
-              scale: [0, 1, 0],
-            }}
-            transition={{
-              duration: Math.random() * 8 + 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: Math.random() * 2,
-            }}
-            style={{
-              filter: "blur(0.5px)",
-              boxShadow: "0 0 8px rgba(168, 85, 247, 0.4)",
-            }}
-          />
-        ))}
+        {Array.from({ length: particleCount }).map((_, i) => {
+          const initialPos = getParticlePosition(i, particleCount);
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"
+              initial={{
+                x: initialPos.x,
+                y: initialPos.y,
+                scale: 0,
+              }}
+              animate={{
+                x: mounted
+                  ? [
+                      Math.random() * dimensions.width,
+                      Math.random() * dimensions.width,
+                      Math.random() * dimensions.width,
+                    ]
+                  : initialPos.x,
+                y: mounted
+                  ? [
+                      Math.random() * dimensions.height,
+                      Math.random() * dimensions.height,
+                      Math.random() * dimensions.height,
+                    ]
+                  : initialPos.y,
+                opacity: [0.2, 0.8, 0.2],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: mounted ? Math.random() * 8 + 4 : 0,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: mounted ? Math.random() * 2 : 0,
+              }}
+              style={{
+                filter: "blur(0.5px)",
+                boxShadow: "0 0 8px rgba(168, 85, 247, 0.4)",
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Additional Background Stars */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(isMobile ? 20 : 40)].map((_, i) => (
-          <motion.div
-            key={`star-${i}`}
-            className="absolute w-0.5 h-0.5 bg-white rounded-full"
-            initial={{
-              x: Math.random() * 100 + "%",
-              y: Math.random() * 100 + "%",
-              scale: Math.random() * 0.5 + 0.5,
-            }}
-            animate={{
-              opacity: [0.2, 0.8, 0.2],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-            style={{
-              boxShadow: "0 0 2px rgba(255, 255, 255, 0.5)",
-            }}
-          />
-        ))}
+        {Array.from({ length: starCount }).map((_, i) => {
+          const pos = getParticlePosition(i, starCount, true);
+          const scale = getParticleScale(i);
+          return (
+            <motion.div
+              key={`star-${i}`}
+              className="absolute w-0.5 h-0.5 bg-white rounded-full"
+              initial={{
+                x: pos.x,
+                y: pos.y,
+                scale,
+              }}
+              animate={{
+                opacity: [0.2, 0.8, 0.2],
+              }}
+              transition={{
+                duration: mounted ? Math.random() * 3 + 2 : 2,
+                repeat: Infinity,
+                delay: mounted ? Math.random() * 2 : 0,
+              }}
+              style={{
+                boxShadow: "0 0 2px rgba(255, 255, 255, 0.5)",
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );
