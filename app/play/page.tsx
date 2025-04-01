@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
@@ -132,8 +132,17 @@ function deterministicShuffle(array: any[], seed: number) {
   return result;
 }
 
+// Add portal configuration
+const PORTAL_CONFIG = {
+  exitPortalUrl: "http://portal.pieter.com",
+  defaultColor: "purple",
+  defaultSpeed: 1,
+  gameRef: "https://cardbattle.online",
+};
+
 export default function PlayGame() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [gameState, setGameState] = useState<"select" | "battle" | "result">(
     "select"
   );
@@ -153,6 +162,12 @@ export default function PlayGame() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [roundAttributes, setRoundAttributes] = useState<string[]>([]);
   const [currentDay, setCurrentDay] = useState(0);
+
+  // Add portal-related state
+  const [portalActive, setPortalActive] = useState(false);
+  const [playerName, setPlayerName] = useState<string>("");
+  const [comingFromPortal, setComingFromPortal] = useState(false);
+  const [previousGameUrl, setPreviousGameUrl] = useState<string | null>(null);
 
   // Initialize game
   useEffect(() => {
@@ -208,6 +223,31 @@ export default function PlayGame() {
       setIsTimerActive(false);
     }
   }, [gameState, battleAttribute]);
+
+  // Add this near your other useEffect hooks
+  useEffect(() => {
+    // Check if user is coming from portal
+    const isFromPortal = searchParams.get("portal") === "true";
+    const refGame = searchParams.get("ref");
+    const userName = searchParams.get("username");
+
+    // Add debug logging
+    console.log("Portal Debug:", {
+      isFromPortal,
+      refGame,
+      userName,
+      allParams: Object.fromEntries(searchParams.entries()),
+    });
+
+    if (isFromPortal && refGame) {
+      console.log("Entering from portal:", refGame);
+      setComingFromPortal(true);
+      setPreviousGameUrl(refGame);
+      if (userName) setPlayerName(userName);
+      // Automatically start game for seamless experience
+      startGame();
+    }
+  }, [searchParams]);
 
   const startGame = () => {
     if (selectedCards.length < 4) return;
@@ -318,7 +358,7 @@ export default function PlayGame() {
       playerScore > aiScore ? "🏆" : playerScore === aiScore ? "🤝" : "💪";
 
     // Create header with win/loss indicator
-    const header = `Startup Battle #${currentDay} ${playerScore}/4 ${resultEmoji}\n\n`;
+    const header = `Startup Battle #${currentDay} (${playerScore}/4) ${resultEmoji}\n\n`;
 
     // Keep the grid generation code the same
     const grid = roundAttributes
@@ -356,7 +396,7 @@ export default function PlayGame() {
       .join("\n");
 
     // Add a more direct challenge in the footer
-    const footer = `\n\nCan you beat my ${playerScore}/4 at startupcards.game? #StartupBattle`;
+    const footer = `\n\nCan you beat my ${playerScore}/4 at cardbattle.online? #StartupBattle`;
 
     return header + grid + footer;
   };
@@ -1295,536 +1335,581 @@ Can you beat my score? #StartupCardBattle`;
     );
   };
 
+  // Add portal transition function
+  const handlePortalTransition = (isExit: boolean = false) => {
+    setPortalActive(true);
+
+    // Construct portal URL with parameters
+    const portalParams = new URLSearchParams({
+      username: playerName || "anonymous",
+      color: PORTAL_CONFIG.defaultColor,
+      speed: PORTAL_CONFIG.defaultSpeed.toString(),
+      ref: PORTAL_CONFIG.gameRef,
+    });
+
+    // Add game-specific stats
+    if (playerScore) {
+      portalParams.append("score", (playerScore * 100).toString());
+    }
+
+    const portalUrl = isExit
+      ? `${PORTAL_CONFIG.exitPortalUrl}?${portalParams}`
+      : previousGameUrl || PORTAL_CONFIG.exitPortalUrl;
+
+    // Debug logging
+    console.log("Portal Transition:", {
+      isExit,
+      portalUrl,
+      params: Object.fromEntries(portalParams.entries()),
+    });
+
+    // Animate portal transition
+    setTimeout(() => {
+      router.push(portalUrl);
+    }, 1000);
+  };
+
+  // Add portal UI components
+  const PortalElement = ({
+    isExit = false,
+    onClick,
+  }: {
+    isExit?: boolean;
+    onClick: () => void;
+  }) => (
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      className={cn(
+        "cursor-pointer relative rounded-full overflow-hidden",
+        "w-16 h-16 md:w-24 md:h-24",
+        "bg-gradient-to-r from-purple-600 to-blue-600",
+        "flex items-center justify-center",
+        "transition-all duration-300",
+        isExit
+          ? "hover:shadow-[0_0_30px_rgba(147,51,234,0.5)]"
+          : "hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+      )}
+      onClick={onClick}
+    >
+      <div className="absolute inset-0 portal-swirl animate-spin-slow" />
+      <div className="relative z-10 text-white font-bold text-sm md:text-base">
+        {isExit ? "Exit Portal" : "Return"}
+      </div>
+    </motion.div>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Streamlined Header */}
-      <header className="sticky top-0 z-40 px-3 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800/50">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-bold">Unicorn Battle</h1>
-          <div className="w-5" />
-        </div>
-      </header>
+    <div className="relative min-h-screen bg-gray-900">
+      {/* Add portal entrance animation if coming from portal */}
+      {comingFromPortal && (
+        <motion.div
+          initial={{ scale: 0, opacity: 1 }}
+          animate={{ scale: 20, opacity: 0 }}
+          transition={{ duration: 1 }}
+          className="fixed inset-0 bg-purple-600/50 z-50"
+        />
+      )}
 
-      {/* Optimized Game Content */}
-      <main className="flex-grow px-3 py-2">
-        {gameState === "select" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col space-y-3 max-w-7xl mx-auto px-4"
-          >
-            {/* Quick Tutorial Tooltip */}
+      {/* Add portals to the game UI */}
+      <div className="fixed top-4 right-4 z-40 flex gap-4">
+        {previousGameUrl && (
+          <PortalElement onClick={() => handlePortalTransition(false)} />
+        )}
+        <PortalElement isExit onClick={() => handlePortalTransition(true)} />
+      </div>
+
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+        {/* Streamlined Header */}
+        <header className="sticky top-0 z-40 px-3 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800/50">
+          <div className="flex justify-between items-center max-w-7xl mx-auto">
+            <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-bold">Unicorn Battle</h1>
+            <div className="w-5" />
+          </div>
+        </header>
+
+        {/* Optimized Game Content */}
+        <main className="flex-grow px-3 py-2">
+          {gameState === "select" && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-3 sm:p-4 max-w-3xl mx-auto w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col space-y-3 max-w-7xl mx-auto px-4"
             >
-              <div className="flex items-start gap-2">
-                <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs sm:text-sm text-blue-200">
-                  Select 4 cards to build your battle deck. Choose wisely -
-                  different attributes matter in different rounds!
-                </p>
-              </div>
-            </motion.div>
+              {/* Quick Tutorial Tooltip */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-3 sm:p-4 max-w-3xl mx-auto w-full"
+              >
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs sm:text-sm text-blue-200">
+                    Select 4 cards to build your battle deck. Choose wisely -
+                    different attributes matter in different rounds!
+                  </p>
+                </div>
+              </motion.div>
 
-            {/* Desktop Layout Container */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-              {/* Left Column - Stats & Info */}
-              <div className="lg:col-span-3 space-y-3">
-                {/* Compact Header with Progress */}
-                <div className="text-center sm:text-left bg-gray-900/50 rounded-xl p-4">
-                  <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
-                    Build Your Battle Deck
-                  </h1>
-                  <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
-                    <div className="h-2 w-32 bg-gray-800 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                        initial={{ width: "0%" }}
-                        animate={{
-                          width: `${(selectedCards.length / 4) * 100}%`,
-                        }}
-                      />
+              {/* Desktop Layout Container */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                {/* Left Column - Stats & Info */}
+                <div className="lg:col-span-3 space-y-3">
+                  {/* Compact Header with Progress */}
+                  <div className="text-center sm:text-left bg-gray-900/50 rounded-xl p-4">
+                    <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+                      Build Your Battle Deck
+                    </h1>
+                    <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
+                      <div className="h-2 w-32 bg-gray-800 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                          initial={{ width: "0%" }}
+                          animate={{
+                            width: `${(selectedCards.length / 4) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-purple-300">
+                        {selectedCards.length}/4
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-purple-300">
-                      {selectedCards.length}/4
-                    </span>
                   </div>
-                </div>
 
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-                  {[
-                    {
-                      label: "Deck Power",
-                      value: selectedCards.length
-                        ? Math.round(
-                            selectedCards.reduce(
-                              (acc, card) => acc + card.valuation,
-                              0
-                            ) / selectedCards.length
-                          )
-                        : "-",
-                      icon: Zap,
-                      color: "text-yellow-400",
-                      bg: "bg-yellow-500/10",
-                    },
-                    {
-                      label: "Categories",
-                      value: selectedCards.length
-                        ? `${
-                            new Set(selectedCards.map((card) => card.category))
-                              .size
-                          }/4`
-                        : "-",
-                      icon: Layout,
-                      color: "text-blue-400",
-                      bg: "bg-blue-500/10",
-                    },
-                    {
-                      label: "Avg Year",
-                      value: selectedCards.length
-                        ? Math.round(
-                            selectedCards.reduce(
-                              (acc, card) => acc + card.founded,
-                              0
-                            ) / selectedCards.length
-                          )
-                        : "-",
-                      icon: Calendar,
-                      color: "text-green-400",
-                      bg: "bg-green-500/10",
-                    },
-                  ].map((stat) => (
-                    <div
-                      key={stat.label}
-                      className={`${stat.bg} rounded-lg p-3 border border-gray-800`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <stat.icon className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-300">
-                          {stat.label}
-                        </span>
-                      </div>
-                      <div className={`text-lg font-bold mt-1 ${stat.color}`}>
-                        {stat.value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Battle Tips Accordion */}
-                <Collapsible>
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-purple-400" />
-                        <span className="text-sm font-medium text-purple-200">
-                          Battle Tips
-                        </span>
-                      </div>
-                      <ChevronDown className="w-4 h-4 text-purple-400" />
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="grid grid-cols-1 gap-2 p-2">
-                      {[
-                        {
-                          tip: "Higher valuation wins valuation rounds",
-                          icon: "💰",
-                          color: "bg-green-500/10",
-                        },
-                        {
-                          tip: "Newer startups win founding year rounds",
-                          icon: "📅",
-                          color: "bg-blue-500/10",
-                        },
-                        {
-                          tip: "Faster unicorns win speed rounds",
-                          icon: "⚡",
-                          color: "bg-yellow-500/10",
-                        },
-                        {
-                          tip: "Higher revenue wins revenue rounds",
-                          icon: "📈",
-                          color: "bg-pink-500/10",
-                        },
-                      ].map((tip) => (
-                        <div
-                          key={tip.tip}
-                          className={`flex items-start gap-2 ${tip.color} rounded-lg p-3`}
-                        >
-                          <span className="text-xl">{tip.icon}</span>
-                          <span className="text-sm leading-tight text-gray-300">
-                            {tip.tip}
+                  {/* Quick Stats Grid */}
+                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+                    {[
+                      {
+                        label: "Deck Power",
+                        value: selectedCards.length
+                          ? Math.round(
+                              selectedCards.reduce(
+                                (acc, card) => acc + card.valuation,
+                                0
+                              ) / selectedCards.length
+                            )
+                          : "-",
+                        icon: Zap,
+                        color: "text-yellow-400",
+                        bg: "bg-yellow-500/10",
+                      },
+                      {
+                        label: "Categories",
+                        value: selectedCards.length
+                          ? `${
+                              new Set(
+                                selectedCards.map((card) => card.category)
+                              ).size
+                            }/4`
+                          : "-",
+                        icon: Layout,
+                        color: "text-blue-400",
+                        bg: "bg-blue-500/10",
+                      },
+                      {
+                        label: "Avg Year",
+                        value: selectedCards.length
+                          ? Math.round(
+                              selectedCards.reduce(
+                                (acc, card) => acc + card.founded,
+                                0
+                              ) / selectedCards.length
+                            )
+                          : "-",
+                        icon: Calendar,
+                        color: "text-green-400",
+                        bg: "bg-green-500/10",
+                      },
+                    ].map((stat) => (
+                      <div
+                        key={stat.label}
+                        className={`${stat.bg} rounded-lg p-3 border border-gray-800`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <stat.icon className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-300">
+                            {stat.label}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-
-              {/* Right Column - Categories & Cards */}
-              <div className="lg:col-span-9 space-y-3">
-                {/* Enhanced Category Navigation */}
-                <div className="bg-gray-900/50 rounded-lg p-2">
-                  <Tabs
-                    defaultValue="all"
-                    className="w-full"
-                    onValueChange={setActiveCategory}
-                  >
-                    <TabsList className="grid grid-cols-4 gap-2">
-                      {categories.map((category) => (
-                        <TabsTrigger
-                          key={category.name}
-                          value={category.name.toLowerCase()}
-                          className="relative px-3 py-2 rounded-md data-[state=active]:bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <category.icon className="w-4 h-4" />
-                            <span className="text-sm">{category.name}</span>
-                          </div>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-
-                {/* Card Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-20">
-                  {playerDeck
-                    .filter(
-                      (card) =>
-                        activeCategory === "all" ||
-                        card.category.toLowerCase() === activeCategory
-                    )
-                    .map((card, index) => (
-                      <motion.div
-                        key={card.name}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="relative"
-                      >
-                        <CardComponent
-                          card={card}
-                          isSelected={selectedCards.includes(card)}
-                          onSelect={() => handleCardSelect(card)}
-                        />
-                      </motion.div>
+                        <div className={`text-lg font-bold mt-1 ${stat.color}`}>
+                          {stat.value}
+                        </div>
+                      </div>
                     ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Start Battle Button */}
-            <AnimatePresence>
-              {selectedCards.length === 4 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-96 z-50"
-                >
-                  <motion.button
-                    onClick={startGame}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium text-base shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Swords className="w-5 h-5" />
-                    <span>Start Battle</span>
-                  </motion.button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {gameState === "battle" && renderBattlePhase()}
-
-        {gameState === "result" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center h-full w-full max-w-[900px] mx-auto px-4"
-          >
-            {/* Hero Result Section - Responsive */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="relative w-full bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-8 mb-6 overflow-hidden"
-            >
-              {/* Background Effects */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-50" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent" />
-
-              {/* Content */}
-              <div className="relative flex items-center justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                    {playerScore > aiScore
-                      ? "Victory!"
-                      : playerScore === aiScore
-                      ? "Draw!"
-                      : "Nice Try!"}
-                  </h2>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl md:text-5xl font-bold text-white">
-                      {playerScore * 100}
-                    </span>
-                    {playerScore > aiScore && (
-                      <span className="text-xl md:text-2xl font-semibold text-green-400">
-                        +50
-                      </span>
-                    )}
-                    <span className="text-base md:text-lg text-gray-400">
-                      points
-                    </span>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-400 mt-2">
-                    <span className="text-xl">
-                      Rounds Won:{" "}
-                      <span className="text-blue-400 font-bold">
-                        {playerScore}
-                      </span>
-                    </span>
-                    <span className="text-gray-600">•</span>
-                    <span className="text-xl">
-                      AI Won:{" "}
-                      <span className="text-red-400 font-bold">{aiScore}</span>
-                    </span>
-                  </div>
+
+                  {/* Battle Tips Accordion */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-purple-400" />
+                          <span className="text-sm font-medium text-purple-200">
+                            Battle Tips
+                          </span>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-purple-400" />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="grid grid-cols-1 gap-2 p-2">
+                        {[
+                          {
+                            tip: "Higher valuation wins valuation rounds",
+                            icon: "💰",
+                            color: "bg-green-500/10",
+                          },
+                          {
+                            tip: "Newer startups win founding year rounds",
+                            icon: "📅",
+                            color: "bg-blue-500/10",
+                          },
+                          {
+                            tip: "Faster unicorns win speed rounds",
+                            icon: "⚡",
+                            color: "bg-yellow-500/10",
+                          },
+                          {
+                            tip: "Higher revenue wins revenue rounds",
+                            icon: "📈",
+                            color: "bg-pink-500/10",
+                          },
+                        ].map((tip) => (
+                          <div
+                            key={tip.tip}
+                            className={`flex items-start gap-2 ${tip.color} rounded-lg p-3`}
+                          >
+                            <span className="text-xl">{tip.icon}</span>
+                            <span className="text-sm leading-tight text-gray-300">
+                              {tip.tip}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
 
-                {/* Trophy/Emoji with enhanced animation */}
-                <div className="relative">
-                  {playerScore > aiScore ? (
-                    <div className="relative">
-                      <motion.div
-                        animate={{
-                          rotate: [0, -10, 10, -10, 10, 0],
-                          scale: [1, 1.1, 1],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          repeatType: "reverse",
-                        }}
-                      >
-                        <Trophy className="w-20 h-20 md:w-28 md:h-28 text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.3)]" />
-                      </motion.div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: [0, 1.2, 1] }}
-                        transition={{ delay: 0.8 }}
-                        className="absolute -top-3 -right-3 animate-bounce"
-                      >
-                        <span className="text-2xl md:text-3xl">✨</span>
-                      </motion.div>
-                    </div>
-                  ) : (
-                    <motion.div
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="text-5xl md:text-6xl"
+                {/* Right Column - Categories & Cards */}
+                <div className="lg:col-span-9 space-y-3">
+                  {/* Enhanced Category Navigation */}
+                  <div className="bg-gray-900/50 rounded-lg p-2">
+                    <Tabs
+                      defaultValue="all"
+                      className="w-full"
+                      onValueChange={setActiveCategory}
                     >
-                      {playerScore === aiScore ? "🤝" : "💪"}
-                    </motion.div>
-                  )}
+                      <TabsList className="grid grid-cols-4 gap-2">
+                        {categories.map((category) => (
+                          <TabsTrigger
+                            key={category.name}
+                            value={category.name.toLowerCase()}
+                            className="relative px-3 py-2 rounded-md data-[state=active]:bg-gradient-to-r from-purple-500/20 to-pink-500/20"
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              <category.icon className="w-4 h-4" />
+                              <span className="text-sm">{category.name}</span>
+                            </div>
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  </div>
+
+                  {/* Card Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-20">
+                    {playerDeck
+                      .filter(
+                        (card) =>
+                          activeCategory === "all" ||
+                          card.category.toLowerCase() === activeCategory
+                      )
+                      .map((card, index) => (
+                        <motion.div
+                          key={card.name}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="relative"
+                        >
+                          <CardComponent
+                            card={card}
+                            isSelected={selectedCards.includes(card)}
+                            onSelect={() => handleCardSelect(card)}
+                          />
+                        </motion.div>
+                      ))}
+                  </div>
                 </div>
               </div>
-            </motion.div>
 
-            {/* Battle Summary Card - Enhanced for desktop and mobile */}
-            <Card
-              id="battle-summary"
-              className="w-full bg-gray-900/90 border-gray-800 overflow-hidden backdrop-blur-sm"
-            >
-              <CardHeader className="border-b border-gray-800/50 p-4">
-                <CardTitle className="text-xl md:text-2xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                  Battle Summary
-                </CardTitle>
-              </CardHeader>
-              <div className="p-3 md:p-6 grid gap-2 md:gap-4 max-h-[60vh] overflow-y-auto">
-                {Array.from({ length: 4 }).map((_, i) => (
+              {/* Start Battle Button */}
+              <AnimatePresence>
+                {selectedCards.length === 4 && (
                   <motion.div
-                    key={`${i}-${roundAttributes[i]}-${
-                      selectedCards[i][roundAttributes[i]]
-                    }-${aiDeck[i][roundAttributes[i]]}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + i * 0.1 }}
-                    className={cn(
-                      "relative rounded-xl overflow-hidden",
-                      "bg-gradient-to-r p-[1px]",
-                      roundAttributes[i] === "timeToUnicorn" ||
-                        roundAttributes[i] === "founded"
-                        ? selectedCards[i][roundAttributes[i]] <
-                          aiDeck[i][roundAttributes[i]]
-                          ? "from-green-500/30 via-green-500/20 to-green-500/30"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-96 z-50"
+                  >
+                    <motion.button
+                      onClick={startGame}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium text-base shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Swords className="w-5 h-5" />
+                      <span>Start Battle</span>
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          {gameState === "battle" && renderBattlePhase()}
+
+          {gameState === "result" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center h-full w-full max-w-[900px] mx-auto px-4"
+            >
+              {/* Hero Result Section - Responsive */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative w-full bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-8 mb-6 overflow-hidden"
+              >
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-50" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent" />
+
+                {/* Content */}
+                <div className="relative flex items-center justify-between">
+                  <div className="space-y-2">
+                    <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                      {playerScore > aiScore
+                        ? "Victory!"
+                        : playerScore === aiScore
+                        ? "Draw!"
+                        : "Nice Try!"}
+                    </h2>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl md:text-5xl font-bold text-white">
+                        {playerScore * 100}
+                      </span>
+                      {playerScore > aiScore && (
+                        <span className="text-xl md:text-2xl font-semibold text-green-400">
+                          +50
+                        </span>
+                      )}
+                      <span className="text-base md:text-lg text-gray-400">
+                        points
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-400 mt-2">
+                      <span className="text-xl">
+                        Rounds Won:{" "}
+                        <span className="text-blue-400 font-bold">
+                          {playerScore}
+                        </span>
+                      </span>
+                      <span className="text-gray-600">•</span>
+                      <span className="text-xl">
+                        AI Won:{" "}
+                        <span className="text-red-400 font-bold">
+                          {aiScore}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Trophy/Emoji with enhanced animation */}
+                  <div className="relative">
+                    {playerScore > aiScore ? (
+                      <div className="relative">
+                        <motion.div
+                          animate={{
+                            rotate: [0, -10, 10, -10, 10, 0],
+                            scale: [1, 1.1, 1],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                          }}
+                        >
+                          <Trophy className="w-20 h-20 md:w-28 md:h-28 text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.3)]" />
+                        </motion.div>
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: [0, 1.2, 1] }}
+                          transition={{ delay: 0.8 }}
+                          className="absolute -top-3 -right-3 animate-bounce"
+                        >
+                          <span className="text-2xl md:text-3xl">✨</span>
+                        </motion.div>
+                      </div>
+                    ) : (
+                      <motion.div
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-5xl md:text-6xl"
+                      >
+                        {playerScore === aiScore ? "🤝" : "💪"}
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Battle Summary Card - Enhanced for desktop and mobile */}
+              <Card
+                id="battle-summary"
+                className="w-full bg-gray-900/90 border-gray-800 overflow-hidden backdrop-blur-sm"
+              >
+                <CardHeader className="border-b border-gray-800/50 p-4">
+                  <CardTitle className="text-xl md:text-2xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                    Battle Summary
+                  </CardTitle>
+                </CardHeader>
+                <div className="p-3 md:p-6 grid gap-2 md:gap-4 max-h-[60vh] overflow-y-auto">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <motion.div
+                      key={`${i}-${roundAttributes[i]}-${
+                        selectedCards[i][roundAttributes[i]]
+                      }-${aiDeck[i][roundAttributes[i]]}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + i * 0.1 }}
+                      className={cn(
+                        "relative rounded-xl overflow-hidden",
+                        "bg-gradient-to-r p-[1px]",
+                        roundAttributes[i] === "timeToUnicorn" ||
+                          roundAttributes[i] === "founded"
+                          ? selectedCards[i][roundAttributes[i]] <
+                            aiDeck[i][roundAttributes[i]]
+                            ? "from-green-500/30 via-green-500/20 to-green-500/30"
+                            : selectedCards[i][roundAttributes[i]] >
+                              aiDeck[i][roundAttributes[i]]
+                            ? "from-red-500/30 via-red-500/20 to-red-500/30"
+                            : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
                           : selectedCards[i][roundAttributes[i]] >
+                            aiDeck[i][roundAttributes[i]]
+                          ? "from-green-500/30 via-green-500/20 to-green-500/30"
+                          : selectedCards[i][roundAttributes[i]] <
                             aiDeck[i][roundAttributes[i]]
                           ? "from-red-500/30 via-red-500/20 to-red-500/30"
                           : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
-                        : selectedCards[i][roundAttributes[i]] >
-                          aiDeck[i][roundAttributes[i]]
-                        ? "from-green-500/30 via-green-500/20 to-green-500/30"
-                        : selectedCards[i][roundAttributes[i]] <
-                          aiDeck[i][roundAttributes[i]]
-                        ? "from-red-500/30 via-red-500/20 to-red-500/30"
-                        : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
-                    )}
-                  >
-                    <div className="relative bg-gray-950/90 rounded-xl p-3 md:p-5">
-                      <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-6">
-                        {/* Round Number */}
-                        <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
-                          R{i + 1}
-                        </div>
-
-                        {/* Player Side */}
-                        <div className="min-w-0">
-                          <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
-                            {selectedCards[i].name}
+                      )}
+                    >
+                      <div className="relative bg-gray-950/90 rounded-xl p-3 md:p-5">
+                        <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-6">
+                          {/* Round Number */}
+                          <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
+                            R{i + 1}
                           </div>
-                          <div className="flex items-center gap-1 md:gap-2">
-                            {renderAttributeIcon(roundAttributes[i])}
-                            <span className="text-base md:text-2xl font-bold text-blue-400">
-                              {formatAttributeValue(
-                                selectedCards[i][roundAttributes[i]],
-                                roundAttributes[i]
-                              )}
-                            </span>
-                          </div>
-                        </div>
 
-                        {/* Result Badge */}
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "px-2 py-0.5 md:px-3 md:py-1 text-xs md:text-base font-semibold",
-                            roundAttributes[i] === "timeToUnicorn" ||
-                              roundAttributes[i] === "founded"
-                              ? selectedCards[i][roundAttributes[i]] <
-                                aiDeck[i][roundAttributes[i]]
-                                ? "border-green-500/30 bg-green-500/10 text-green-400"
-                                : selectedCards[i][roundAttributes[i]] >
-                                  aiDeck[i][roundAttributes[i]]
-                                ? "border-red-500/30 bg-red-500/10 text-red-400"
-                                : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
-                              : selectedCards[i][roundAttributes[i]] >
-                                aiDeck[i][roundAttributes[i]]
-                              ? "border-green-500/30 bg-green-500/10 text-green-400"
-                              : selectedCards[i][roundAttributes[i]] <
-                                aiDeck[i][roundAttributes[i]]
-                              ? "border-red-500/30 bg-red-500/10 text-red-400"
-                              : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
-                          )}
-                        >
-                          {roundAttributes[i] === "timeToUnicorn" ||
-                          roundAttributes[i] === "founded"
-                            ? selectedCards[i][roundAttributes[i]] <
-                              aiDeck[i][roundAttributes[i]]
-                              ? "WIN"
-                              : selectedCards[i][roundAttributes[i]] >
-                                aiDeck[i][roundAttributes[i]]
-                              ? "LOSS"
-                              : "TIE"
-                            : selectedCards[i][roundAttributes[i]] >
-                              aiDeck[i][roundAttributes[i]]
-                            ? "WIN"
-                            : selectedCards[i][roundAttributes[i]] <
-                              aiDeck[i][roundAttributes[i]]
-                            ? "LOSS"
-                            : "TIE"}
-                        </Badge>
-
-                        {/* AI Side */}
-                        <div className="min-w-0 text-right">
-                          <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
-                            {aiDeck[i].name}
+                          {/* Player Side */}
+                          <div className="min-w-0">
+                            <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
+                              {selectedCards[i].name}
+                            </div>
+                            <div className="flex items-center gap-1 md:gap-2">
+                              {renderAttributeIcon(roundAttributes[i])}
+                              <span className="text-base md:text-2xl font-bold text-blue-400">
+                                {formatAttributeValue(
+                                  selectedCards[i][roundAttributes[i]],
+                                  roundAttributes[i]
+                                )}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-end gap-1 md:gap-2">
-                            <span className="text-base md:text-2xl font-bold text-red-400">
-                              {formatAttributeValue(
-                                aiDeck[i][roundAttributes[i]],
-                                roundAttributes[i]
-                              )}
-                            </span>
-                            {renderAttributeIcon(roundAttributes[i])}
+
+                          {/* Result Badge */}
+                          <div className="min-w-0 text-right">
+                            <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
+                              {aiDeck[i].name}
+                            </div>
+                            <div className="flex items-center justify-end gap-1 md:gap-2">
+                              <span className="text-base md:text-2xl font-bold text-red-400">
+                                {formatAttributeValue(
+                                  aiDeck[i][roundAttributes[i]],
+                                  roundAttributes[i]
+                                )}
+                              </span>
+                              {renderAttributeIcon(roundAttributes[i])}
+                            </div>
                           </div>
                         </div>
                       </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Action Buttons - Fixed position for mobile */}
+              <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-4 mb-16 px-4">
+                <Button
+                  variant="outline"
+                  className="relative py-3 md:py-6 text-base md:text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
+                  onClick={shareResult}
+                >
+                  <div className="relative flex items-center justify-center gap-2">
+                    <Share2 className="h-4 w-4 md:h-6 md:w-6" />
+                    <span className="font-medium">Share</span>
+                  </div>
+                </Button>
+
+                <Button
+                  className="col-span-1 py-3 md:py-6 text-base md:text-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
+                  onClick={resetGame}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Swords className="h-4 w-4 md:h-6 md:w-6" />
+                    <span>Play Again</span>
+                  </div>
+                </Button>
+              </div>
+
+              {/* Share Prompt with enhanced message */}
+              <AnimatePresence>
+                {showSharePrompt && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 50 }}
+                    className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg z-50"
+                  >
+                    <div className="text-center">
+                      <div className="font-bold mb-2">
+                        Battle summary copied! 📋
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        Share your results with friends and challenge them to
+                        beat your score!
+                      </div>
                     </div>
                   </motion.div>
-                ))}
-              </div>
-            </Card>
+                )}
+              </AnimatePresence>
 
-            {/* Action Buttons - Fixed position for mobile */}
-            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-4 mb-16 px-4">
-              <Button
-                variant="outline"
-                className="relative py-3 md:py-6 text-base md:text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
-                onClick={shareResult}
-              >
-                <div className="relative flex items-center justify-center gap-2">
-                  <Share2 className="h-4 w-4 md:h-6 md:w-6" />
-                  <span className="font-medium">Share</span>
+              {/* Preview Message */}
+              {currentDay < 1 && (
+                <div className="fixed bottom-4 left-4 right-4 bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg shadow-lg">
+                  <p className="text-center text-white font-bold">
+                    Playing preview version! Official daily challenges launch on
+                    March 31, 2025.
+                  </p>
                 </div>
-              </Button>
-
-              <Button
-                className="col-span-1 py-3 md:py-6 text-base md:text-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
-                onClick={resetGame}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Swords className="h-4 w-4 md:h-6 md:w-6" />
-                  <span>Play Again</span>
-                </div>
-              </Button>
-            </div>
-
-            {/* Share Prompt with enhanced message */}
-            <AnimatePresence>
-              {showSharePrompt && (
-                <motion.div
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 50 }}
-                  className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg z-50"
-                >
-                  <div className="text-center">
-                    <div className="font-bold mb-2">
-                      Battle summary copied! 📋
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      Share your results with friends and challenge them to beat
-                      your score!
-                    </div>
-                  </div>
-                </motion.div>
               )}
-            </AnimatePresence>
-
-            {/* Preview Message */}
-            {currentDay < 1 && (
-              <div className="fixed bottom-4 left-4 right-4 bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg shadow-lg">
-                <p className="text-center text-white font-bold">
-                  Playing preview version! Official daily challenges launch on
-                  March 31, 2025.
-                </p>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </main>
+            </motion.div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

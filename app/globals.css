@@ -144,3 +144,36 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Add these portal-specific styles */
+.portal-swirl {
+  background: conic-gradient(
+    from 0deg,
+    rgba(147, 51, 234, 0.2),
+    rgba(59, 130, 246, 0.2),
+    rgba(147, 51, 234, 0.2)
+  );
+  animation: portal-spin 4s linear infinite;
+}
+
+@keyframes portal-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
