@@ -11,6 +11,9 @@ import {
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import cloudflareIcon from "/public/icons/cloudflare.png";
+import vercelIcon from "/public/icons/vercel-icon-dark.png";
+import replitIcon from "/public/icons/replit_logo_symbol.png";
 
 interface StartupData {
   icon: string;
@@ -80,13 +83,13 @@ export function OrbitingCirclesDemo() {
   // Startup data with retro gaming stats
   const startupData: StartupData[] = [
     {
-      icon: "/icons/cloudflare.png",
+      icon: cloudflareIcon.src,
       name: "Cloudflare",
       color: "from-indigo-600 to-indigo-900",
       stats: {
         valuation: "12B",
         founded: 2015,
-        category: "Fintech",
+        category: "Cybersecurity",
         power: 90,
         speed: 85,
         innovation: 82,
@@ -94,13 +97,13 @@ export function OrbitingCirclesDemo() {
       borderColor: "purple-500",
     },
     {
-      icon: "/icons/vercel-icon-dark.png",
+      icon: vercelIcon.src,
       name: "VERCEL",
       color: "from-black-900 to-black-900",
       stats: {
         valuation: "6.4B",
         founded: 2018,
-        category: "Fintech",
+        category: "DevOps",
         power: 85,
         speed: 92,
         innovation: 88,
@@ -108,13 +111,13 @@ export function OrbitingCirclesDemo() {
       borderColor: "purple-500",
     },
     {
-      icon: "/icons/replit_logo_symbol.png",
+      icon: replitIcon.src,
       name: "Replit",
       color: "from-blue-600 to-blue-900",
       stats: {
         valuation: "4.9B",
         founded: 2015,
-        category: "Consumer",
+        category: "Coding",
         power: 82,
         speed: 88,
         innovation: 85,

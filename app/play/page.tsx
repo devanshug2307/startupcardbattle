@@ -497,7 +497,7 @@ const PixelAttackEffect = ({ isPlayer = true, isActive = false }) => (
 
 // Assuming your main content is in a component, let's wrap it in Suspense
 function PlayContent() {
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [gameState, setGameState] = useState<"select" | "battle" | "result">(
     "select"
@@ -2763,5 +2763,5 @@ export default function PlayPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <PlayContent />
     </Suspense>
-  )
+  );
 }
