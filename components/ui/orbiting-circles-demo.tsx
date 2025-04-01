@@ -11,9 +11,9 @@ import {
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import cloudflareIcon from "/public/icons/cloudflare.png";
+import cloudflareIcon from "/public/icons/Cloudflare.png";
 import vercelIcon from "/public/icons/vercel-icon-dark.png";
-import replitIcon from "/public/icons/replit_logo_symbol.png";
+import replitIcon from "/public/icons/Replit_Logo_Symbol.png";
 
 interface StartupData {
   icon: string;
