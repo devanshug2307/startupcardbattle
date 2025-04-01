@@ -142,16 +142,16 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center mb-4"
               >
-                <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight bg-gradient-to-br from-violet-200 via-purple-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-2xl">
+                {/* <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight bg-gradient-to-br from-violet-200 via-purple-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-2xl">
                   Startup Card Battle
-                </h1>
+                </h1> */}
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                   className="mt-6 text-lg md:text-xl text-purple-200/80 font-light"
                 >
-                  A Strategic Card Game of Innovation & Power
+                  {/* A Strategic Card Game of Innovation & Power */}
                 </motion.p>
               </motion.div>
 
@@ -234,7 +234,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
               {[
                 {
                   title: "Collect Cards",
@@ -280,7 +280,7 @@ export default function Home() {
                   </p>
                 </motion.div>
               ))}
-            </div>
+            </div> */}
           </motion.div>
         </div>
       </div>

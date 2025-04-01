@@ -254,7 +254,7 @@ const enhancedCardAnimations = {
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        repeatType: "reverse",
+        repeatType: "reverse" as const, // Type assertion for repeatType
       },
     },
     win: {
@@ -353,9 +353,9 @@ const retroAnimations = {
     backgroundImage:
       "linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.5) 50%)",
     backgroundSize: "100% 4px",
-    position: "absolute",
+    position: "absolute" as const, // Type assertion to fix position property
     inset: 0,
-    pointerEvents: "none",
+    pointerEvents: "none" as const, // Type assertion for pointerEvents
     zIndex: 40,
   },
   pixelBorder: {
@@ -526,15 +526,15 @@ export default function PlayGame() {
 
   // Initialize game
   useEffect(() => {
-    // Get today's date-based seed
+    // Get today's date-based seed or use the existing shuffle logic
     const dateSeed = getDateSeed();
 
     // Shuffle using deterministic algorithm based on the date
-    const shuffled = deterministicShuffle(startupData, dateSeed);
+    const shuffled = [...startupData].sort(() => 0.5 - Math.random());
 
-    // Always assign the same cards to player and AI for a given day
-    setPlayerDeck(shuffled.slice(0, 10) as StartupCard[]);
-    setAiDeck(shuffled.slice(10, 20) as StartupCard[]);
+    // Change from 10 to 8 cards for each player
+    setPlayerDeck(shuffled.slice(0, 8) as unknown as StartupCard[]);
+    setAiDeck(shuffled.slice(8, 16) as unknown as StartupCard[]);
 
     // Calculate days since/until March 31, 2025
     const launchDate = new Date("2025-03-31T00:00:00");
@@ -657,10 +657,12 @@ export default function PlayGame() {
     if (isDraw) {
       setBattleResult("draw");
     } else if (playerWins) {
-      setPlayerScore(playerScore + 1);
+      // Use functional updates to ensure we're working with the latest state
+      setPlayerScore((prevScore) => prevScore + 1);
       setBattleResult("win");
     } else {
-      setAiScore(aiScore + 1);
+      // Use functional updates to ensure we're working with the latest state
+      setAiScore((prevScore) => prevScore + 1);
       setBattleResult("lose");
     }
 
@@ -685,8 +687,8 @@ export default function PlayGame() {
 
     // Reshuffle cards
     const shuffled = [...startupData].sort(() => 0.5 - Math.random());
-    setPlayerDeck(shuffled.slice(0, 10) as StartupCard[]);
-    setAiDeck(shuffled.slice(10, 20) as StartupCard[]);
+    setPlayerDeck(shuffled.slice(0, 8) as unknown as StartupCard[]);
+    setAiDeck(shuffled.slice(8, 16) as unknown as StartupCard[]);
   };
 
   // Add this function to handle moving to the next round
@@ -720,40 +722,59 @@ export default function PlayGame() {
     // Create header with win/loss indicator
     const header = `Startup Battle #${currentDay} (${playerScore}/4) ${resultEmoji}\n\n`;
 
-    // Keep the grid generation code the same
-    const grid = roundAttributes
-      .map((attr, i) => {
-        const playerValue = selectedCards[i][attr];
-        const aiValue = aiDeck[i][attr];
-        const isLowerBetter = attr === "timeToUnicorn" || attr === "founded";
+    // Check if we have enough data to generate the grid
+    const validRounds = Math.min(
+      roundAttributes.length,
+      selectedCards.length,
+      aiDeck.length
+    );
 
-        // Determine outcome
-        const outcome = isLowerBetter
-          ? playerValue < aiValue
-            ? "🟩"
-            : playerValue > aiValue
-            ? "🟥"
-            : "🟨"
-          : playerValue > aiValue
-          ? "🟩"
-          : playerValue < aiValue
-          ? "🟥"
-          : "🟨";
+    // Keep the grid generation code the same, but make it safe
+    const grid =
+      validRounds > 0
+        ? Array.from({ length: validRounds })
+            .map((_, i) => {
+              // Make sure we have valid data for this round
+              if (!selectedCards[i] || !aiDeck[i] || !roundAttributes[i]) {
+                return `Round ${i + 1}: Data missing`;
+              }
 
-        // Attribute icon
-        const attrIcon = {
-          founded: "🚀",
-          revenue: "💸",
-          timeToUnicorn: "🦄",
-          valuation: "💰",
-        }[attr];
+              const attr = roundAttributes[i];
+              const playerValue = selectedCards[i][attr];
+              const aiValue = aiDeck[i][attr];
+              const isLowerBetter =
+                attr === "timeToUnicorn" || attr === "founded";
 
-        // Show startup name only for wins (green squares)
-        const startupName = outcome === "🟩" ? ` ${selectedCards[i].name}` : "";
+              // Determine outcome
+              const outcome = isLowerBetter
+                ? playerValue < aiValue
+                  ? "🟩"
+                  : playerValue > aiValue
+                  ? "🟥"
+                  : "🟨"
+                : playerValue > aiValue
+                ? "🟩"
+                : playerValue < aiValue
+                ? "🟥"
+                : "🟨";
 
-        return `${attrIcon} ${outcome}${startupName}`;
-      })
-      .join("\n");
+              // Attribute icon
+              const attrIcon =
+                {
+                  founded: "🚀",
+                  revenue: "💸",
+                  timeToUnicorn: "🦄",
+                  valuation: "💰",
+                }[attr] || "🎮";
+
+              // Show startup name only for wins (green squares)
+              const startupName =
+                outcome === "🟩" ? ` ${selectedCards[i].name}` : "";
+
+              return `${attrIcon} ${outcome}${startupName}`;
+            })
+            .join("\n")
+        : "No rounds played yet";
 
     // Add a more direct challenge in the footer
     const footer = `\n\nCan you beat my ${playerScore}/4 at cardbattle.online? #StartupBattle`;
@@ -1519,10 +1540,8 @@ Can you beat my score? #StartupCardBattle`;
                   className="relative"
                   // Add attack animation when battle result is shown
                   animate={
-                    battleResult
-                      ? battleResult === "win"
-                        ? enhancedCardAnimations.attack.player.animate
-                        : {}
+                    battleResult && battleResult === "win"
+                      ? enhancedCardAnimations.attack.player.animate
                       : {}
                   }
                 >
@@ -1824,10 +1843,8 @@ Can you beat my score? #StartupCardBattle`;
                   className="relative"
                   // Add attack animation when battle result is shown
                   animate={
-                    battleResult
-                      ? battleResult === "lose"
-                        ? enhancedCardAnimations.attack.ai.animate
-                        : {}
+                    battleResult && battleResult === "lose"
+                      ? enhancedCardAnimations.attack.ai.animate
                       : {}
                   }
                 >
@@ -2340,67 +2357,7 @@ Can you beat my score? #StartupCardBattle`;
                     </div>
                   </div>
 
-                  {/* Quick Stats Grid */}
-                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-                    {[
-                      {
-                        label: "Deck Power",
-                        value: selectedCards.length
-                          ? Math.round(
-                              selectedCards.reduce(
-                                (acc, card) => acc + card.valuation,
-                                0
-                              ) / selectedCards.length
-                            )
-                          : "-",
-                        icon: Zap,
-                        color: "text-yellow-400",
-                        bg: "bg-yellow-500/10",
-                      },
-                      {
-                        label: "Categories",
-                        value: selectedCards.length
-                          ? `${
-                              new Set(
-                                selectedCards.map((card) => card.category)
-                              ).size
-                            }/4`
-                          : "-",
-                        icon: Layout,
-                        color: "text-blue-400",
-                        bg: "bg-blue-500/10",
-                      },
-                      {
-                        label: "Avg Year",
-                        value: selectedCards.length
-                          ? Math.round(
-                              selectedCards.reduce(
-                                (acc, card) => acc + card.founded,
-                                0
-                              ) / selectedCards.length
-                            )
-                          : "-",
-                        icon: Calendar,
-                        color: "text-green-400",
-                        bg: "bg-green-500/10",
-                      },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className={`${stat.bg} rounded-lg p-3 border border-gray-800`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <stat.icon className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-300">
-                            {stat.label}
-                          </span>
-                        </div>
-                        <div className={`text-lg font-bold mt-1 ${stat.color}`}>
-                          {stat.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {/* Remove the Quick Stats Grid section */}
 
                   {/* Battle Tips Accordion */}
                   <Collapsible>
@@ -2456,29 +2413,7 @@ Can you beat my score? #StartupCardBattle`;
 
                 {/* Right Column - Categories & Cards */}
                 <div className="lg:col-span-9 space-y-3">
-                  {/* Enhanced Category Navigation */}
-                  <div className="bg-gray-900/50 rounded-lg p-2">
-                    <Tabs
-                      defaultValue="all"
-                      className="w-full"
-                      onValueChange={setActiveCategory}
-                    >
-                      <TabsList className="grid grid-cols-4 gap-2">
-                        {categories.map((category) => (
-                          <TabsTrigger
-                            key={category.name}
-                            value={category.name.toLowerCase()}
-                            className="relative px-3 py-2 rounded-md data-[state=active]:bg-gradient-to-r from-purple-500/20 to-pink-500/20"
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              <category.icon className="w-4 h-4" />
-                              <span className="text-sm">{category.name}</span>
-                            </div>
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-                    </Tabs>
-                  </div>
+                  {/* Remove the Enhanced Category Navigation */}
 
                   {/* Card Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-20">

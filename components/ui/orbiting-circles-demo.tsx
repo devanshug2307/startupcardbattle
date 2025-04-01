@@ -58,8 +58,8 @@ export function OrbitingCirclesDemo() {
   // Startup data with retro gaming stats
   const startupData: StartupData[] = [
     {
-      icon: "/icons/phonepe.png",
-      name: "PhonePe",
+      icon: "/icons/cloudflare.png",
+      name: "Cloudflare",
       color: "from-indigo-600 to-indigo-900",
       stats: {
         valuation: "12B",
@@ -69,12 +69,12 @@ export function OrbitingCirclesDemo() {
         speed: 85,
         innovation: 82,
       },
-      borderColor: "indigo-500",
+      borderColor: "purple-500",
     },
     {
-      icon: "/icons/cred.png",
-      name: "CRED",
-      color: "from-purple-600 to-purple-900",
+      icon: "/icons/vercel-icon-dark.png",
+      name: "VERCEL",
+      color: "from-black-900 to-black-900",
       stats: {
         valuation: "6.4B",
         founded: 2018,
@@ -86,9 +86,9 @@ export function OrbitingCirclesDemo() {
       borderColor: "purple-500",
     },
     {
-      icon: "/icons/meesho.png",
-      name: "Meesho",
-      color: "from-pink-600 to-pink-900",
+      icon: "/icons/replit_logo_symbol.png",
+      name: "Replit",
+      color: "from-blue-600 to-blue-900",
       stats: {
         valuation: "4.9B",
         founded: 2015,
@@ -97,7 +97,7 @@ export function OrbitingCirclesDemo() {
         speed: 88,
         innovation: 85,
       },
-      borderColor: "pink-500",
+      borderColor: "blue-500",
     },
   ];
 
@@ -232,6 +232,103 @@ export function OrbitingCirclesDemo() {
             }}
           />
         </div>
+      </div>
+
+      {/* Add Rocket Section before Cards Display */}
+      <div className="relative max-w-4xl mx-auto pt-8">
+        <motion.div
+          className="flex flex-col items-center justify-center mb-8 relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {/* Animated Rocket */}
+          <motion.div
+            className="relative"
+            animate={{
+              y: [-10, 10, -10],
+              rotate: [-2, 2, -2],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <motion.div
+              className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-12 opacity-20"
+              animate={{
+                height: [48, 64, 48],
+                opacity: [0.1, 0.3, 0.1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <div className="w-full h-full bg-gradient-to-b from-purple-500 to-transparent rounded-full blur-lg" />
+            </motion.div>
+
+            <Rocket
+              className="w-12 h-12 text-purple-400 transform rotate-45"
+              strokeWidth={1.5}
+            />
+
+            {/* Particle Effects */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute bottom-0 left-1/2 w-1 h-1 rounded-full bg-purple-400"
+                initial={{
+                  x: 0,
+                  y: 0,
+                  opacity: 0,
+                }}
+                animate={{
+                  x: Math.random() * 40 - 20,
+                  y: Math.random() * 40 + 20,
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                  ease: "easeOut",
+                }}
+              />
+            ))}
+          </motion.div>
+
+          {/* Title */}
+          <motion.h1
+            className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mt-6 pixel-text text-center"
+            animate={{
+              scale: [1, 1.02, 1],
+              textShadow: [
+                "0 0 8px rgba(168, 85, 247, 0.4)",
+                "0 0 16px rgba(168, 85, 247, 0.6)",
+                "0 0 8px rgba(168, 85, 247, 0.4)",
+              ],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            Startup Battle
+          </motion.h1>
+
+          <motion.p
+            className="text-purple-300 mt-2 text-sm sm:text-base text-center max-w-md"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            Collect cards, build your deck, and battle with the most innovative
+            startups
+          </motion.p>
+        </motion.div>
       </div>
 
       {/* Cards Display */}
@@ -518,22 +615,54 @@ export function OrbitingCirclesDemo() {
         {/* Battle Section */}
         <div className="mt-8 space-y-6">
           {/* Start Battle Button */}
-          <motion.button
-            className="w-full max-w-md mx-auto bg-[#7C3AED] hover:bg-[#6D28D9] text-white py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => router.push("/play")}
-          >
-            <Gamepad2 className="w-5 h-5" />
-            <span className="text-lg font-semibold">Start Battle</span>
-          </motion.button>
+          <div className="relative max-w-md mx-auto">
+            <motion.button
+              className="relative w-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white py-4 px-6 rounded-lg flex items-center justify-center gap-3 overflow-hidden pixel-corners"
+              whileHover={{
+                scale: 1.02,
+                transition: { duration: 0.2 },
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/play")}
+            >
+              {/* Button Content */}
+              <motion.div
+                className="relative flex items-center gap-3"
+                animate={{
+                  y: [-1, 1, -1],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Gamepad2 className="w-6 h-6" />
+                <span className="text-xl font-bold pixel-text tracking-wide">
+                  START BATTLE
+                </span>
+                <motion.div
+                  animate={{
+                    x: [0, 5, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Rocket className="w-6 h-6" />
+                </motion.div>
+              </motion.div>
+            </motion.button>
+          </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
             {[
-              { value: "1.2K", label: "Active Players" },
-              { value: "5.6K", label: "Battles Today" },
-              { value: "50+", label: "Cards Released" },
+              { value: "5+", label: "Category" },
+              { value: "$100B+", label: "Total Valuation" },
+              { value: "20+", label: "Unicorns" },
             ].map((stat, i) => (
               <motion.div
                 key={i}
