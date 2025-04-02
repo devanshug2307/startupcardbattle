@@ -11,6 +11,8 @@ import {
   Library,
   Rocket,
   HelpCircle,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { LogoCarousel } from "@/components/ui/logo-carousel";
 import { GradientHeading } from "@/components/ui/gradient-heading";
@@ -103,6 +105,65 @@ const startupLogos = [
 
 export default function Home() {
   const router = useRouter();
+  const [isMusicPlaying, setIsMusicPlaying] = useState(true);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Create audio element when component mounts
+    const audioElement = new Audio("/music/background-music.mp3");
+    audioElement.loop = true;
+    audioElement.volume = 0.5;
+    setAudio(audioElement);
+
+    // Try to auto-play, but handle the expected restriction
+    audioElement.play().catch((error) => {
+      console.log("Auto-play prevented - waiting for user interaction");
+      setIsMusicPlaying(false); // Update UI to show music is not playing
+    });
+
+    // Add a one-time event listener for user interaction
+    const enableAudio = () => {
+      if (audioElement && !audioElement.playing) {
+        audioElement
+          .play()
+          .then(() => {
+            setIsMusicPlaying(true);
+          })
+          .catch((e) => console.error("Play failed:", e));
+      }
+      // Remove the event listeners after first interaction
+      document.removeEventListener("click", enableAudio);
+      document.removeEventListener("touchstart", enableAudio);
+    };
+
+    // Add event listeners for user interaction
+    document.addEventListener("click", enableAudio);
+    document.addEventListener("touchstart", enableAudio);
+
+    // Cleanup function
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = "";
+      }
+      // Clean up event listeners
+      document.removeEventListener("click", enableAudio);
+      document.removeEventListener("touchstart", enableAudio);
+    };
+  }, []);
+
+  const toggleMusic = () => {
+    if (audio) {
+      if (isMusicPlaying) {
+        audio.pause();
+      } else {
+        audio.play().catch((error) => {
+          console.error("Audio playback failed:", error);
+        });
+      }
+      setIsMusicPlaying(!isMusicPlaying);
+    }
+  };
 
   const buttonVariants = {
     initial: { opacity: 0, y: 20 },
@@ -132,6 +193,28 @@ export default function Home() {
 
       {/* Content Container */}
       <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
+        {/* Sound Toggle Button */}
+        <motion.div
+          className="absolute top-4 right-4 z-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.button
+            className="bg-purple-900/40 hover:bg-purple-800/60 p-3 rounded-full border border-purple-700/30"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleMusic}
+            aria-label={isMusicPlaying ? "Mute music" : "Play music"}
+          >
+            {isMusicPlaying ? (
+              <Volume2 className="h-5 w-5 text-purple-200" />
+            ) : (
+              <VolumeX className="h-5 w-5 text-purple-200" />
+            )}
+          </motion.button>
+        </motion.div>
+
         <div className="flex flex-col items-center gap-8">
           {/* Hero Section */}
           <div className="w-full max-w-4xl mx-auto">
