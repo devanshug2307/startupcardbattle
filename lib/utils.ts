@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatRevenue(value: number): string {
+export function formatPower(value: number): string {
   return `${value} PW`;
 }
 

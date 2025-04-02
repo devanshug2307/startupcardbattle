@@ -19,7 +19,7 @@ import { motion } from "framer-motion";
 import { startupData } from "@/lib/game-data";
 import {
   cn,
-  formatRevenue,
+  formatPower,
   formatTimeToUnicorn,
   formatValuation,
 } from "@/lib/utils";
@@ -142,7 +142,7 @@ export default function Collection() {
                         >
                           Lvl{" "}
                           {card.founded +
-                            card.revenue +
+                            card.power +
                             card.timeToUnicorn +
                             card.valuation >
                           30
@@ -163,10 +163,10 @@ export default function Collection() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
                             <TrendingUp className="w-4 h-4 mr-1 text-green-400" />
-                            <span className="text-xs">Revenue</span>
+                            <span className="text-xs">Power</span>
                           </div>
                           <div className="font-bold">
-                            {formatRevenue(card.revenue)}
+                            {formatPower(card.power)}
                           </div>
                         </div>
 
@@ -230,9 +230,9 @@ export default function Collection() {
                 ? " early establishment"
                 : " recent founding"}{" "}
               and
-              {selectedCard.revenue > 7
-                ? " strong revenue growth"
-                : " steady revenue"}{" "}
+              {selectedCard.power > 7
+                ? " high power level"
+                : " moderate power"}{" "}
               in the market.
             </p>
           </div>
@@ -248,21 +248,21 @@ export default function Collection() {
                 Best Attribute:{" "}
                 {Math.max(
                   selectedCard.founded,
-                  selectedCard.revenue,
+                  selectedCard.power,
                   selectedCard.timeToUnicorn,
                   selectedCard.valuation
                 ) === selectedCard.founded
                   ? "Founded"
                   : Math.max(
                       selectedCard.founded,
-                      selectedCard.revenue,
+                      selectedCard.power,
                       selectedCard.timeToUnicorn,
                       selectedCard.valuation
-                    ) === selectedCard.revenue
-                  ? "Revenue"
+                    ) === selectedCard.power
+                  ? "Power"
                   : Math.max(
                       selectedCard.founded,
-                      selectedCard.revenue,
+                      selectedCard.power,
                       selectedCard.timeToUnicorn,
                       selectedCard.valuation
                     ) === selectedCard.timeToUnicorn
@@ -279,7 +279,7 @@ export default function Collection() {
                 <br />
                 Power Level:{" "}
                 {selectedCard.founded +
-                  selectedCard.revenue +
+                  selectedCard.power +
                   selectedCard.timeToUnicorn +
                   selectedCard.valuation}
               </div>

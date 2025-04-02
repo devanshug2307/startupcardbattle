@@ -6,7 +6,7 @@ export interface StartupData {
   r: number; // Annual r in billions USD
   timeToUnicorn: number; // Years to reach unicorn status (e.g., 7.5 = 7 years 6 months)
   valuation: number; // Valuation in billions USD
-  revenue: number;
+  power: number; // Changed from revenue
 }
 
 export const startupData: StartupData[] = [
@@ -17,7 +17,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 2,
     valuation: 1,
-    revenue: 8,
+    power: 8,
   },
   {
     name: "Runway",
@@ -26,7 +26,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 5,
     valuation: 1.5,
-    revenue: 7,
+    power: 7,
   },
   {
     name: "Replit",
@@ -35,7 +35,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 6,
     valuation: 1.2,
-    revenue: 8,
+    power: 8,
   },
   {
     name: "Anthropic",
@@ -44,7 +44,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 2,
     valuation: 5,
-    revenue: 9,
+    power: 9,
   },
   {
     name: "Vercel",
@@ -53,7 +53,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 5,
     valuation: 2.5,
-    revenue: 7,
+    power: 7,
   },
   {
     name: "Cloudflare",
@@ -62,7 +62,7 @@ export const startupData: StartupData[] = [
     r: 1,
     timeToUnicorn: 7,
     valuation: 20,
-    revenue: 9,
+    power: 9,
   },
   {
     name: "Indrive",
@@ -71,7 +71,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 6,
     valuation: 1,
-    revenue: 7,
+    power: 7,
   },
   {
     name: "Calendly",
@@ -80,7 +80,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 7,
     valuation: 3,
-    revenue: 8,
+    power: 8,
   },
   {
     name: "Clubhouse",
@@ -89,7 +89,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 1,
     valuation: 4,
-    revenue: 6,
+    power: 6,
   },
   {
     name: "Quora",
@@ -98,7 +98,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 8,
     valuation: 2,
-    revenue: 7,
+    power: 7,
   },
   {
     name: "Robinhood",
@@ -107,7 +107,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 5,
     valuation: 10,
-    revenue: 8,
+    power: 8,
   },
   {
     name: "Coinbase",
@@ -116,7 +116,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 6,
     valuation: 80,
-    revenue: 9,
+    power: 9,
   },
   {
     name: "Lyft",
@@ -125,7 +125,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 5,
     valuation: 15,
-    revenue: 8,
+    power: 8,
   },
   {
     name: "GitHub",
@@ -134,7 +134,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 6,
     valuation: 7.5,
-    revenue: 9,
+    power: 9,
   },
   {
     name: "Stripe",
@@ -143,7 +143,7 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 4,
     valuation: 50,
-    revenue: 9,
+    power: 9,
   },
   {
     name: "OpenAI",
@@ -152,6 +152,6 @@ export const startupData: StartupData[] = [
     r: 0,
     timeToUnicorn: 4,
     valuation: 90,
-    revenue: 10,
+    power: 10,
   },
 ];

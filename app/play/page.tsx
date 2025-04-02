@@ -42,7 +42,7 @@ import {
 import { startupData } from "@/lib/game-data";
 import {
   cn,
-  formatRevenue,
+  formatPower,
   formatTimeToUnicorn,
   formatValuation,
 } from "@/lib/utils";
@@ -62,7 +62,7 @@ type StartupCard = {
   name: string;
   category: string;
   founded: number;
-  revenue: number;
+  power: number;
   timeToUnicorn: number;
   valuation: number;
   [key: string]: string | number; // Add index signature to allow string indexing
@@ -214,8 +214,8 @@ const pixelBorderStyles = {
 // Add this helper function to get max values for the progress bars
 function getMaxValue(key: string): number {
   switch (key) {
-    case "revenue":
-      return 10; // Max revenue in billions
+    case "power":
+      return 10; // Max power level
     case "founded":
       return 2025; // Current year
     case "timeToUnicorn":
@@ -230,8 +230,8 @@ function getMaxValue(key: string): number {
 // First, add this helper function at the top of the file
 const getBattleGuideText = (attribute: string) => {
   switch (attribute) {
-    case "revenue":
-      return "Higher revenue shows stronger market performance";
+    case "power":
+      return "Higher power shows stronger market performance";
     case "founded":
       return "More recent founding year indicates newer technology";
     case "timeToUnicorn":
@@ -508,8 +508,8 @@ const formatAttributeValue = (
   }
 
   switch (attribute) {
-    case "revenue":
-      return formatRevenue(Number(value));
+    case "power":
+      return formatPower(Number(value));
     case "timeToUnicorn":
       return formatTimeToUnicorn(Number(value));
     case "valuation":
@@ -772,7 +772,7 @@ function PlayContent() {
       }, 1000);
     } else if (isTimerActive && timeLeft === 0) {
       // Auto-select a random attribute if time runs out
-      const attributes = ["founded", "revenue", "timeToUnicorn", "valuation"];
+      const attributes = ["founded", "power", "timeToUnicorn", "valuation"];
       const randomAttr =
         attributes[Math.floor(Math.random() * attributes.length)];
       handleAttributeSelect(randomAttr);
@@ -884,7 +884,7 @@ function PlayContent() {
       }
 
       // Wait longer on the result screen
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Progress to next round or end game
       if (currentRound < 4) {
@@ -983,7 +983,7 @@ function PlayContent() {
               const attrIcon =
                 {
                   founded: "🚀",
-                  revenue: "💸",
+                  power: "💸",
                   timeToUnicorn: "🦄",
                   valuation: "💰",
                 }[attr] || "🎮";
@@ -998,7 +998,7 @@ function PlayContent() {
         : "No rounds played yet";
 
     // Add a more direct challenge in the footer
-    const footer = `\n\nCan you beat my ${playerScore}/4 at cardbattle.online? #StartupBattle`;
+    const footer = `\n\nCan you beat my ${playerScore}/4 at cardbattle.online? #StartupBattle #vibejam`;
 
     return header + grid + footer;
   };
@@ -1008,11 +1008,11 @@ function PlayContent() {
     const shareText = generateShareText();
 
     try {
-      // Try to use the Web Share API directly
+      // Try to use the Web Share API directly with the text as the primary content
       await navigator.share({
         title: "Startup Battle Results",
         text: shareText,
-        url: window.location.href,
+        // Remove the URL to focus on sharing the text content
       });
     } catch (error) {
       // Fallback to clipboard only if sharing fails
@@ -1030,7 +1030,7 @@ function PlayContent() {
     switch (attribute) {
       case "founded":
         return <Zap className="w-5 h-5" />;
-      case "revenue":
+      case "power":
         return <TrendingUp className="w-5 h-5" />;
       case "timeToUnicorn":
         return <Users className="w-5 h-5" />;
@@ -1131,7 +1131,7 @@ function PlayContent() {
                 <DollarSign className="w-4 h-4" /> Valuation
               </div>
               <div className="flex items-center gap-2 text-blue-400">
-                <TrendingUp className="w-4 h-4" /> Revenue
+                <TrendingUp className="w-4 h-4" /> Power
               </div>
             </div>
           </div>
@@ -1225,22 +1225,22 @@ function PlayContent() {
 
         {/* Stats Grid with Different Colors */}
         <div className="space-y-3">
-          {/* Revenue Stat */}
+          {/* Power Stat */}
           <div className="relative">
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs text-gray-300">Revenue</span>
+                <span className="text-xs text-gray-300">Power</span>
               </div>
               <span className="text-xs font-medium text-emerald-400">
-                {formatRevenue(card.revenue)}
+                {formatPower(card.power)}
               </span>
             </div>
             <div className="h-1.5 rounded-full bg-gray-800/50 overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-emerald-600 to-green-400"
                 initial={{ width: 0 }}
-                animate={{ width: `${(card.revenue / 10) * 100}%` }}
+                animate={{ width: `${(card.power / 10) * 100}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
               />
             </div>
@@ -1811,7 +1811,7 @@ Can you beat my score? #StartupCardBattle`;
               {Array.from({
                 length: Math.min(
                   5,
-                  Math.ceil((card.revenue + card.valuation) / 4)
+                  Math.ceil((card.power + card.valuation) / 4)
                 ),
               }).map((_, i) => (
                 <div
@@ -1828,9 +1828,9 @@ Can you beat my score? #StartupCardBattle`;
           <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
             {[
               {
-                key: "revenue",
+                key: "power",
                 label: "Power",
-                value: formatRevenue(card.revenue),
+                value: formatPower(card.power),
                 icon: TrendingUp,
                 color: "from-green-500 to-emerald-600",
                 textColor: "text-green-400",
@@ -2144,9 +2144,9 @@ Can you beat my score? #StartupCardBattle`;
                     <div className="space-y-2 md:space-y-3">
                       {[
                         {
-                          key: "revenue",
+                          key: "power",
                           label: "Power",
-                          value: formatRevenue(playerCard.revenue),
+                          value: formatPower(playerCard.power),
                         },
                         {
                           key: "founded",
@@ -2400,9 +2400,9 @@ Can you beat my score? #StartupCardBattle`;
                     <div className="space-y-3">
                       {[
                         {
-                          key: "revenue",
+                          key: "power",
                           label: "Power",
-                          value: formatRevenue(aiCard.revenue),
+                          value: formatPower(aiCard.power),
                         },
                         {
                           key: "founded",
@@ -2635,12 +2635,12 @@ Can you beat my score? #StartupCardBattle`;
       description: "Compare valuations",
     },
     {
-      name: "REVENUE",
-      power: "$2.1B",
+      name: "POWER",
+      power: "8 PW",
       accuracy: "↗️ Higher",
       color: "from-green-600 to-green-800",
       icon: "📈",
-      description: "Compare annual revenue",
+      description: "Compare power levels",
     },
     {
       name: "FOUNDED",
