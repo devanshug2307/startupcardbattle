@@ -817,13 +817,10 @@ function PlayContent() {
   }, [searchParams]);
 
   const startGame = () => {
-    // Ensure we have 4 random attributes for the 4 rounds
-    const attributes = ["founded", "revenue", "timeToUnicorn", "valuation"];
-    const shuffledAttributes = [...attributes].sort(() => Math.random() - 0.5);
-    setRoundAttributes(shuffledAttributes);
-
     if (selectedCards.length < 4) return;
 
+    // Initialize empty roundAttributes array
+    setRoundAttributes([]);
     setGameState("battle");
     setCurrentRound(1);
     setPlayerScore(0);
@@ -841,6 +838,13 @@ function PlayContent() {
   const handleAttributeSelect = (attribute: string) => {
     setBattleAttribute(attribute);
     setIsTimerActive(false);
+
+    // Update roundAttributes array with the selected attribute for current round
+    setRoundAttributes((prev) => {
+      const newAttributes = [...prev];
+      newAttributes[currentRound - 1] = attribute;
+      return newAttributes;
+    });
 
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
@@ -3007,9 +3011,7 @@ Can you beat my score? #StartupCardBattle`;
                 <div className="p-2 grid gap-1.5">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <motion.div
-                      key={`${i}-${roundAttributes[i]}-${
-                        selectedCards[i][roundAttributes[i]]
-                      }-${aiDeck[i][roundAttributes[i]]}`}
+                      key={`round-${i}-${roundAttributes[i]}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + i * 0.1 }}
@@ -3050,12 +3052,10 @@ Can you beat my score? #StartupCardBattle`;
                             <div className="flex items-center gap-1 md:gap-2">
                               {renderAttributeIcon(roundAttributes[i])}
                               <span className="text-base md:text-2xl font-bold text-blue-400">
-                                {roundAttributes[i] && selectedCards[i]
-                                  ? formatAttributeValue(
-                                      selectedCards[i][roundAttributes[i]],
-                                      roundAttributes[i]
-                                    )
-                                  : "-"}
+                                {formatAttributeValue(
+                                  selectedCards[i][roundAttributes[i]],
+                                  roundAttributes[i]
+                                )}
                               </span>
                             </div>
                           </div>
@@ -3109,12 +3109,10 @@ Can you beat my score? #StartupCardBattle`;
                             </div>
                             <div className="flex items-center justify-end gap-1 md:gap-2">
                               <span className="text-base md:text-2xl font-bold text-red-400">
-                                {roundAttributes[i] && aiDeck[i]
-                                  ? formatAttributeValue(
-                                      aiDeck[i][roundAttributes[i]],
-                                      roundAttributes[i]
-                                    )
-                                  : "-"}
+                                {formatAttributeValue(
+                                  aiDeck[i][roundAttributes[i]],
+                                  roundAttributes[i]
+                                )}
                               </span>
                               {renderAttributeIcon(roundAttributes[i])}
                             </div>
