@@ -789,20 +789,20 @@ function PlayContent() {
 
     try {
       // Try to use the Web Share API directly
-          await navigator.share({
-            title: 'Startup Battle Results',
-            text: shareText,
-          url: window.location.href
-        });
+      await navigator.share({
+        title: "Startup Battle Results",
+        text: shareText,
+        url: window.location.href,
+      });
     } catch (error) {
       // Fallback to clipboard only if sharing fails
-        await navigator.clipboard.writeText(shareText);
-        setShowSharePrompt(true);
+      await navigator.clipboard.writeText(shareText);
+      setShowSharePrompt(true);
 
-    // Hide prompt after delay
-        setTimeout(() => {
-          setShowSharePrompt(false);
-        }, 3000);
+      // Hide prompt after delay
+      setTimeout(() => {
+        setShowSharePrompt(false);
+      }, 3000);
     }
   };
 
@@ -1985,7 +1985,7 @@ Can you beat my score? #StartupCardBattle`;
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-3 px-2">
                   {[
-                    { name: "Revenue", icon: DollarSign },
+                    { name: "Power", icon: DollarSign },
                     { name: "Founded", icon: Calendar },
                     { name: "Time to Unicorn", icon: Rocket },
                     { name: "Valuation", icon: TrendingUp },
@@ -2735,7 +2735,7 @@ Can you beat my score? #StartupCardBattle`;
                   onClick={shareResult}
                 >
                   <div className="relative flex items-center justify-center gap-2">
-                      <Share2 className="h-4 w-4 md:h-5 md:w-5" />
+                    <Share2 className="h-4 w-4 md:h-5 md:w-5" />
                     <span className="font-medium">Share</span>
                   </div>
                 </Button>
@@ -2765,7 +2765,8 @@ Can you beat my score? #StartupCardBattle`;
                         Battle summary copied to clipboard! 📋
                       </div>
                       <div className="text-sm text-gray-400">
-                        Share your results with friends and challenge them to beat your score!
+                        Share your results with friends and challenge them to
+                        beat your score!
                       </div>
                     </div>
                   </motion.div>
