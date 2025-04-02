@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatRevenue(value: number): string {
-  return `$${value.toFixed(1)}B`;
+  return `${value} PW`;
 }
 
 export function formatTimeToUnicorn(years: number): string {

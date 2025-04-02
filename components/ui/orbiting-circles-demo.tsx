@@ -159,7 +159,7 @@ export function OrbitingCirclesDemo() {
       demo: (
         <div className="space-y-2 text-xs">
           <div className="flex items-center justify-between text-green-400">
-            <span>Valuation & Revenue:</span>
+            <span>Valuation & Power:</span>
             <span>Higher Wins! ↑</span>
           </div>
           <div className="flex items-center justify-between text-blue-400">

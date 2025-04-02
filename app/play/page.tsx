@@ -213,9 +213,9 @@ const pixelBorderStyles = {
 function getMaxValue(key: string): number {
   switch (key) {
     case "revenue":
-      return 100; // Max revenue in billions
+      return 10; // Max revenue in billions
     case "founded":
-      return 2024; // Current year
+      return 2025; // Current year
     case "timeToUnicorn":
       return 15; // Max years to unicorn
     case "valuation":
@@ -783,30 +783,27 @@ function PlayContent() {
     return header + grid + footer;
   };
 
+  // Update the shareResult function to be more direct
   const shareResult = async () => {
     const shareText = generateShareText();
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: shareText,
+    try {
+      // Try to use the Web Share API directly
+          await navigator.share({
+            title: 'Startup Battle Results',
+            text: shareText,
+          url: window.location.href
         });
-      } catch (error) {
-        console.error("Error sharing:", error);
-        // Fallback to clipboard
+    } catch (error) {
+      // Fallback to clipboard only if sharing fails
         await navigator.clipboard.writeText(shareText);
         setShowSharePrompt(true);
-      }
-    } else {
-      // Fallback to clipboard
-      await navigator.clipboard.writeText(shareText);
-      setShowSharePrompt(true);
-    }
 
     // Hide prompt after delay
-    setTimeout(() => {
-      setShowSharePrompt(false);
-    }, 3000);
+        setTimeout(() => {
+          setShowSharePrompt(false);
+        }, 3000);
+    }
   };
 
   const renderAttributeIcon = (attribute: string) => {
@@ -947,7 +944,7 @@ function PlayContent() {
               {[
                 {
                   key: "revenue",
-                  label: "Revenue",
+                  label: "Power",
                   value: formatRevenue(card.revenue),
                   icon: TrendingUp,
                   color: "from-green-500 to-emerald-600",
@@ -1336,7 +1333,7 @@ Can you beat my score? #StartupCardBattle`;
             {[
               {
                 key: "revenue",
-                label: "Revenue",
+                label: "Power",
                 value: formatRevenue(card.revenue),
                 icon: TrendingUp,
                 color: "from-green-500 to-emerald-600",
@@ -1652,7 +1649,7 @@ Can you beat my score? #StartupCardBattle`;
                       {[
                         {
                           key: "revenue",
-                          label: "Revenue",
+                          label: "Power",
                           value: formatRevenue(playerCard.revenue),
                         },
                         {
@@ -1908,7 +1905,7 @@ Can you beat my score? #StartupCardBattle`;
                       {[
                         {
                           key: "revenue",
-                          label: "Revenue",
+                          label: "Power",
                           value: formatRevenue(aiCard.revenue),
                         },
                         {
@@ -2225,7 +2222,7 @@ Can you beat my score? #StartupCardBattle`;
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center gap-2">
             <div className="text-green-400">Higher Wins! ↗️</div>
-            <div className="text-gray-300 text-xs">• Valuation & Revenue</div>
+            <div className="text-gray-300 text-xs">• Valuation & Power</div>
           </div>
           <div className="flex items-center gap-2">
             <div className="text-blue-400">Lower Wins! ↙️</div>
@@ -2738,7 +2735,7 @@ Can you beat my score? #StartupCardBattle`;
                   onClick={shareResult}
                 >
                   <div className="relative flex items-center justify-center gap-2">
-                    <Share2 className="h-4 w-4 md:h-5 md:w-5" />
+                      <Share2 className="h-4 w-4 md:h-5 md:w-5" />
                     <span className="font-medium">Share</span>
                   </div>
                 </Button>
@@ -2765,11 +2762,10 @@ Can you beat my score? #StartupCardBattle`;
                   >
                     <div className="text-center">
                       <div className="font-bold mb-2">
-                        Battle summary copied! 📋
+                        Battle summary copied to clipboard! 📋
                       </div>
                       <div className="text-sm text-gray-400">
-                        Share your results with friends and challenge them to
-                        beat your score!
+                        Share your results with friends and challenge them to beat your score!
                       </div>
                     </div>
                   </motion.div>
