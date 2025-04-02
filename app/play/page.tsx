@@ -495,6 +495,215 @@ const PixelAttackEffect = ({ isPlayer = true, isActive = false }) => (
   </AnimatePresence>
 );
 
+// Update the formatAttributeValue function with null checks
+const formatAttributeValue = (
+  value: number | string | undefined,
+  attribute: string
+): string => {
+  // Return placeholder if value is undefined or null
+  if (value === undefined || value === null) {
+    return "---";
+  }
+
+  switch (attribute) {
+    case "revenue":
+      return formatRevenue(Number(value));
+    case "timeToUnicorn":
+      return formatTimeToUnicorn(Number(value));
+    case "valuation":
+      return formatValuation(Number(value));
+    case "founded":
+      return value.toString();
+    default:
+      return value.toString();
+  }
+};
+
+// Update the BattleResultOverlay component to handle potential undefined values
+const BattleResultOverlay = ({
+  result,
+  playerCard,
+  aiCard,
+  attribute,
+  onNext,
+  playerScore,
+  aiScore,
+}: {
+  result: "win" | "lose" | "draw" | null;
+  playerCard: StartupCard;
+  aiCard: StartupCard;
+  attribute: string;
+  onNext: () => void;
+  playerScore: number;
+  aiScore: number;
+}) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="absolute inset-0 flex items-center justify-center z-30"
+  >
+    <motion.div
+      className="absolute inset-0 bg-black/60"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onNext}
+    />
+
+    {/* Add CRT turn-on effect */}
+    <motion.div
+      className="absolute inset-0 bg-white/5 pointer-events-none"
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: [0, 0.2, 0],
+        scaleY: [1.5, 1],
+      }}
+      transition={{ duration: 0.3 }}
+    />
+
+    <motion.div
+      className="pixel-corners border-2 bg-gray-900/90 p-1 relative overflow-hidden"
+      style={{
+        borderColor:
+          result === "win"
+            ? "#22c55e"
+            : result === "lose"
+            ? "#ef4444"
+            : "#eab308",
+      }}
+      initial={{ y: -50, opacity: 0, scale: 0.8 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      exit={{ y: 50, opacity: 0, scale: 0.8 }}
+      transition={{ type: "spring", bounce: 0.4 }}
+    >
+      {/* Add scanlines effect */}
+      <div style={retroAnimations.scanlines} />
+
+      {/* Add horizontal scan effect */}
+      <motion.div
+        className="absolute left-0 right-0 h-[2px] bg-white/30 z-50 pointer-events-none"
+        initial={{ top: 0, opacity: 0 }}
+        animate={{
+          top: ["0%", "100%"],
+          opacity: [0.5, 0.5, 0],
+        }}
+        transition={{ duration: 1, times: [0, 0.9, 1] }}
+      />
+
+      <div className="p-6 md:p-8 relative">
+        {/* Victory/Defeat Text */}
+        <motion.div
+          className={`text-3xl md:text-4xl font-bold pixel-text ${
+            result === "win"
+              ? "text-green-400"
+              : result === "lose"
+              ? "text-red-400"
+              : "text-yellow-400"
+          }`}
+          style={{
+            textShadow: "3px 3px 0 #000",
+          }}
+          animate={{
+            scale: [1, 1.1, 1],
+            x: result === "win" ? [0, -2, 2, -2, 0] : 0,
+          }}
+          transition={{
+            scale: { duration: 0.6, repeat: 1 },
+            x: { duration: 0.3, delay: 0.6 },
+          }}
+        >
+          {result === "win"
+            ? "VICTORY!"
+            : result === "lose"
+            ? "DEFEATED!"
+            : "DRAW!"}
+        </motion.div>
+
+        {/* Attribute Comparison */}
+        <div className="mt-6 grid grid-cols-2 gap-4">
+          <div className="text-center">
+            <div className="text-purple-400 mb-2">YOUR CARD</div>
+            <div className="font-bold text-lg mb-1">
+              {playerCard?.name || "Unknown"}
+            </div>
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                result === "win"
+                  ? "text-green-400"
+                  : result === "lose"
+                  ? "text-red-400"
+                  : "text-yellow-400"
+              )}
+            >
+              {formatAttributeValue(playerCard?.[attribute], attribute)}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-red-400 mb-2">AI CARD</div>
+            <div className="font-bold text-lg mb-1">
+              {aiCard?.name || "Unknown"}
+            </div>
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                result === "lose"
+                  ? "text-green-400"
+                  : result === "win"
+                  ? "text-red-400"
+                  : "text-yellow-400"
+              )}
+            >
+              {formatAttributeValue(aiCard?.[attribute], attribute)}
+            </div>
+          </div>
+        </div>
+
+        {/* Add retro pixel particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          <RetroPixelParticles
+            count={20}
+            color={
+              result === "win"
+                ? "bg-green-400"
+                : result === "lose"
+                ? "bg-red-400"
+                : "bg-yellow-400"
+            }
+          />
+        </div>
+
+        {/* Add 8-bit style score display */}
+        <div className="mt-6 flex justify-center items-center gap-4">
+          <div className="pixel-corners bg-gray-800/80 px-3 py-1">
+            <div className="text-sm text-gray-400">YOU</div>
+            <div className="text-xl text-green-400 font-bold text-center">
+              {playerScore}
+            </div>
+          </div>
+          <div className="text-xl text-white">-</div>
+          <div className="pixel-corners bg-gray-800/80 px-3 py-1">
+            <div className="text-sm text-gray-400">CPU</div>
+            <div className="text-xl text-red-400 font-bold text-center">
+              {aiScore}
+            </div>
+          </div>
+        </div>
+
+        <motion.div
+          className="mt-4 text-gray-300 text-center pixel-text"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0.5, 1] }}
+          transition={{ delay: 0.5, duration: 1, repeat: Infinity }}
+        >
+          PRESS ANY KEY TO CONTINUE
+        </motion.div>
+      </div>
+    </motion.div>
+  </motion.div>
+);
+
 // Assuming your main content is in a component, let's wrap it in Suspense
 function PlayContent() {
   const searchParams = useSearchParams();
@@ -628,55 +837,60 @@ function PlayContent() {
   };
 
   const handleAttributeSelect = (attribute: string) => {
-    console.log("Selected attribute:", attribute); // Add this for debugging
     setBattleAttribute(attribute);
     setIsTimerActive(false);
-
-    // Store the attribute used for this round
-    setRoundAttributes((prev) => [...prev, attribute]);
 
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
 
-    // Compare values based on attribute type
-    let playerWins = false;
-    let isDraw = false;
+    // First highlight the selected attribute on both cards
+    const revealSequence = async () => {
+      // 1. Highlight selected attribute on player card
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-    switch (attribute) {
-      case "timeToUnicorn":
-      case "founded":
-        // Lower is better for these attributes
-        playerWins = playerCard[attribute] < aiCard[attribute];
-        isDraw = playerCard[attribute] === aiCard[attribute];
-        break;
-      default:
-        // Higher is better for revenue and valuation
-        playerWins = playerCard[attribute] > aiCard[attribute];
-        isDraw = playerCard[attribute] === aiCard[attribute];
-    }
+      // 2. Highlight and reveal AI card's attribute
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (isDraw) {
-      setBattleResult("draw");
-    } else if (playerWins) {
-      // Use functional updates to ensure we're working with the latest state
-      setPlayerScore((prevScore) => prevScore + 1);
-      setBattleResult("win");
-    } else {
-      // Use functional updates to ensure we're working with the latest state
-      setAiScore((prevScore) => prevScore + 1);
-      setBattleResult("lose");
-    }
+      // 3. Compare and show result
+      let playerWins = false;
+      let isDraw = false;
 
-    // Move to next round or end game
-    setTimeout(() => {
+      switch (attribute) {
+        case "timeToUnicorn":
+        case "founded":
+          playerWins = playerCard[attribute] < aiCard[attribute];
+          isDraw = playerCard[attribute] === aiCard[attribute];
+          break;
+        default:
+          playerWins = playerCard[attribute] > aiCard[attribute];
+          isDraw = playerCard[attribute] === aiCard[attribute];
+      }
+
+      // Update scores and show result with animation
+      if (isDraw) {
+        setBattleResult("draw");
+      } else if (playerWins) {
+        setPlayerScore((prev) => prev + 1);
+        setBattleResult("win");
+      } else {
+        setAiScore((prev) => prev + 1);
+        setBattleResult("lose");
+      }
+
+      // Wait longer on the result screen
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      // Progress to next round or end game
       if (currentRound < 4) {
-        setCurrentRound(currentRound + 1);
+        setCurrentRound((prev) => prev + 1);
         setBattleAttribute(null);
         setBattleResult(null);
       } else {
         setGameState("result");
       }
-    }, 2000);
+    };
+
+    revealSequence();
   };
 
   const resetGame = () => {
@@ -1196,22 +1410,6 @@ Can you beat my score? #StartupCardBattle`;
     } catch (error) {
       console.error("Error capturing battle summary:", error);
       return null;
-    }
-  };
-
-  const formatAttributeValue = (value: string | number, attribute: string) => {
-    // First convert to number if it's a string
-    const numValue = typeof value === "string" ? parseFloat(value) : value;
-
-    switch (attribute) {
-      case "revenue":
-        return formatRevenue(numValue);
-      case "timeToUnicorn":
-        return formatTimeToUnicorn(numValue);
-      case "valuation":
-        return formatValuation(numValue);
-      default:
-        return value;
     }
   };
 
@@ -1985,7 +2183,7 @@ Can you beat my score? #StartupCardBattle`;
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-3 px-2">
                   {[
-                    { name: "Power", icon: DollarSign },
+                    { name: "Revenue", icon: DollarSign },
                     { name: "Founded", icon: Calendar },
                     { name: "Time to Unicorn", icon: Rocket },
                     { name: "Valuation", icon: TrendingUp },
@@ -2018,130 +2216,23 @@ Can you beat my score? #StartupCardBattle`;
           {/* Battle Result Animation - Enhanced Retro Style */}
           <AnimatePresence>
             {battleResult && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center z-30"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-black/60"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => handleNextRound()}
-                />
-
-                {/* Add CRT turn-on effect */}
-                <motion.div
-                  className="absolute inset-0 bg-white/5 pointer-events-none"
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: [0, 0.2, 0],
-                    scaleY: [1.5, 1],
-                  }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <motion.div
-                  className="pixel-corners border-2 bg-gray-900/90 p-1 relative overflow-hidden"
-                  style={{
-                    borderColor:
-                      battleResult === "win"
-                        ? "#22c55e"
-                        : battleResult === "lose"
-                        ? "#ef4444"
-                        : "#eab308",
-                  }}
-                  initial={{ y: -50, opacity: 0, scale: 0.8 }}
-                  animate={{ y: 0, opacity: 1, scale: 1 }}
-                  exit={{ y: 50, opacity: 0, scale: 0.8 }}
-                  transition={{ type: "spring", bounce: 0.4 }}
-                >
-                  {/* Add scanlines effect */}
-                  <div style={retroAnimations.scanlines} />
-
-                  {/* Add horizontal scan effect */}
-                  <motion.div
-                    className="absolute left-0 right-0 h-[2px] bg-white/30 z-50 pointer-events-none"
-                    initial={{ top: 0, opacity: 0 }}
-                    animate={{
-                      top: ["0%", "100%"],
-                      opacity: [0.5, 0.5, 0],
-                    }}
-                    transition={{ duration: 1, times: [0, 0.9, 1] }}
-                  />
-
-                  <div className="p-6 md:p-8 relative">
-                    <motion.div
-                      className={`text-3xl md:text-4xl font-bold pixel-text ${
-                        battleResult === "win"
-                          ? "text-green-400"
-                          : battleResult === "lose"
-                          ? "text-red-400"
-                          : "text-yellow-400"
-                      }`}
-                      style={{
-                        textShadow: "3px 3px 0 #000",
-                      }}
-                      animate={{
-                        scale: [1, 1.1, 1],
-                        x: battleResult === "win" ? [0, -2, 2, -2, 0] : 0,
-                      }}
-                      transition={{
-                        scale: { duration: 0.6, repeat: 1 },
-                        x: { duration: 0.3, delay: 0.6 },
-                      }}
-                    >
-                      {battleResult === "win"
-                        ? "VICTORY!"
-                        : battleResult === "lose"
-                        ? "DEFEATED!"
-                        : "DRAW!"}
-                    </motion.div>
-
-                    {/* Add retro pixel particles */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <RetroPixelParticles
-                        count={20}
-                        color={
-                          battleResult === "win"
-                            ? "bg-green-400"
-                            : battleResult === "lose"
-                            ? "bg-red-400"
-                            : "bg-yellow-400"
-                        }
-                      />
-                    </div>
-
-                    {/* Add 8-bit style score display */}
-                    <div className="mt-4 flex justify-center items-center gap-4">
-                      <div className="pixel-corners bg-gray-800/80 px-3 py-1">
-                        <div className="text-sm text-gray-400">YOU</div>
-                        <div className="text-xl text-green-400 font-bold text-center">
-                          {playerScore}
-                        </div>
-                      </div>
-                      <div className="text-xl text-white">-</div>
-                      <div className="pixel-corners bg-gray-800/80 px-3 py-1">
-                        <div className="text-sm text-gray-400">CPU</div>
-                        <div className="text-xl text-red-400 font-bold text-center">
-                          {aiScore}
-                        </div>
-                      </div>
-                    </div>
-
-                    <motion.div
-                      className="mt-4 text-gray-300 text-center pixel-text"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: [0, 1, 0.5, 1] }}
-                      transition={{ delay: 0.5, duration: 1, repeat: Infinity }}
-                    >
-                      PRESS ANY KEY TO CONTINUE
-                    </motion.div>
-                  </div>
-                </motion.div>
-              </motion.div>
+              <BattleResultOverlay
+                result={battleResult}
+                playerCard={selectedCards[currentRound - 1]}
+                aiCard={aiDeck[currentRound - 1]}
+                attribute={battleAttribute!}
+                playerScore={playerScore}
+                aiScore={aiScore}
+                onNext={() => {
+                  if (currentRound < 4) {
+                    setCurrentRound((prev) => prev + 1);
+                    setBattleAttribute(null);
+                    setBattleResult(null);
+                  } else {
+                    setGameState("result");
+                  }
+                }}
+              />
             )}
           </AnimatePresence>
         </div>
