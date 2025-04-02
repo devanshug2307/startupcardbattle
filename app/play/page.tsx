@@ -254,7 +254,7 @@ const enhancedCardAnimations = {
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        repeatType: "reverse" as const, // Type assertion for repeatType
+        repeatType: "reverse" as const, // Type assertion to fix repeatType
       },
     },
     win: {
@@ -266,7 +266,7 @@ const enhancedCardAnimations = {
       transition: {
         duration: 0.8,
         repeat: Infinity,
-        repeatType: "reverse",
+        repeatType: "reverse" as const,
       },
     },
     lose: {
@@ -278,7 +278,7 @@ const enhancedCardAnimations = {
       transition: {
         duration: 0.8,
         repeat: Infinity,
-        repeatType: "reverse",
+        repeatType: "reverse" as const,
       },
     },
   },
@@ -1537,14 +1537,12 @@ Can you beat my score? #StartupCardBattle`;
               >
                 <motion.div
                   variants={cardAnimationVariants.hover}
-                  animate="animate"
-                  className="relative"
-                  // Add attack animation when battle result is shown
                   animate={
-                    battleResult && battleResult === "win"
+                    battleResult === "win"
                       ? enhancedCardAnimations.attack.player.animate
-                      : {}
+                      : cardAnimationVariants.hover.animate
                   }
+                  className="relative"
                 >
                   {/* Add pixel border effect with improved animation */}
                   <motion.div
@@ -1840,14 +1838,12 @@ Can you beat my score? #StartupCardBattle`;
               >
                 <motion.div
                   variants={cardAnimationVariants.hover}
-                  animate="animate"
-                  className="relative"
-                  // Add attack animation when battle result is shown
                   animate={
-                    battleResult && battleResult === "lose"
+                    battleResult === "lose"
                       ? enhancedCardAnimations.attack.ai.animate
-                      : {}
+                      : cardAnimationVariants.hover.animate
                   }
+                  className="relative"
                 >
                   {/* Add glow effect container */}
                   <motion.div
@@ -2473,13 +2469,13 @@ Can you beat my score? #StartupCardBattle`;
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center h-full w-full max-w-[900px] mx-auto px-4"
+              className="flex flex-col items-center justify-between h-full w-full max-w-[900px] mx-auto px-4 md:min-h-0 gap-2"
             >
-              {/* Hero Result Section - Responsive */}
+              {/* Hero Result Section - Make it more compact */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-8 mb-6 overflow-hidden"
+                className="relative w-full bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-4 md:p-6 overflow-hidden"
               >
                 {/* Background Effects */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-50" />
@@ -2512,14 +2508,52 @@ Can you beat my score? #StartupCardBattle`;
                       <span className="text-xl">
                         Rounds Won:{" "}
                         <span className="text-blue-400 font-bold">
-                          {playerScore}
+                          {
+                            roundAttributes.length > 0 &&
+                            selectedCards.length === 4 &&
+                            aiDeck.length >= 4
+                              ? roundAttributes.reduce((wins, attr, index) => {
+                                  if (!selectedCards[index] || !aiDeck[index])
+                                    return wins;
+                                  return attr === "timeToUnicorn" ||
+                                    attr === "founded"
+                                    ? selectedCards[index][attr] <
+                                      aiDeck[index][attr]
+                                      ? wins + 1
+                                      : wins
+                                    : selectedCards[index][attr] >
+                                      aiDeck[index][attr]
+                                    ? wins + 1
+                                    : wins;
+                                }, 0)
+                              : playerScore // Fallback to playerScore if data isn't ready
+                          }
                         </span>
                       </span>
                       <span className="text-gray-600">•</span>
                       <span className="text-xl">
                         AI Won:{" "}
                         <span className="text-red-400 font-bold">
-                          {aiScore}
+                          {
+                            roundAttributes.length > 0 &&
+                            selectedCards.length === 4 &&
+                            aiDeck.length >= 4
+                              ? roundAttributes.reduce((wins, attr, index) => {
+                                  if (!selectedCards[index] || !aiDeck[index])
+                                    return wins;
+                                  return attr === "timeToUnicorn" ||
+                                    attr === "founded"
+                                    ? selectedCards[index][attr] >
+                                      aiDeck[index][attr]
+                                      ? wins + 1
+                                      : wins
+                                    : selectedCards[index][attr] <
+                                      aiDeck[index][attr]
+                                    ? wins + 1
+                                    : wins;
+                                }, 0)
+                              : aiScore // Fallback to aiScore if data isn't ready
+                          }
                         </span>
                       </span>
                     </div>
@@ -2564,17 +2598,17 @@ Can you beat my score? #StartupCardBattle`;
                 </div>
               </motion.div>
 
-              {/* Battle Summary Card - Enhanced for desktop and mobile */}
+              {/* Battle Summary Card - Reduce margins */}
               <Card
                 id="battle-summary"
                 className="w-full bg-gray-900/90 border-gray-800 overflow-hidden backdrop-blur-sm"
               >
-                <CardHeader className="border-b border-gray-800/50 p-4">
-                  <CardTitle className="text-xl md:text-2xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                <CardHeader className="border-b border-gray-800/50 p-2">
+                  <CardTitle className="text-lg md:text-xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
                     Battle Summary
                   </CardTitle>
                 </CardHeader>
-                <div className="p-3 md:p-6 grid gap-2 md:gap-4 max-h-[60vh] overflow-y-auto">
+                <div className="p-2 grid gap-1.5">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <motion.div
                       key={`${i}-${roundAttributes[i]}-${
@@ -2604,8 +2638,9 @@ Can you beat my score? #StartupCardBattle`;
                           : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
                       )}
                     >
-                      <div className="relative bg-gray-950/90 rounded-xl p-3 md:p-5">
-                        <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-6">
+                      {/* Adjust padding in the inner content */}
+                      <div className="relative bg-gray-950/90 rounded-xl p-2 md:p-3">
+                        <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-4">
                           {/* Round Number */}
                           <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
                             R{i + 1}
@@ -2695,25 +2730,25 @@ Can you beat my score? #StartupCardBattle`;
                 </div>
               </Card>
 
-              {/* Action Buttons - Fixed position for mobile */}
-              <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-4 mb-16 px-4">
+              {/* Action Buttons - Update positioning */}
+              <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-2">
                 <Button
                   variant="outline"
-                  className="relative py-3 md:py-6 text-base md:text-lg col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
+                  className="relative py-2 md:py-4 text-base col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
                   onClick={shareResult}
                 >
                   <div className="relative flex items-center justify-center gap-2">
-                    <Share2 className="h-4 w-4 md:h-6 md:w-6" />
+                    <Share2 className="h-4 w-4 md:h-5 md:w-5" />
                     <span className="font-medium">Share</span>
                   </div>
                 </Button>
 
                 <Button
-                  className="col-span-1 py-3 md:py-6 text-base md:text-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
+                  className="col-span-1 py-2 md:py-4 text-base bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
                   onClick={resetGame}
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <Swords className="h-4 w-4 md:h-6 md:w-6" />
+                    <Swords className="h-4 w-4 md:h-5 md:w-5" />
                     <span>Play Again</span>
                   </div>
                 </Button>
