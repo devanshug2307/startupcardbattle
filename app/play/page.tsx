@@ -2183,7 +2183,7 @@ Can you beat my score? #StartupCardBattle`;
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-3 px-2">
                   {[
-                    { name: "Revenue", icon: DollarSign },
+                    { name: "Power", icon: DollarSign },
                     { name: "Founded", icon: Calendar },
                     { name: "Time to Unicorn", icon: Rocket },
                     { name: "Valuation", icon: TrendingUp },
