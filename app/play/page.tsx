@@ -30,6 +30,8 @@ import {
   Rocket,
   TrendingDown,
   Clock,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import {
   Card,
@@ -45,6 +47,7 @@ import {
   formatPower,
   formatTimeToUnicorn,
   formatValuation,
+  playSfx,
 } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -538,173 +541,194 @@ const BattleResultOverlay = ({
   onNext: () => void;
   playerScore: number;
   aiScore: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="absolute inset-0 flex items-center justify-center z-30"
-  >
+}) => {
+  // Play result sound when component mounts
+  useEffect(() => {
+    if (result === "win") {
+      playSfx("result-win", 0.8);
+    } else if (result === "lose") {
+      playSfx("result-lose", 0.7);
+    } else if (result === "draw") {
+      playSfx("result-draw", 0.6);
+    }
+  }, [result]);
+
+  return (
     <motion.div
-      className="absolute inset-0 bg-black/60"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onNext}
-    />
-
-    {/* Add CRT turn-on effect */}
-    <motion.div
-      className="absolute inset-0 bg-white/5 pointer-events-none"
-      initial={{ opacity: 0 }}
-      animate={{
-        opacity: [0, 0.2, 0],
-        scaleY: [1.5, 1],
-      }}
-      transition={{ duration: 0.3 }}
-    />
-
-    <motion.div
-      className="pixel-corners border-2 bg-gray-900/90 p-1 relative overflow-hidden"
-      style={{
-        borderColor:
-          result === "win"
-            ? "#22c55e"
-            : result === "lose"
-            ? "#ef4444"
-            : "#eab308",
-      }}
-      initial={{ y: -50, opacity: 0, scale: 0.8 }}
-      animate={{ y: 0, opacity: 1, scale: 1 }}
-      exit={{ y: 50, opacity: 0, scale: 0.8 }}
-      transition={{ type: "spring", bounce: 0.4 }}
+      className="absolute inset-0 flex items-center justify-center z-30"
     >
-      {/* Add scanlines effect */}
-      <div style={retroAnimations.scanlines} />
-
-      {/* Add horizontal scan effect */}
       <motion.div
-        className="absolute left-0 right-0 h-[2px] bg-white/30 z-50 pointer-events-none"
-        initial={{ top: 0, opacity: 0 }}
-        animate={{
-          top: ["0%", "100%"],
-          opacity: [0.5, 0.5, 0],
-        }}
-        transition={{ duration: 1, times: [0, 0.9, 1] }}
+        className="absolute inset-0 bg-black/60"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onNext}
       />
 
-      <div className="p-6 md:p-8 relative">
-        {/* Victory/Defeat Text */}
-        <motion.div
-          className={`text-3xl md:text-4xl font-bold pixel-text ${
+      {/* Add CRT turn-on effect */}
+      <motion.div
+        className="absolute inset-0 bg-white/5 pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: [0, 0.2, 0],
+          scaleY: [1.5, 1],
+        }}
+        transition={{ duration: 0.3 }}
+      />
+
+      <motion.div
+        className="pixel-corners border-2 bg-gray-900/90 p-1 relative overflow-hidden"
+        style={{
+          borderColor:
             result === "win"
-              ? "text-green-400"
+              ? "#22c55e"
               : result === "lose"
-              ? "text-red-400"
-              : "text-yellow-400"
-          }`}
-          style={{
-            textShadow: "3px 3px 0 #000",
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-            x: result === "win" ? [0, -2, 2, -2, 0] : 0,
-          }}
-          transition={{
-            scale: { duration: 0.6, repeat: 1 },
-            x: { duration: 0.3, delay: 0.6 },
-          }}
-        >
-          {result === "win"
-            ? "VICTORY!"
-            : result === "lose"
-            ? "DEFEATED!"
-            : "DRAW!"}
-        </motion.div>
+              ? "#ef4444"
+              : "#eab308",
+        }}
+        initial={{ y: -50, opacity: 0, scale: 0.8 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 50, opacity: 0, scale: 0.8 }}
+        transition={{ type: "spring", bounce: 0.4 }}
+      >
+        {/* Add scanlines effect */}
+        <div style={retroAnimations.scanlines} />
 
-        {/* Attribute Comparison */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
-          <div className="text-center">
-            <div className="text-purple-400 mb-2">YOUR CARD</div>
-            <div className="font-bold text-lg mb-1">
-              {playerCard?.name || "Unknown"}
-            </div>
-            <div
-              className={cn(
-                "text-2xl font-bold",
-                result === "win"
-                  ? "text-green-400"
-                  : result === "lose"
-                  ? "text-red-400"
-                  : "text-yellow-400"
-              )}
-            >
-              {formatAttributeValue(playerCard?.[attribute], attribute)}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-red-400 mb-2">AI CARD</div>
-            <div className="font-bold text-lg mb-1">
-              {aiCard?.name || "Unknown"}
-            </div>
-            <div
-              className={cn(
-                "text-2xl font-bold",
-                result === "lose"
-                  ? "text-green-400"
-                  : result === "win"
-                  ? "text-red-400"
-                  : "text-yellow-400"
-              )}
-            >
-              {formatAttributeValue(aiCard?.[attribute], attribute)}
-            </div>
-          </div>
-        </div>
-
-        {/* Add retro pixel particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          <RetroPixelParticles
-            count={20}
-            color={
-              result === "win"
-                ? "bg-green-400"
-                : result === "lose"
-                ? "bg-red-400"
-                : "bg-yellow-400"
-            }
-          />
-        </div>
-
-        {/* Add 8-bit style score display */}
-        <div className="mt-6 flex justify-center items-center gap-4">
-          <div className="pixel-corners bg-gray-800/80 px-3 py-1">
-            <div className="text-sm text-gray-400">YOU</div>
-            <div className="text-xl text-green-400 font-bold text-center">
-              {playerScore}
-            </div>
-          </div>
-          <div className="text-xl text-white">-</div>
-          <div className="pixel-corners bg-gray-800/80 px-3 py-1">
-            <div className="text-sm text-gray-400">CPU</div>
-            <div className="text-xl text-red-400 font-bold text-center">
-              {aiScore}
-            </div>
-          </div>
-        </div>
-
+        {/* Add horizontal scan effect */}
         <motion.div
-          className="mt-4 text-gray-300 text-center pixel-text"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0.5, 1] }}
-          transition={{ delay: 0.5, duration: 1, repeat: Infinity }}
-        >
-          PRESS ANY KEY TO CONTINUE
-        </motion.div>
-      </div>
+          className="absolute left-0 right-0 h-[2px] bg-white/30 z-50 pointer-events-none"
+          initial={{ top: 0, opacity: 0 }}
+          animate={{
+            top: ["0%", "100%"],
+            opacity: [0.5, 0.5, 0],
+          }}
+          transition={{ duration: 1, times: [0, 0.9, 1] }}
+        />
+
+        <div className="p-6 md:p-8 relative">
+          {/* Victory/Defeat Text */}
+          <motion.div
+            className={`text-3xl md:text-4xl font-bold pixel-text ${
+              result === "win"
+                ? "text-green-400"
+                : result === "lose"
+                ? "text-red-400"
+                : "text-yellow-400"
+            }`}
+            style={{
+              textShadow: "3px 3px 0 #000",
+            }}
+            animate={{
+              scale: [1, 1.1, 1],
+              x: result === "win" ? [0, -2, 2, -2, 0] : 0,
+            }}
+            transition={{
+              scale: { duration: 0.6, repeat: 1 },
+              x: { duration: 0.3, delay: 0.6 },
+            }}
+          >
+            {result === "win"
+              ? "VICTORY!"
+              : result === "lose"
+              ? "DEFEATED!"
+              : "DRAW!"}
+          </motion.div>
+
+          {/* Attribute Comparison */}
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-purple-400 mb-2">YOUR CARD</div>
+              <div className="font-bold text-lg mb-1">
+                {playerCard?.name || "Unknown"}
+              </div>
+              <div
+                className={cn(
+                  "text-2xl font-bold",
+                  result === "win"
+                    ? "text-green-400"
+                    : result === "lose"
+                    ? "text-red-400"
+                    : "text-yellow-400"
+                )}
+              >
+                {formatAttributeValue(playerCard?.[attribute], attribute)}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-red-400 mb-2">AI CARD</div>
+              <div className="font-bold text-lg mb-1">
+                {aiCard?.name || "Unknown"}
+              </div>
+              <div
+                className={cn(
+                  "text-2xl font-bold",
+                  result === "lose"
+                    ? "text-green-400"
+                    : result === "win"
+                    ? "text-red-400"
+                    : "text-yellow-400"
+                )}
+              >
+                {formatAttributeValue(aiCard?.[attribute], attribute)}
+              </div>
+            </div>
+          </div>
+
+          {/* Add retro pixel particles */}
+          <div className="absolute inset-0 overflow-hidden">
+            <RetroPixelParticles
+              count={20}
+              color={
+                result === "win"
+                  ? "bg-green-400"
+                  : result === "lose"
+                  ? "bg-red-400"
+                  : "bg-yellow-400"
+              }
+            />
+          </div>
+
+          {/* Add 8-bit style score display */}
+          <div className="mt-6 flex justify-center items-center gap-4">
+            <div className="pixel-corners bg-gray-800/80 px-3 py-1">
+              <div className="text-sm text-gray-400">YOU</div>
+              <div className="text-xl text-green-400 font-bold text-center">
+                {playerScore}
+              </div>
+            </div>
+            <div className="text-xl text-white">-</div>
+            <div className="pixel-corners bg-gray-800/80 px-3 py-1">
+              <div className="text-sm text-gray-400">CPU</div>
+              <div className="text-xl text-red-400 font-bold text-center">
+                {aiScore}
+              </div>
+            </div>
+          </div>
+
+          <motion.div
+            className="mt-4 text-gray-300 text-center pixel-text"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0.5, 1] }}
+            transition={{ delay: 0.5, duration: 1, repeat: Infinity }}
+          >
+            PRESS ANY KEY TO CONTINUE
+          </motion.div>
+        </div>
+      </motion.div>
+      <Button
+        onClick={() => {
+          playSfx("button-click", 0.6); // Button click sound
+          onNext();
+        }}
+      >
+        Next
+      </Button>
     </motion.div>
-  </motion.div>
-);
+  );
+};
 
 // Assuming your main content is in a component, let's wrap it in Suspense
 function PlayContent() {
@@ -735,6 +759,39 @@ function PlayContent() {
   const [playerName, setPlayerName] = useState<string>("");
   const [comingFromPortal, setComingFromPortal] = useState(false);
   const [previousGameUrl, setPreviousGameUrl] = useState<string | null>(null);
+
+  // Add this state at the top of your component
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+
+  // Add this effect to update the sound utility
+  useEffect(() => {
+    // Store the preference in localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "unicornBattle_soundEnabled",
+        isSoundEnabled.toString()
+      );
+    }
+  }, [isSoundEnabled]);
+
+  // Add this effect to load the preference
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedPreference = localStorage.getItem(
+        "unicornBattle_soundEnabled"
+      );
+      if (savedPreference !== null) {
+        setIsSoundEnabled(savedPreference === "true");
+      }
+    }
+  }, []);
+
+  // Modify the playSfx function to respect the sound toggle
+  const playSoundEffect = (soundName: string, volume: number = 1.0) => {
+    if (isSoundEnabled) {
+      playSfx(soundName, volume);
+    }
+  };
 
   // Initialize game
   useEffect(() => {
@@ -769,10 +826,14 @@ function PlayContent() {
     if (isTimerActive && timeLeft > 0) {
       timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
+        if (timeLeft <= 5) {
+          playSfx("timer-low", 0.5); // Low time warning sound
+        }
       }, 1000);
     } else if (isTimerActive && timeLeft === 0) {
       // Auto-select a random attribute if time runs out
-      const attributes = ["founded", "power", "timeToUnicorn", "valuation"];
+      playSfx("timer-end", 0.7); // Timer end sound
+      const attributes = ["founded", "revenue", "timeToUnicorn", "valuation"];
       const randomAttr =
         attributes[Math.floor(Math.random() * attributes.length)];
       handleAttributeSelect(randomAttr);
@@ -817,10 +878,11 @@ function PlayContent() {
   }, [searchParams]);
 
   const startGame = () => {
-    if (selectedCards.length < 4) return;
-
-    // Initialize empty roundAttributes array
-    setRoundAttributes([]);
+    if (selectedCards.length < 4) {
+      playSfx("error", 0.5); // Error sound
+      return;
+    }
+    playSfx("game-start", 0.8); // Game start sound
     setGameState("battle");
     setCurrentRound(1);
     setPlayerScore(0);
@@ -830,88 +892,70 @@ function PlayContent() {
   const handleCardSelect = (card: StartupCard) => {
     if (selectedCards.includes(card)) {
       setSelectedCards(selectedCards.filter((c) => c !== card));
+      playSfx("card-unselect", 0.6); // Card deselection sound
     } else if (selectedCards.length < 4) {
       setSelectedCards([...selectedCards, card]);
+      playSfx("card-select", 0.7); // Card selection sound
+    } else {
+      playSfx("error", 0.5); // Error sound when trying to select more than 4 cards
     }
   };
 
   const handleAttributeSelect = (attribute: string) => {
-    // Normalize the attribute name to match the property in the data structure
-    let normalizedAttribute = attribute.toLowerCase();
-
-    // Make sure "time to unicorn" becomes "timeToUnicorn" (camelCase)
-    if (normalizedAttribute === "timetounicorn") {
-      normalizedAttribute = "timeToUnicorn";
-    }
-
-    setBattleAttribute(normalizedAttribute);
+    playSfx("attribute-select", 0.7); // Attribute selection sound
+    setBattleAttribute(attribute);
     setIsTimerActive(false);
-
-    // Store the attribute in the roundAttributes array for later reference
-    const updatedRoundAttributes = [...roundAttributes];
-    updatedRoundAttributes[currentRound - 1] = normalizedAttribute;
-    setRoundAttributes(updatedRoundAttributes);
 
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
 
-    // First highlight the selected attribute on both cards
-    const revealSequence = async () => {
-      // 1. Highlight selected attribute on player card
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    // Compare values based on attribute type
+    let playerWins = false;
+    let isDraw = false;
 
-      // 2. Highlight and reveal AI card's attribute
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    switch (attribute) {
+      case "timeToUnicorn":
+      case "founded":
+        // Lower is better for these attributes
+        playerWins = playerCard[attribute] < aiCard[attribute];
+        isDraw = playerCard[attribute] === aiCard[attribute];
+        break;
+      default:
+        // Higher is better for revenue and valuation
+        playerWins = playerCard[attribute] > aiCard[attribute];
+        isDraw = playerCard[attribute] === aiCard[attribute];
+    }
 
-      // 3. Compare and show result
-      let playerWins = false;
-      let isDraw = false;
+    // Update scores and play appropriate sound
+    if (isDraw) {
+      setBattleResult("draw");
+      playSfx("battle-draw", 0.7); // Draw sound
+    } else if (playerWins) {
+      setPlayerScore((prevScore) => prevScore + 1);
+      setBattleResult("win");
+      playSfx("battle-win", 0.8); // Win sound
+    } else {
+      setAiScore((prevScore) => prevScore + 1);
+      setBattleResult("lose");
+      playSfx("battle-lose", 0.7); // Lose sound
+    }
 
-      switch (normalizedAttribute) {
-        case "timeToUnicorn":
-        case "founded":
-          // Lower is better for these attributes
-          playerWins =
-            playerCard[normalizedAttribute] < aiCard[normalizedAttribute];
-          isDraw =
-            playerCard[normalizedAttribute] === aiCard[normalizedAttribute];
-          break;
-        default:
-          // Higher is better for power and valuation
-          playerWins =
-            playerCard[normalizedAttribute] > aiCard[normalizedAttribute];
-          isDraw =
-            playerCard[normalizedAttribute] === aiCard[normalizedAttribute];
-      }
-
-      // Update scores and show result with animation
-      if (isDraw) {
-        setBattleResult("draw");
-      } else if (playerWins) {
-        setPlayerScore((prev) => prev + 1);
-        setBattleResult("win");
-      } else {
-        setAiScore((prev) => prev + 1);
-        setBattleResult("lose");
-      }
-
-      // Wait longer on the result screen
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      // Progress to next round or end game
+    // Move to next round or end game
+    setTimeout(() => {
       if (currentRound < 4) {
-        setCurrentRound((prev) => prev + 1);
+        setCurrentRound(currentRound + 1);
         setBattleAttribute(null);
         setBattleResult(null);
+        playSfx("next-round", 0.6); // Next round sound
       } else {
         setGameState("result");
+        playSfx("game-end", 0.8); // Game end sound
       }
-    };
-
-    revealSequence();
+    }, 2000);
   };
 
   const resetGame = () => {
+    playSfx("reset-game", 0.7); // Reset game sound
     setGameState("select");
     setSelectedCards([]);
     setBattleAttribute(null);
@@ -2552,6 +2596,7 @@ Can you beat my score? #StartupCardBattle`;
 
   // Add portal transition function
   const handlePortalTransition = (isExit: boolean = false) => {
+    playSfx("portal-transition", 0.8); // Portal transition sound
     setPortalActive(true);
 
     // Construct portal URL with parameters
@@ -2697,10 +2742,20 @@ Can you beat my score? #StartupCardBattle`;
         <header className="sticky top-0 z-40 px-3 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800/50">
           <div className="flex justify-between items-center max-w-7xl mx-auto">
             <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-bold">Unicorn Battle</h1>
-            <div className="w-5" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+            >
+              {isSoundEnabled ? (
+                <Volume2 className="w-5 h-5" />
+              ) : (
+                <VolumeX className="w-5 h-5" />
+              )}
+            </Button>
           </div>
         </header>
 
