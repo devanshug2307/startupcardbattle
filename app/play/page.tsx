@@ -500,7 +500,7 @@ const PixelAttackEffect = ({ isPlayer = true, isActive = false }) => (
   </AnimatePresence>
 );
 
-// Update the formatAttributeValue function with null checks
+// Update the formatAttributeValue function to better handle attribute access
 const formatAttributeValue = (
   value: number | string | undefined,
   attribute: string
@@ -905,6 +905,9 @@ function PlayContent() {
     playSfx("attribute-select", 0.7); // Attribute selection sound
     setBattleAttribute(attribute);
     setIsTimerActive(false);
+
+    // Add this line to track the selected attribute for each round
+    setRoundAttributes((prev) => [...prev, attribute]);
 
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
@@ -3076,118 +3079,109 @@ Can you beat my score? #StartupCardBattle`;
                   </CardTitle>
                 </CardHeader>
                 <div className="p-2 grid gap-1.5">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <motion.div
-                      key={`round-${i}-${roundAttributes[i]}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 + i * 0.1 }}
-                      className={cn(
-                        "relative rounded-xl overflow-hidden",
-                        "bg-gradient-to-r p-[1px]",
-                        roundAttributes[i] === "timeToUnicorn" ||
-                          roundAttributes[i] === "founded"
-                          ? selectedCards[i][roundAttributes[i]] <
-                            aiDeck[i][roundAttributes[i]]
-                            ? "from-green-500/30 via-green-500/20 to-green-500/30"
-                            : selectedCards[i][roundAttributes[i]] >
-                              aiDeck[i][roundAttributes[i]]
-                            ? "from-red-500/30 via-red-500/20 to-red-500/30"
-                            : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
-                          : selectedCards[i][roundAttributes[i]] >
-                            aiDeck[i][roundAttributes[i]]
-                          ? "from-green-500/30 via-green-500/20 to-green-500/30"
-                          : selectedCards[i][roundAttributes[i]] <
-                            aiDeck[i][roundAttributes[i]]
-                          ? "from-red-500/30 via-red-500/20 to-red-500/30"
-                          : "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
-                      )}
-                    >
-                      {/* Adjust padding in the inner content */}
-                      <div className="relative bg-gray-950/90 rounded-xl p-2 md:p-3">
-                        <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-4">
-                          {/* Round Number */}
-                          <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
-                            R{i + 1}
-                          </div>
+                  {Array.from({ length: 4 }).map((_, i) => {
+                    // Skip if we don't have the data for this round yet
+                    if (
+                      !roundAttributes[i] ||
+                      !selectedCards[i] ||
+                      !aiDeck[i]
+                    ) {
+                      return null;
+                    }
 
-                          {/* Player Side */}
-                          <div className="min-w-0">
-                            <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
-                              {selectedCards[i].name}
-                            </div>
-                            <div className="flex items-center gap-1 md:gap-2">
-                              {renderAttributeIcon(roundAttributes[i])}
-                              <span className="text-base md:text-2xl font-bold text-blue-400">
-                                {formatAttributeValue(
-                                  selectedCards[i][roundAttributes[i]],
-                                  roundAttributes[i]
-                                )}
-                              </span>
-                            </div>
-                          </div>
+                    const attribute = roundAttributes[i];
+                    const playerCard = selectedCards[i];
+                    const aiCard = aiDeck[i];
 
-                          {/* Result Badge */}
-                          <div className="flex items-center justify-center">
-                            <div
-                              className={cn(
-                                "px-2 py-1 rounded text-sm font-medium",
-                                roundAttributes[i] === "timeToUnicorn" ||
-                                  roundAttributes[i] === "founded"
-                                  ? selectedCards[i][roundAttributes[i]] <
-                                    aiDeck[i][roundAttributes[i]]
+                    // Determine if lower or higher is better for this attribute
+                    const isLowerBetter =
+                      attribute === "timeToUnicorn" || attribute === "founded";
+
+                    // Compare values
+                    const playerValue = playerCard[attribute];
+                    const aiValue = aiCard[attribute];
+                    const isDraw = playerValue === aiValue;
+                    const playerWins = isLowerBetter
+                      ? playerValue < aiValue
+                      : playerValue > aiValue;
+
+                    // Get result and style
+                    const result = isDraw
+                      ? "DRAW"
+                      : playerWins
+                      ? "WIN"
+                      : "LOSS";
+                    const resultStyle = isDraw
+                      ? "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
+                      : playerWins
+                      ? "from-green-500/30 via-green-500/20 to-green-500/30"
+                      : "from-red-500/30 via-red-500/20 to-red-500/30";
+
+                    return (
+                      <motion.div
+                        key={`round-${i}-${attribute}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 + i * 0.1 }}
+                        className={cn(
+                          "relative rounded-xl overflow-hidden",
+                          "bg-gradient-to-r p-[1px]",
+                          resultStyle
+                        )}
+                      >
+                        <div className="relative bg-gray-950/90 rounded-xl p-2 md:p-3">
+                          <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-4">
+                            {/* Round Number */}
+                            <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
+                              R{i + 1}
+                            </div>
+
+                            {/* Player Side */}
+                            <div className="min-w-0">
+                              <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
+                                {playerCard.name}
+                              </div>
+                              <div className="flex items-center gap-1 md:gap-2">
+                                {renderAttributeIcon(attribute)}
+                                <span className="text-base md:text-2xl font-bold text-blue-400">
+                                  {formatAttributeValue(playerValue, attribute)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Result Badge */}
+                            <div className="flex items-center justify-center">
+                              <div
+                                className={cn(
+                                  "px-2 py-1 rounded text-sm font-medium",
+                                  result === "WIN"
                                     ? "bg-green-500/20 text-green-400"
-                                    : selectedCards[i][roundAttributes[i]] >
-                                      aiDeck[i][roundAttributes[i]]
+                                    : result === "LOSS"
                                     ? "bg-red-500/20 text-red-400"
                                     : "bg-yellow-500/20 text-yellow-400"
-                                  : selectedCards[i][roundAttributes[i]] >
-                                    aiDeck[i][roundAttributes[i]]
-                                  ? "bg-green-500/20 text-green-400"
-                                  : selectedCards[i][roundAttributes[i]] <
-                                    aiDeck[i][roundAttributes[i]]
-                                  ? "bg-red-500/20 text-red-400"
-                                  : "bg-yellow-500/20 text-yellow-400"
-                              )}
-                            >
-                              {roundAttributes[i] === "timeToUnicorn" ||
-                              roundAttributes[i] === "founded"
-                                ? selectedCards[i][roundAttributes[i]] <
-                                  aiDeck[i][roundAttributes[i]]
-                                  ? "WIN"
-                                  : selectedCards[i][roundAttributes[i]] >
-                                    aiDeck[i][roundAttributes[i]]
-                                  ? "LOSS"
-                                  : "DRAW"
-                                : selectedCards[i][roundAttributes[i]] >
-                                  aiDeck[i][roundAttributes[i]]
-                                ? "WIN"
-                                : selectedCards[i][roundAttributes[i]] <
-                                  aiDeck[i][roundAttributes[i]]
-                                ? "LOSS"
-                                : "DRAW"}
-                            </div>
-                          </div>
-
-                          {/* AI Side */}
-                          <div className="min-w-0 text-right">
-                            <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
-                              {aiDeck[i].name}
-                            </div>
-                            <div className="flex items-center justify-end gap-1 md:gap-2">
-                              <span className="text-base md:text-2xl font-bold text-red-400">
-                                {formatAttributeValue(
-                                  aiDeck[i][roundAttributes[i]],
-                                  roundAttributes[i]
                                 )}
-                              </span>
-                              {renderAttributeIcon(roundAttributes[i])}
+                              >
+                                {result}
+                              </div>
+                            </div>
+
+                            {/* AI Side */}
+                            <div className="min-w-0 text-right">
+                              <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
+                                {aiCard.name}
+                              </div>
+                              <div className="flex items-center justify-end gap-1 md:gap-2">
+                                <span className="text-base md:text-2xl font-bold text-red-400">
+                                  {formatAttributeValue(aiValue, attribute)}
+                                </span>
+                                {renderAttributeIcon(attribute)}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </Card>
 
