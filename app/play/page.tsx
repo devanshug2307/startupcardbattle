@@ -836,15 +836,21 @@ function PlayContent() {
   };
 
   const handleAttributeSelect = (attribute: string) => {
-    setBattleAttribute(attribute);
+    // Normalize the attribute name to match the property in the data structure
+    let normalizedAttribute = attribute.toLowerCase();
+
+    // Make sure "time to unicorn" becomes "timeToUnicorn" (camelCase)
+    if (normalizedAttribute === "timetounicorn") {
+      normalizedAttribute = "timeToUnicorn";
+    }
+
+    setBattleAttribute(normalizedAttribute);
     setIsTimerActive(false);
 
-    // Update roundAttributes array with the selected attribute for current round
-    setRoundAttributes((prev) => {
-      const newAttributes = [...prev];
-      newAttributes[currentRound - 1] = attribute;
-      return newAttributes;
-    });
+    // Store the attribute in the roundAttributes array for later reference
+    const updatedRoundAttributes = [...roundAttributes];
+    updatedRoundAttributes[currentRound - 1] = normalizedAttribute;
+    setRoundAttributes(updatedRoundAttributes);
 
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
@@ -861,15 +867,21 @@ function PlayContent() {
       let playerWins = false;
       let isDraw = false;
 
-      switch (attribute) {
+      switch (normalizedAttribute) {
         case "timeToUnicorn":
         case "founded":
-          playerWins = playerCard[attribute] < aiCard[attribute];
-          isDraw = playerCard[attribute] === aiCard[attribute];
+          // Lower is better for these attributes
+          playerWins =
+            playerCard[normalizedAttribute] < aiCard[normalizedAttribute];
+          isDraw =
+            playerCard[normalizedAttribute] === aiCard[normalizedAttribute];
           break;
         default:
-          playerWins = playerCard[attribute] > aiCard[attribute];
-          isDraw = playerCard[attribute] === aiCard[attribute];
+          // Higher is better for power and valuation
+          playerWins =
+            playerCard[normalizedAttribute] > aiCard[normalizedAttribute];
+          isDraw =
+            playerCard[normalizedAttribute] === aiCard[normalizedAttribute];
       }
 
       // Update scores and show result with animation
@@ -2481,18 +2493,18 @@ Can you beat my score? #StartupCardBattle`;
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-3 px-2">
                   {[
-                    { name: "Power", icon: DollarSign },
-                    { name: "Founded", icon: Calendar },
-                    { name: "Time to Unicorn", icon: Rocket },
-                    { name: "Valuation", icon: TrendingUp },
+                    { name: "Power", icon: DollarSign, key: "power" },
+                    { name: "Founded", icon: Calendar, key: "founded" },
+                    {
+                      name: "Time to Unicorn",
+                      icon: Rocket,
+                      key: "timeToUnicorn",
+                    },
+                    { name: "Valuation", icon: TrendingUp, key: "valuation" },
                   ].map((attr) => (
                     <motion.button
                       key={attr.name}
-                      onClick={() =>
-                        handleAttributeSelect(
-                          attr.name.toLowerCase().replace(" to ", "")
-                        )
-                      }
+                      onClick={() => handleAttributeSelect(attr.key)}
                       className="pixel-corners bg-gradient-to-br from-purple-600 to-indigo-600 
                                hover:from-purple-500 hover:to-indigo-500 p-2 md:px-4 md:py-3 
                                text-white font-medium text-xs md:text-base

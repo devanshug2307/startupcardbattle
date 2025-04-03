@@ -9,7 +9,10 @@ export function formatPower(value: number): string {
   return `${value} PW`;
 }
 
-export function formatTimeToUnicorn(years: number): string {
+export function formatTimeToUnicorn(years: number | undefined): string {
+  if (years === undefined || years === null) {
+    return "---";
+  }
   const wholeYears = Math.floor(years);
   const months = Math.round((years - wholeYears) * 12);
   return `${wholeYears}Y ${months}M`;
