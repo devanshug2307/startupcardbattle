@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Startup Card Battle",
-  description: "A strategic card game of innovation & power",
+  title: "Startup Battle",
+  description: "A strategic card game for startup enthusiasts",
   generator: "v0.dev",
 };
 
@@ -15,7 +15,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        {children}
+        <div className="relative">
+          <div
+            className="fixed inset-0 bg-[radial-gradient(circle_at_50%_-20%,#2C0855,#0A0118_50%)]"
+            style={{
+              zIndex: -10000,
+            }}
+          />
+          {children}
+        </div>
         <a
           target="_blank"
           href="https://jam.pieter.com"

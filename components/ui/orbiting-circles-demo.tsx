@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import {
   Trophy,
@@ -7,13 +9,27 @@ import {
   HelpCircle,
   Clock,
   X,
+  Zap,
+  Cpu,
+  Database,
+  Globe,
+  BarChart,
+  ArrowUp,
+  Code,
+  Server,
+  ArrowRight,
+  Command,
+  Sparkles,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import cloudflareIcon from "/public/icons/Cloudflare.png";
 import vercelIcon from "/public/icons/vercel-icon-dark.png";
 import replitIcon from "/public/icons/Replit_Logo_Symbol.png";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { OrbitingCircles } from "@/components/ui/orbiting-circles";
 
 interface StartupData {
   icon: string;
@@ -30,7 +46,15 @@ interface StartupData {
   borderColor: string;
 }
 
-export function OrbitingCirclesDemo() {
+export interface OrbitingCirclesDemoProps {
+  hideTitle?: boolean;
+  compactMode?: boolean;
+}
+
+export function OrbitingCirclesDemo({
+  hideTitle = false,
+  compactMode = false,
+}: OrbitingCirclesDemoProps) {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -39,6 +63,21 @@ export function OrbitingCirclesDemo() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
+  const [showScanlines, setShowScanlines] = useState(true);
+
+  // Set directly to true to skip animation
+  const [animationComplete, setAnimationComplete] = useState(true);
+
+  const [noiseParticles, setNoiseParticles] = useState<
+    Array<{
+      width: number;
+      height: number;
+      x: string;
+      y: string;
+      opacity: number;
+      delay: number;
+    }>
+  >([]);
 
   // Check if mobile on mount and window resize
   useEffect(() => {
@@ -54,7 +93,7 @@ export function OrbitingCirclesDemo() {
       const timer = setTimeout(() => {
         setShowHelp(true);
         setHasShownInitialHelp(true);
-      }, 3000); // Changed from 2000 to 3000 to show after 3 seconds
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
@@ -79,6 +118,21 @@ export function OrbitingCirclesDemo() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Generate noise particles after mount
+  useEffect(() => {
+    if (mounted) {
+      const particles = Array.from({ length: 20 }).map(() => ({
+        width: Math.random() * 2 + 1,
+        height: Math.random() * 2 + 1,
+        x: `${Math.random() * 100}%`,
+        y: `${Math.random() * 100}%`,
+        opacity: Math.random() * 0.3,
+        delay: Math.random() * 5,
+      }));
+      setNoiseParticles(particles);
+    }
+  }, [mounted]);
 
   // Startup data with retro gaming stats
   const startupData: StartupData[] = [
@@ -280,548 +334,258 @@ export function OrbitingCirclesDemo() {
   const particleCount = isMobile ? 25 : 50;
   const starCount = isMobile ? 20 : 40;
 
+  // Define floating icons with their properties
+  const floatingIcons = useMemo(
+    () => [
+      {
+        icon: <Rocket size={compactMode ? 14 : 18} />,
+        delay: 0,
+        radius: compactMode ? 120 : 220,
+        color: "cyan-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Cpu size={compactMode ? 14 : 18} />,
+        delay: 2,
+        radius: compactMode ? 120 : 220,
+        color: "green-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Globe size={compactMode ? 14 : 18} />,
+        delay: 4,
+        radius: compactMode ? 120 : 220,
+        color: "indigo-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Database size={compactMode ? 14 : 18} />,
+        delay: 6,
+        radius: compactMode ? 120 : 220,
+        color: "amber-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Server size={compactMode ? 14 : 18} />,
+        delay: 8,
+        radius: compactMode ? 120 : 220,
+        color: "rose-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Zap size={compactMode ? 14 : 18} />,
+        delay: 10,
+        radius: compactMode ? 120 : 220,
+        color: "yellow-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Code size={compactMode ? 14 : 18} />,
+        delay: 12,
+        radius: compactMode ? 120 : 220,
+        color: "blue-500",
+        glowEffect: true,
+      },
+      {
+        icon: <Command size={compactMode ? 14 : 18} />,
+        delay: 14,
+        radius: compactMode ? 120 : 220,
+        color: "purple-500",
+        glowEffect: true,
+      },
+    ],
+    [compactMode]
+  );
+
   return (
-    <div
+    <motion.div
       id="orbiting-circles-demo"
-      className="relative min-h-[600px] w-full overflow-hidden px-4 sm:px-6"
+      className="relative w-full overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
-      {/* Enhanced Retro Grid Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a0066_1px,transparent_1px),linear-gradient(to_bottom,#2a0066_1px,transparent_1px)] bg-[size:24px_24px] sm:bg-[size:32px_32px] opacity-20">
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/20 to-transparent"
-            animate={{
-              opacity: [0.2, 0.3, 0.2],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        </div>
+      {/* CRT Screen Effect */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+        {/* Scanlines effect */}
+        <div className="absolute inset-0 bg-scanlines opacity-10"></div>
+
+        {/* CRT flicker effect */}
+        <motion.div
+          className="absolute inset-0 bg-white/5"
+          animate={{ opacity: [0.03, 0, 0.02, 0, 0.03] }}
+          transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
+        />
+
+        {/* Edge vignette */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent to-black/70 opacity-40"></div>
       </div>
 
-      {/* Add Rocket Section before Cards Display */}
-      <div className="relative max-w-4xl mx-auto pt-8">
-        <motion.div
-          className="flex flex-col items-center justify-center mb-8 relative"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+      <div className="relative z-20 grid lg:grid-cols-2 gap-0 items-center overflow-hidden">
+        {/* Animated circles with icons */}
+        <div
+          className={`flex items-center justify-center relative ${
+            compactMode ? "h-[300px]" : "h-[600px]"
+          }`}
         >
-          {/* Animated Rocket */}
-          <motion.div
-            className="relative"
-            animate={{
-              y: [-10, 10, -10],
-              rotate: [-2, 2, -2],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
+          <div className="flex flex-col items-center justify-center relative">
+            {/* Glowing orb center */}
             <motion.div
-              className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-12 opacity-20"
+              className={`absolute ${
+                compactMode ? "w-16 h-16" : "w-24 h-24"
+              } rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500`}
               animate={{
-                height: [48, 64, 48],
-                opacity: [0.1, 0.3, 0.1],
+                scale: [1, 1.2, 1],
               }}
               transition={{
-                duration: 2,
+                duration: 4,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-            >
-              <div className="w-full h-full bg-gradient-to-b from-purple-500 to-transparent rounded-full blur-lg" />
-            </motion.div>
-
-            <Rocket
-              className="w-12 h-12 text-purple-400 transform rotate-45"
-              strokeWidth={1.5}
+              style={{
+                filter: "blur(20px)",
+              }}
             />
 
-            {/* Particle Effects */}
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute bottom-0 left-1/2 w-1 h-1 rounded-full bg-purple-400"
-                initial={{
-                  x: 0,
-                  y: 0,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: Math.random() * 40 - 20,
-                  y: Math.random() * 40 + 20,
-                  opacity: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  delay: i * 0.2,
-                  ease: "easeOut",
-                }}
-              />
-            ))}
-          </motion.div>
-
-          {/* Title */}
-          <motion.h1
-            className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mt-6 pixel-text text-center"
-            animate={{
-              scale: [1, 1.02, 1],
-              textShadow: [
-                "0 0 8px rgba(168, 85, 247, 0.4)",
-                "0 0 16px rgba(168, 85, 247, 0.6)",
-                "0 0 8px rgba(168, 85, 247, 0.4)",
-              ],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            Startup Battle
-          </motion.h1>
-
-          <motion.p
-            className="text-purple-300 mt-2 text-sm sm:text-base text-center max-w-md"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Collect cards, build your deck, and battle with the most innovative
-            startups
-          </motion.p>
-        </motion.div>
-      </div>
-
-      {/* Cards Display */}
-      <div className="relative max-w-4xl mx-auto py-8 sm:py-12">
-        {/* Help Button */}
-        <motion.button
-          className="absolute top-0 right-0 p-2 text-purple-300 hover:text-purple-100 transition-colors"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowHelp(!showHelp)}
-        >
-          <HelpCircle className="w-6 h-6" />
-        </motion.button>
-
-        {/* How to Play Modal */}
-        <AnimatePresence>
-          {showHelp && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+              className="relative"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
             >
-              {/* Backdrop */}
-              <motion.div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={() => setShowHelp(false)}
-              />
-
-              {/* Modal Content */}
-              <motion.div
-                className="relative bg-gradient-to-b from-purple-900/90 to-indigo-900/90 p-4 sm:p-6 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
+              <div
+                className={`relative flex items-center justify-center rounded-full bg-background/10 backdrop-blur-md border border-secondary p-4 ${
+                  compactMode ? "w-12 h-12" : "w-16 h-16"
+                } z-20`}
               >
-                {/* Close button */}
-                <button
-                  onClick={() => setShowHelp(false)}
-                  className="absolute top-2 right-2 p-2 text-purple-300 hover:text-purple-100 transition-colors"
+                <Sparkles
+                  className={`${
+                    compactMode ? "h-5 w-5" : "h-7 w-7"
+                  } text-primary`}
+                />
+              </div>
+            </motion.div>
+
+            {/* Orbiting icons */}
+            {mounted &&
+              floatingIcons.map((item, index) => (
+                <OrbitingCircles
+                  key={index}
+                  radius={item.radius}
+                  delay={item.delay}
+                  duration={compactMode ? 20 + index * 2 : 25 + index * 2}
+                  reverse={index % 2 === 0}
+                  glowEffect={item.glowEffect}
+                  glowColor={item.color}
+                  trailEffect={true}
+                  trailCount={compactMode ? 2 : 3}
+                  pathColor={`${item.color}`}
+                  pulseEffect={true}
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <div
+                    className={`p-1 rounded-full bg-background/50 backdrop-blur-sm`}
+                  >
+                    {item.icon}
+                  </div>
+                </OrbitingCircles>
+              ))}
+          </div>
+        </div>
 
-                <h3 className="text-xl font-bold text-white mb-6 pixel-text text-center">
-                  How to Play
-                </h3>
+        {/* Content */}
+        <AnimatePresence>
+          {!hideTitle && (
+            <motion.div
+              className="p-4 lg:p-8 flex flex-col space-y-6"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 tracking-tight">
+                    STARTUP BATTLE
+                  </h1>
+                </motion.div>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                  className="text-muted-foreground max-w-lg font-mono"
+                >
+                  Build, compete, and conquer in the ultimate entrepreneurship
+                  simulator. Launch your startup, outmaneuver rivals, and
+                  dominate the market.
+                </motion.p>
+              </div>
 
-                <div className="space-y-6">
-                  {helpSteps.map((step, index) => (
-                    <motion.div
-                      key={step.title}
-                      className="relative"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.15 }}
-                    >
-                      <div className="flex items-start gap-4">
-                        <motion.div
-                          className={`flex-shrink-0 p-3 rounded-lg bg-gradient-to-br ${step.color}`}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <step.icon className="w-5 h-5 text-white" />
-                        </motion.div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-white font-semibold mb-1">
-                            {step.title}
-                          </h4>
-                          <p className="text-purple-200 text-sm mb-3">
-                            {step.description}
-                          </p>
-                          <motion.div
-                            className="bg-black/20 rounded-lg p-3"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            transition={{ delay: index * 0.15 + 0.3 }}
-                          >
-                            {step.demo}
-                          </motion.div>
-                        </div>
+              {/* Feature cards with retro styling */}
+              <div className="grid gap-4 mt-8">
+                {[
+                  {
+                    title: "BUILD YOUR STARTUP",
+                    desc: "Assemble your team, allocate resources, and develop your MVP",
+                    icon: <Code />,
+                    delay: 0.6,
+                  },
+                  {
+                    title: "RAISE CAPITAL",
+                    desc: "Pitch to VCs, negotiate terms, and secure funding rounds",
+                    icon: <Database />,
+                    delay: 0.8,
+                  },
+                  {
+                    title: "MARKET DOMINATION",
+                    desc: "Execute your go-to-market strategy and crush the competition",
+                    icon: <Rocket />,
+                    delay: 1.0,
+                  },
+                ].map((feature, i) => (
+                  <motion.div
+                    key={i}
+                    className="p-4 border border-secondary/50 rounded-md bg-background/50 backdrop-blur-sm hover:bg-accent/5 transition-colors"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: feature.delay }}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="mt-1 bg-primary/10 p-2 rounded-md">
+                        {feature.icon}
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      <div>
+                        <h3 className="text-sm font-bold tracking-wider text-primary">
+                          {feature.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1 font-mono">
+                          {feature.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
-                {/* Add this before the bottom padding div */}
-                <motion.button
-                  className="w-full mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-lg font-semibold"
-                  onClick={() => setShowHelp(false)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Got it!
-                </motion.button>
-
-                {/* Bottom padding */}
-                <div className="h-4" />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 1.2 }}
+                className="mt-4"
+              >
+                <Link href="/signup" className="inline-block">
+                  <Button className="gap-1 px-4 py-2 font-mono bg-primary hover:bg-primary/90 transition-colors">
+                    GET STARTED
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-8">
-          <AnimatePresence>
-            {startupData.map((card, index) => (
-              <motion.div
-                key={index}
-                className="relative group w-full"
-                variants={cardVariants}
-                initial="initial"
-                animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-                custom={index}
-                layout
-              >
-                {/* Card Container */}
-                <div className="relative rounded-lg overflow-hidden card-retro">
-                  {/* Enhanced Card Background */}
-                  <motion.div
-                    className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-90`}
-                    animate={{
-                      background: [
-                        `linear-gradient(45deg, ${card.color.split(" ")[1]}, ${
-                          card.color.split(" ")[3]
-                        })`,
-                        `linear-gradient(225deg, ${card.color.split(" ")[1]}, ${
-                          card.color.split(" ")[3]
-                        })`,
-                      ],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-scanlines opacity-10" />
-                  </motion.div>
-
-                  {/* Card Content */}
-                  <div className="relative p-2 sm:p-3 md:p-4">
-                    {/* Enhanced Header - Reduce padding and font sizes */}
-                    <motion.div
-                      className="flex justify-between items-start mb-2 sm:mb-3 md:mb-4"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.2 + 0.3 }}
-                    >
-                      <div className="pixel-corners bg-black/30 px-1 py-0.5 sm:px-2 sm:py-1">
-                        <span className="text-[8px] sm:text-[10px] md:text-xs font-bold text-white">
-                          {card.stats.category}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        {[...Array(3)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.1 + i * 0.1 }}
-                          >
-                            <Star className="w-2 h-2 sm:w-3 sm:h-3 text-yellow-300 fill-yellow-300" />
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-
-                    {/* Enhanced Image Container - Reduce size on mobile */}
-                    <motion.div
-                      className="relative h-16 sm:h-24 md:h-32 mb-2 sm:mb-3 md:mb-4"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <motion.div
-                          className="relative w-12 h-12 sm:w-20 sm:h-20 md:w-24 md:h-24"
-                          animate={{
-                            y: [0, -5, 0],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <Image
-                            src={card.icon}
-                            alt={card.name}
-                            fill
-                            className="object-contain pixel-image"
-                            sizes="(max-width: 768px) 48px, (max-width: 1024px) 80px, 96px"
-                          />
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    {/* Enhanced Name - Reduce font size on mobile */}
-                    <motion.div
-                      className="text-center mb-2 sm:mb-3 md:mb-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.2 + 0.5 }}
-                    >
-                      <h3 className="text-sm sm:text-lg md:text-xl font-bold text-white pixel-text">
-                        {card.name}
-                      </h3>
-                    </motion.div>
-
-                    {/* Enhanced Stats - Reduce spacing and font sizes */}
-                    <div className="space-y-1 sm:space-y-1.5 md:space-y-2">
-                      {Object.entries(card.stats)
-                        .filter(
-                          ([key]) =>
-                            key !== "category" &&
-                            key !== "founded" &&
-                            key !== "valuation"
-                        )
-                        .map(([stat, value], statIndex) => (
-                          <motion.div
-                            key={stat}
-                            className="flex items-center justify-between"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{
-                              delay: index * 0.1 + statIndex * 0.1,
-                            }}
-                          >
-                            <span className="text-[8px] sm:text-[10px] md:text-xs text-white/80 uppercase">
-                              {stat}
-                            </span>
-                            <div className="flex-1 mx-1 sm:mx-2">
-                              <div className="h-1 sm:h-1.5 md:h-2 bg-black/30 rounded-full overflow-hidden">
-                                <motion.div
-                                  className="h-full bg-white"
-                                  initial={{ width: 0 }}
-                                  animate={{
-                                    width: `${
-                                      typeof value === "number" ? value : 0
-                                    }%`,
-                                  }}
-                                  transition={{
-                                    duration: 1,
-                                    delay: index * 0.2 + statIndex * 0.1,
-                                    ease: "easeOut",
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <span className="text-[8px] sm:text-[10px] md:text-xs font-bold text-white">
-                              {value}
-                            </span>
-                          </motion.div>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Enhanced Border Effect */}
-                  <motion.div
-                    className={`absolute inset-0 border-2 border-${card.borderColor} pixel-corners pointer-events-none`}
-                    animate={{
-                      opacity: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-                </div>
-
-                {/* Enhanced Hover Glow Effect */}
-                <motion.div
-                  className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg opacity-0 group-hover:opacity-30 blur transition-opacity duration-300 -z-10"
-                  animate={{
-                    scale: [1, 1.05, 1],
-                    opacity: [0.2, 0.3, 0.2],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Battle Section */}
-        <div className="mt-8 space-y-6">
-          {/* Start Battle Button */}
-          <div className="relative max-w-md mx-auto">
-            <motion.button
-              className="relative w-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white py-4 px-6 rounded-lg flex items-center justify-center gap-3 overflow-hidden pixel-corners"
-              whileHover={{
-                scale: 1.02,
-                transition: { duration: 0.2 },
-              }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/play")}
-            >
-              {/* Button Content */}
-              <motion.div
-                className="relative flex items-center gap-3"
-                animate={{
-                  y: [-1, 1, -1],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <Gamepad2 className="w-6 h-6" />
-                <span className="text-xl font-bold pixel-text tracking-wide">
-                  START BATTLE
-                </span>
-                <motion.div
-                  animate={{
-                    x: [0, 5, 0],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <Rocket className="w-6 h-6" />
-                </motion.div>
-              </motion.div>
-            </motion.button>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
-            {[
-              { value: "5+", label: "Category" },
-              { value: "$100B+", label: "Total Valuation" },
-              { value: "20+", label: "Unicorns" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                className="bg-[#1A1033] bg-opacity-50 rounded-lg p-3 text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <div className="text-lg font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-purple-300">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
       </div>
-
-      {/* Enhanced Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: particleCount }).map((_, i) => {
-          const initialPos = getParticlePosition(i, particleCount);
-          return (
-            <motion.div
-              key={i}
-              className="absolute w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full"
-              initial={{
-                x: initialPos.x,
-                y: initialPos.y,
-                scale: 0,
-              }}
-              animate={{
-                x: mounted
-                  ? [
-                      Math.random() * dimensions.width,
-                      Math.random() * dimensions.width,
-                      Math.random() * dimensions.width,
-                    ]
-                  : initialPos.x,
-                y: mounted
-                  ? [
-                      Math.random() * dimensions.height,
-                      Math.random() * dimensions.height,
-                      Math.random() * dimensions.height,
-                    ]
-                  : initialPos.y,
-                opacity: [0.2, 0.8, 0.2],
-                scale: [0, 1, 0],
-              }}
-              transition={{
-                duration: mounted ? Math.random() * 8 + 4 : 0,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: mounted ? Math.random() * 2 : 0,
-              }}
-              style={{
-                filter: "blur(0.5px)",
-                boxShadow: "0 0 8px rgba(168, 85, 247, 0.4)",
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* Additional Background Stars */}
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: starCount }).map((_, i) => {
-          const pos = getParticlePosition(i, starCount, true);
-          const scale = getParticleScale(i);
-          return (
-            <motion.div
-              key={`star-${i}`}
-              className="absolute w-0.5 h-0.5 bg-white rounded-full"
-              initial={{
-                x: pos.x,
-                y: pos.y,
-                scale,
-              }}
-              animate={{
-                opacity: [0.2, 0.8, 0.2],
-              }}
-              transition={{
-                duration: mounted ? Math.random() * 3 + 2 : 2,
-                repeat: Infinity,
-                delay: mounted ? Math.random() * 2 : 0,
-              }}
-              style={{
-                boxShadow: "0 0 2px rgba(255, 255, 255, 0.5)",
-              }}
-            />
-          );
-        })}
-      </div>
-    </div>
+    </motion.div>
   );
 }
