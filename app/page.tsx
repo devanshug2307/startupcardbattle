@@ -120,8 +120,91 @@ export default function Home() {
   const [showSystemReadyIcon, setShowSystemReadyIcon] = useState(false);
   const [screenOn, setScreenOn] = useState(false);
   const [forceMainContentRender, setForceMainContentRender] = useState(false);
+  const [scanlineEffect, setScanlineEffect] = useState(true);
 
   useEffect(() => {
+    // Add global CSS for CRT effects
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes flicker {
+        0% { opacity: 0.97; }
+        5% { opacity: 0.95; }
+        10% { opacity: 0.97; }
+        15% { opacity: 0.94; }
+        20% { opacity: 0.98; }
+        25% { opacity: 0.95; }
+        30% { opacity: 0.97; }
+        35% { opacity: 0.96; }
+        40% { opacity: 0.99; }
+        45% { opacity: 0.97; }
+        50% { opacity: 0.99; }
+        55% { opacity: 0.95; }
+        60% { opacity: 0.98; }
+        65% { opacity: 0.97; }
+        70% { opacity: 0.95; }
+        75% { opacity: 0.97; }
+        80% { opacity: 0.96; }
+        85% { opacity: 0.98; }
+        90% { opacity: 0.97; }
+        95% { opacity: 0.95; }
+        100% { opacity: 0.98; }
+      }
+
+      .crt-flicker {
+        animation: flicker 0.15s infinite;
+      }
+      
+      body {
+        overflow-x: hidden;
+      }
+      
+      .scanlines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.02) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        background-size: 100% 2px;
+        z-index: 999;
+        pointer-events: none;
+        opacity: 0.3;
+      }
+      
+      .crt-corners:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 12px;
+        box-shadow: inset 0 0 100px 40px rgba(0,0,0,0.9);
+        z-index: 10;
+        pointer-events: none;
+      }
+      
+      .retro-text {
+        text-shadow: 2px 2px 0px rgba(0,0,0,0.8);
+        letter-spacing: 1px;
+      }
+      
+      .retro-button-hover {
+        transition: all 0.2s ease;
+        box-shadow: 0 0 0px rgba(255,255,255,0);
+      }
+      
+      .retro-button-hover:hover {
+        box-shadow: 0 0 10px rgba(255,255,255,0.5);
+      }
+    `;
+    document.head.appendChild(style);
+
     setMounted(true);
 
     // Create audio element when component mounts
@@ -280,14 +363,23 @@ export default function Home() {
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#2C0855,#0A0118_50%)] opacity-70" />
 
-      {/* CRT Monitor Frame */}
+      {/* CRT Monitor Frame with enhanced retro effects */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <div className="w-[102%] h-[102%] bg-[#111] rounded-xl shadow-2xl">
-          <div className="absolute inset-0 rounded-xl border-[20px] sm:border-[32px] border-[#111] shadow-inner bg-transparent overflow-hidden">
+          <div className="absolute inset-0 rounded-xl border-[20px] sm:border-[32px] border-[#111] shadow-inner bg-transparent overflow-hidden crt-corners">
             {/* CRT screen bulge effect */}
             <div
               className="absolute inset-0 rounded-md shadow-inner bg-transparent pointer-events-none"
               style={{ boxShadow: "inset 0 0 100px 20px rgba(0,0,0,0.8)" }}
+            ></div>
+
+            {/* Static noise overlay */}
+            <div
+              className="absolute inset-0 opacity-[0.03] pointer-events-none z-10 mix-blend-overlay"
+              style={{
+                backgroundImage:
+                  "url('data:image/png;base64,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')",
+              }}
             ></div>
 
             {/* Power button */}
@@ -305,6 +397,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Scanlines overlay */}
+      {scanlineEffect && <div className="scanlines"></div>}
 
       {/* CRT Turn on animation */}
       <AnimatePresence>
@@ -417,7 +512,7 @@ export default function Home() {
 `}
                 </pre>
                 <div className="text-sm text-amber-400 mt-2 font-mono">
-                  VERSION 3.7 - (C) STARTUP SYSTEMS 2024
+                  VERSION 3.7 - (C) STARTUP SYSTEMS 2025
                 </div>
               </motion.div>
 
@@ -554,33 +649,53 @@ export default function Home() {
           </motion.button>
         </motion.div>
 
-        {/* DOS-Style Title Bar - New Addition */}
+        {/* DOS-Style Title Bar - Enhanced */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-900 text-white p-2 mb-4 rounded-t-md border border-blue-700 flex items-center justify-between"
+          className="bg-blue-900 text-white p-2 mb-4 rounded-t-md border-2 border-blue-700 flex items-center justify-between"
         >
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-mono">STARTBAT.EXE</span>
+            <span className="text-sm font-mono tracking-wider">
+              C:\STARTBAT.EXE
+            </span>
+            <span className="text-xs bg-black/30 px-1 rounded">[VER 3.7]</span>
           </div>
           <div className="flex space-x-1">
-            <button className="bg-gray-300 h-3 w-3 rounded-sm"></button>
-            <button className="bg-gray-300 h-3 w-3 rounded-sm"></button>
-            <button className="bg-gray-300 h-3 w-3 rounded-sm"></button>
+            <button className="bg-gray-300 h-3 w-3 rounded-sm border border-gray-400"></button>
+            <button className="bg-gray-300 h-3 w-3 rounded-sm border border-gray-400"></button>
+            <button className="bg-gray-300 h-3 w-3 rounded-sm border border-gray-400"></button>
           </div>
         </motion.div>
 
-        {/* Main Action Buttons - Moved to top for immediate access */}
+        {/* Scanline Toggle - New */}
+        <motion.div
+          className="absolute top-4 left-4 z-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.button
+            className="bg-blue-900/60 hover:bg-blue-800/80 p-2 rounded-md border border-blue-700/50 retro-button-hover text-xs font-mono"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setScanlineEffect(!scanlineEffect)}
+          >
+            {scanlineEffect ? "CRT: ON" : "CRT: OFF"}
+          </motion.button>
+        </motion.div>
+
+        {/* Main Action Buttons - Restyled for more retro look */}
         <motion.div
           className="w-full max-w-4xl mx-auto mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-900/50 border border-amber-500/30 rounded-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-900/50 border-2 border-amber-500/30 rounded-md">
             {/* Main Buttons at Top */}
             <motion.button
-              className="relative w-full bg-amber-600 hover:bg-amber-700 text-white py-3 px-6 rounded-md flex items-center justify-center gap-3 shadow-lg shadow-amber-700/20 overflow-hidden pixel-border border border-amber-500/50 retro-button-hover"
+              className="relative w-full bg-amber-600 hover:bg-amber-700 text-white py-3 px-6 rounded-md flex items-center justify-center gap-3 shadow-lg shadow-amber-700/20 overflow-hidden border-2 border-amber-500/50 retro-button-hover"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/play")}
@@ -606,9 +721,9 @@ export default function Home() {
               />
             </motion.button>
 
-            {/* How to Play */}
+            {/* How to Play - Enhanced */}
             <motion.button
-              className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 px-6 rounded-md flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-blue-500/20 pixel-border retro-button-hover terminal-text"
+              className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 px-6 rounded-md flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-blue-500/20 border-2 border-blue-700/50 retro-button-hover terminal-text"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -623,122 +738,171 @@ export default function Home() {
           <div className="w-full max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-4 items-start">
               {/* Left side: Title and Terminal */}
-              <div className="text-center md:text-left p-4 bg-black border border-amber-500/30 rounded-md">
+              <div className="text-center md:text-left p-4 bg-black border-2 border-amber-500/30 rounded-md">
                 {/* Main Title */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-3"
                 >
-                  <div className="bg-blue-900 p-1 mb-2 border-b border-blue-700">
+                  <div className="bg-blue-900 p-1 mb-2 border-b-2 border-blue-700 flex items-center justify-between">
                     <span className="text-white text-xs font-mono">
                       STARTUP BATTLE v3.7
                     </span>
+                    <span className="text-white text-xs font-mono">
+                      [1994-2025]
+                    </span>
                   </div>
-                  <motion.h1
-                    className="text-4xl sm:text-5xl font-bold tracking-tight font-mono terminal-text text-amber-400 drop-shadow-2xl"
-                    animate={{
-                      textShadow: [
-                        "0 0 5px rgba(245, 158, 11, 0.7)",
-                        "0 0 15px rgba(245, 158, 11, 0.9)",
-                        "0 0 5px rgba(245, 158, 11, 0.7)",
-                      ],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
+                </motion.div>
+
+                {/* Enhanced Pixel Art Title with tagline below it */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="my-3 font-mono text-amber-400 leading-tight flex flex-col items-center"
+                >
+                  <pre
+                    className="text-[8px] sm:text-[10px] md:text-[12px] font-bold overflow-hidden text-center"
+                    style={{
+                      color: "#FFB700",
+                      textShadow: "0 2px 4px rgba(0,0,0,0.8)",
                     }}
                   >
-                    STARTUP BATTLE
-                  </motion.h1>
+                    {`
+███████╗████████╗ █████╗ ██████╗ ████████╗██╗   ██╗██████╗ 
+██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██║   ██║██╔══██╗
+███████╗   ██║   ███████║██████╔╝   ██║   ██║   ██║██████╔╝
+╚════██║   ██║   ██╔══██║██╔══██╗   ██║   ██║   ██║██╔═══╝ 
+███████║   ██║   ██║  ██║██║  ██║   ██║   ╚██████╔╝██║     
+╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     
+███████╗  █████╗ ████████╗████████╗██╗     ███████╗
+██╔══██╗ ██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝
+██████╔╝ ███████║   ██║      ██║   ██║     █████╗  
+██╔══██╗ ██╔══██║   ██║      ██║   ██║     ██╔══╝  
+██████╔╝ ██║  ██║   ██║      ██║   ███████╗███████╗
+╚═════╝  ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝`}
+                  </pre>
 
-                  <div className="relative h-1 w-full mx-auto my-3">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500 to-transparent rounded"></div>
-                    <motion.div
-                      className="absolute inset-0 bg-white"
-                      animate={{
-                        x: ["-100%", "100%"],
-                        opacity: [0, 0.5, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  </div>
-
+                  {/* Tagline moved here, after the ASCII art, bright green color */}
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-2 text-sm md:text-base text-amber-300/90 font-mono terminal-text tracking-wider uppercase"
+                    transition={{ delay: 0.4 }}
+                    className="mt-4 text-xs sm:text-sm md:text-base text-[#00FF00] font-mono tracking-wider uppercase text-center"
                   >
                     A Strategic Card Game of Innovation & Power
                   </motion.p>
                 </motion.div>
 
-                {/* MS-DOS Stats Display */}
+                {/* MS-DOS Stats Display - Enhanced */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="mt-4 font-mono text-xs text-amber-300/80 text-left border border-amber-500/20 p-2 bg-black/50 rounded-sm"
+                  className="mt-4 font-mono text-xs text-amber-300/80 text-left border-2 border-amber-500/20 p-2 bg-black/50 rounded-sm"
                 >
                   <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                    <div>CPU: 486DX/33MHz</div>
-                    <div>RAM: 16,384K</div>
-                    <div>VIDEO: VGA/SVGA</div>
-                    <div>DISK: 520MB</div>
+                    <div className="flex items-center">
+                      <Cpu className="h-3 w-3 mr-1 text-amber-500" />
+                      CPU: 486DX/33MHz
+                    </div>
+                    <div className="flex items-center">
+                      <Server className="h-3 w-3 mr-1 text-amber-500" />
+                      RAM: 16,384K
+                    </div>
+                    <div className="flex items-center">
+                      <Zap className="h-3 w-3 mr-1 text-amber-500" />
+                      VIDEO: VGA/SVGA
+                    </div>
+                    <div className="flex items-center">
+                      <Database className="h-3 w-3 mr-1 text-amber-500" />
+                      DISK: 520MB
+                    </div>
                   </div>
                 </motion.div>
               </div>
 
-              {/* Right side: Animated Boot/Startup Visual */}
+              {/* Right side: Animated Boot/Startup Visual - Enhanced */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="p-4 bg-black border border-amber-500/30 rounded-md h-full"
+                className="p-4 bg-black border-2 border-amber-500/30 rounded-md h-full"
               >
-                <div className="bg-blue-900 p-1 mb-2 border-b border-blue-700">
-                  <span className="text-white text-xs font-mono">
+                <div className="bg-blue-900 p-1 mb-2 border-b-2 border-blue-700 flex items-center justify-between">
+                  <span className="text-white text-xs font-mono tracking-wider">
                     STARTUP SIMULATOR
                   </span>
+                  <Command className="h-3 w-3 text-blue-200" />
                 </div>
 
-                {/* DOS-Style File System Animation */}
+                {/* DOS-Style File System Animation - Enhanced */}
                 <div className="text-amber-400 font-mono text-sm space-y-1">
-                  {/* Animated directory listing */}
+                  {/* MS-DOS Style prompt with blinking cursor */}
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="space-y-1"
+                    transition={{ delay: 0.5 }}
+                    className="flex flex-col space-y-2"
                   >
-                    <div>C:\STARTUPBATTLE&gt; dir *.* /p</div>
-                    <div className="pl-2 space-y-0.5 text-xs">
-                      <div className="text-green-400">
-                        STARTUP DAT 12,288 05-17-24 9:15a
+                    <div className="flex flex-col space-y-1 mb-2">
+                      <div className="text-green-400 text-xs">
+                        Microsoft(R) MS-DOS(R) Version 6.22
                       </div>
-                      <div className="text-green-400">
-                        INNOV EXE 46,080 05-10-24 3:22p
-                      </div>
-                      <div className="text-green-400">
-                        VC SYS 8,192 05-12-24 11:40a
-                      </div>
-                      <div className="text-green-400">
-                        README TXT 1,024 05-01-24 8:30a
-                      </div>
-                      <div className="text-green-400">
-                        HIGHSCR DAT 4,096 05-16-24 7:45p
+                      <div className="text-green-400 text-xs">
+                        (C)Copyright Microsoft Corp 1981-1994.
                       </div>
                     </div>
 
-                    <div className="flex items-center mt-2 animate-pulse">
-                      <span className="w-2 h-4 bg-amber-400 mr-1"></span>
-                      <span>C:\STARTUPBATTLE&gt;</span>
+                    <div>
+                      C:\STARTUPBATTLE&gt;{" "}
+                      <span className="text-white">dir /w</span>
+                    </div>
+                    <div className="pl-2 space-y-0.5 text-xs">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-green-400">
+                        <span>STARTUP.DAT</span>
+                        <span>INNOV.EXE</span>
+                        <span>VC.SYS</span>
+                        <span>README.TXT</span>
+                        <span>HIGHSCR.DAT</span>
+                        <span>BATTLE.EXE</span>
+                        <span>CONFIG.SYS</span>
+                      </div>
+                      <div className="text-white text-xs mt-1">
+                        7 file(s) 82,944 bytes
+                      </div>
+                      <div className="text-white text-xs">
+                        312,864 bytes free
+                      </div>
+                    </div>
+
+                    <div>
+                      C:\STARTUPBATTLE&gt;{" "}
+                      <span className="text-white">type README.TXT</span>
+                    </div>
+                    <div className="pl-2 space-y-0.5 text-xs">
+                      <div className="text-green-400">
+                        Welcome to Startup Battle v3.7
+                      </div>
+                      <div className="text-green-400">
+                        Build your deck. Battle opponents.
+                      </div>
+                      <div className="text-green-400">
+                        Become the ultimate entrepreneur.
+                      </div>
+                      <div className="text-green-400 mt-1">
+                        Type BATTLE.EXE to begin...
+                      </div>
+                    </div>
+
+                    <div className="flex items-center mt-2">
+                      <div>C:\STARTUPBATTLE&gt;</div>
+                      <motion.span
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="w-2 h-4 bg-amber-400 ml-1"
+                      ></motion.span>
                     </div>
                   </motion.div>
                 </div>

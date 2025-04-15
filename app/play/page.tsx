@@ -1129,88 +1129,111 @@ function PlayContent() {
         },
       },
     },
+    gridLines: {
+      initial: { opacity: 0, scale: 0.95 },
+      animate: {
+        opacity: 1,
+        scale: 1,
+        transition: {
+          duration: 0.8,
+        },
+      },
+    },
+    cardContainer: {
+      initial: { opacity: 0 },
+      animate: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.1,
+        },
+      },
+      exit: {
+        opacity: 0,
+        transition: {
+          duration: 0.3,
+        },
+      },
+    },
   };
 
-  // Add this new component for the retro grid background
-  const RetroGrid = () => (
+  // Add a css utility for pixel corners
+  const pixelCorners = `
+    clip-path: polygon(
+      0 4px, 4px 4px, 4px 0,
+      calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+      4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+    )
+  `;
+
+  // Add a retro grid background component
+  const RetroGridBackground = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <motion.div
-        variants={retroCardSelectionAnimations.gridLines}
-        initial="initial"
-        animate="animate"
         className="absolute inset-0"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(147, 51, 234, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(147, 51, 234, 0.05) 1px, transparent 1px)
+            linear-gradient(to right, rgba(147, 51, 234, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(147, 51, 234, 0.1) 1px, transparent 1px)
           `,
-          backgroundSize: "20px 20px",
+          backgroundSize: "40px 40px",
+          perspective: "1000px",
+          transformStyle: "preserve-3d",
         }}
         animate={{
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1, 1.02, 1],
+          backgroundPosition: ["0px 0px", "40px 40px"],
         }}
-        transition={{ duration: 4, repeat: Infinity }}
+        transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+      />
+
+      {/* Horizon line */}
+      <div
+        className="absolute w-full h-[1px] bg-gradient-to-r from-purple-500/0 via-purple-500/30 to-purple-500/0"
+        style={{ bottom: "30%", transform: "translateY(0.5px)" }}
+      />
+
+      {/* Horizontal perspective lines */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={`h-line-${i}`}
+          className="absolute w-full h-[1px] bg-purple-500/10"
+          style={{
+            bottom: `${30 + i * 7}%`,
+            transform: `scaleX(${1 - i * 0.1}) translateY(0.5px)`,
+          }}
+        />
+      ))}
+
+      {/* Vertical perspective lines */}
+      {Array.from({ length: 21 }).map((_, i) => (
+        <div
+          key={`v-line-${i}`}
+          className="absolute h-[30%] w-[1px] bg-purple-500/10"
+          style={{
+            bottom: 0,
+            left: `${i * 5}%`,
+            transformOrigin: "bottom center",
+            transform: "perspective(1000px) rotateX(60deg)",
+          }}
+        />
+      ))}
+
+      {/* Sun/sphere in background */}
+      <motion.div
+        className="absolute w-40 h-40 rounded-full bg-gradient-to-b from-purple-500 to-fuchsia-600"
+        style={{
+          bottom: "35%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          filter: "blur(20px)",
+        }}
+        animate={{
+          opacity: [0.5, 0.7, 0.5],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
       />
     </div>
-  );
-
-  // Add these retro color schemes
-  const retroColors = {
-    neon: {
-      pink: "rgb(255, 16, 240)",
-      blue: "rgb(33, 176, 253)",
-      purple: "rgb(178, 39, 255)",
-      green: "rgb(0, 255, 146)",
-      yellow: "rgb(255, 236, 39)",
-    },
-    gradients: {
-      cyberpunk: "from-[#FF10F0] via-[#21B0FD] to-[#B227FF]",
-      synthwave: "from-[#FF10F0] via-[#B227FF] to-[#21B0FD]",
-      retro: "from-[#FFB800] via-[#FF10F0] to-[#B227FF]",
-    },
-  };
-
-  // Add game rules component
-  const GameRules = () => (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mb-8 max-w-2xl mx-auto"
-    >
-      <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <h3 className="text-neon-green font-bold flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Higher is Better
-            </h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex items-center gap-2 text-green-400">
-                <DollarSign className="w-4 h-4" /> Valuation
-              </div>
-              <div className="flex items-center gap-2 text-blue-400">
-                <TrendingUp className="w-4 h-4" /> Power
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-neon-pink font-bold flex items-center gap-2">
-              <TrendingDown className="w-5 h-5" />
-              Lower is Better
-            </h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex items-center gap-2 text-purple-400">
-                <Clock className="w-4 h-4" /> Time to Unicorn
-              </div>
-              <div className="flex items-center gap-2 text-yellow-400">
-                <Calendar className="w-4 h-4" /> Founded Year
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
   );
 
   // Update the CardComponent with enhanced styling and animations
@@ -1233,71 +1256,184 @@ function PlayContent() {
       custom={index}
       onClick={onSelect}
       className={cn(
-        "relative rounded-xl overflow-hidden cursor-pointer transform-gpu",
-        "transition-shadow duration-300",
-        isSelected
-          ? "ring-2 ring-purple-500/50"
-          : "hover:ring-1 hover:ring-purple-500/30"
+        "relative cursor-pointer transform-gpu",
+        "transition-all duration-300"
       )}
     >
-      {/* Retro Grid Background */}
-      <div className="absolute inset-0 bg-gray-900/90">
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
+      {/* Card Frame with Pixel Corners */}
+      <div
+        className={cn(
+          "relative overflow-hidden",
+          isSelected
+            ? "ring-4 ring-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+            : "ring-1 ring-purple-900/50"
+        )}
+        style={{
+          clipPath:
+            "polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px))",
+        }}
+      >
+        {/* Inner Background with Grid */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
               linear-gradient(to right, rgba(147, 51, 234, 0.05) 1px, transparent 1px),
               linear-gradient(to bottom, rgba(147, 51, 234, 0.05) 1px, transparent 1px)
             `,
-            backgroundSize: "20px 20px",
-          }}
-          animate={{
-            opacity: [0.3, 0.5, 0.3],
-            scale: [1, 1.02, 1],
-          }}
-          transition={{ duration: 4, repeat: Infinity }}
-        />
-      </div>
-
-      {/* Card Content */}
-      <div className="relative p-3 md:p-4">
-        {/* Card Header */}
-        <div className="mb-3">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-base md:text-lg bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
-              {card.name}
-            </h3>
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-xs border-none",
-                card.valuation > 10
-                  ? "bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-400"
-                  : "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-400"
-              )}
-            >
-              {card.valuation > 10 ? "RARE" : "COMMON"}
-            </Badge>
-          </div>
-          <div className="text-xs text-gray-400">{card.category}</div>
+              backgroundSize: "8px 8px",
+            }}
+          />
         </div>
 
-        {/* Stats Grid with Different Colors */}
-        <div className="space-y-3">
-          {/* Power Stat */}
-          <div className="relative">
+        {/* Selection Indicator Border Effects */}
+        {isSelected && (
+          <>
+            <motion.div
+              className="absolute inset-0 z-10"
+              style={{
+                background: "transparent",
+                border: "2px dashed rgba(168, 85, 247, 0.7)",
+                margin: "4px",
+              }}
+              animate={{
+                opacity: [0.4, 1, 0.4],
+                boxShadow: [
+                  "0 0 5px rgba(168, 85, 247, 0.3)",
+                  "0 0 10px rgba(168, 85, 247, 0.5)",
+                  "0 0 5px rgba(168, 85, 247, 0.3)",
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute z-10"
+              style={{
+                width: "12px",
+                height: "12px",
+                background: "rgba(168, 85, 247, 0.8)",
+                top: "0",
+                left: "0",
+                margin: "8px",
+              }}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute z-10"
+              style={{
+                width: "12px",
+                height: "12px",
+                background: "rgba(168, 85, 247, 0.8)",
+                top: "0",
+                right: "0",
+                margin: "8px",
+              }}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+            />
+            <motion.div
+              className="absolute z-10"
+              style={{
+                width: "12px",
+                height: "12px",
+                background: "rgba(168, 85, 247, 0.8)",
+                bottom: "0",
+                left: "0",
+                margin: "8px",
+              }}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+            />
+            <motion.div
+              className="absolute z-10"
+              style={{
+                width: "12px",
+                height: "12px",
+                background: "rgba(168, 85, 247, 0.8)",
+                bottom: "0",
+                right: "0",
+                margin: "8px",
+              }}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: 0.9 }}
+            />
+          </>
+        )}
+
+        {/* Scanlines Effect */}
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none z-20"
+          style={{
+            backgroundImage:
+              "linear-gradient(0deg, rgba(255,255,255,0.15) 1px, transparent 1px)",
+            backgroundSize: "2px 4px",
+          }}
+        />
+
+        {/* Card Content */}
+        <div className="relative p-4 z-10">
+          {/* Card Header With Retro Typography */}
+          <div className="mb-3">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-mono font-bold text-base md:text-lg text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                {card.name}
+              </h3>
+              <div className="flex items-center space-x-1">
+                {Array.from({
+                  length: Math.min(5, Math.ceil(card.power / 2)),
+                }).map((_, i) => (
+                  <div
+                    key={`star-${i}`}
+                    className="w-2 h-2 bg-purple-500"
+                    style={{
+                      clipPath:
+                        "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <div className="text-[10px] md:text-xs text-gray-400 uppercase font-mono">
+                {card.category}
+              </div>
+              <div className="text-[10px] md:text-xs text-purple-400 font-mono">
+                LEVEL {Math.ceil(card.valuation / 40)}
+              </div>
+            </div>
+          </div>
+
+          {/* Custom Power Display */}
+          <div className="mb-3">
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs text-gray-300">Power</span>
+                <div
+                  className="w-3 h-3 bg-green-500"
+                  style={{
+                    clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+                  }}
+                />
+                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                  Power
+                </span>
               </div>
-              <span className="text-xs font-medium text-emerald-400">
+              <span className="text-[10px] font-mono font-bold text-green-400">
                 {formatPower(card.power)}
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-gray-800/50 overflow-hidden">
+            <div className="h-1.5 bg-gray-800 overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-emerald-600 to-green-400"
+                className="h-full bg-gradient-to-r from-green-800 to-green-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${(card.power / 10) * 100}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
@@ -1305,20 +1441,27 @@ function PlayContent() {
             </div>
           </div>
 
-          {/* Founded Year Stat */}
-          <div className="relative">
+          {/* Founded Year */}
+          <div className="mb-3">
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-300">Founded</span>
+                <div
+                  className="w-3 h-3 bg-blue-500"
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                  }}
+                />
+                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                  Founded
+                </span>
               </div>
-              <span className="text-xs font-medium text-blue-400">
+              <span className="text-[10px] font-mono font-bold text-blue-400">
                 {card.founded}
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-gray-800/50 overflow-hidden">
+            <div className="h-1.5 bg-gray-800 overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-600 to-cyan-400"
+                className="h-full bg-gradient-to-r from-blue-800 to-blue-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${((2025 - card.founded) / 25) * 100}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
@@ -1326,20 +1469,28 @@ function PlayContent() {
             </div>
           </div>
 
-          {/* Time to Unicorn Stat */}
-          <div className="relative">
+          {/* Unicorn Time */}
+          <div className="mb-3">
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-purple-400" />
-                <span className="text-xs text-gray-300">Time to 🦄</span>
+                <div
+                  className="w-3 h-3 bg-purple-500"
+                  style={{
+                    clipPath:
+                      "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+                  }}
+                />
+                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                  Unicorn
+                </span>
               </div>
-              <span className="text-xs font-medium text-purple-400">
+              <span className="text-[10px] font-mono font-bold text-purple-400">
                 {formatTimeToUnicorn(card.timeToUnicorn)}
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-gray-800/50 overflow-hidden">
+            <div className="h-1.5 bg-gray-800 overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-purple-600 to-fuchsia-400"
+                className="h-full bg-gradient-to-r from-purple-800 to-purple-500"
                 initial={{ width: 0 }}
                 animate={{
                   width: `${((15 - card.timeToUnicorn) / 15) * 100}%`,
@@ -1349,59 +1500,53 @@ function PlayContent() {
             </div>
           </div>
 
-          {/* Valuation Stat */}
-          <div className="relative">
+          {/* Valuation */}
+          <div>
             <div className="flex justify-between items-center mb-1">
               <div className="flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs text-gray-300">Valuation</span>
+                <div
+                  className="w-3 h-3 bg-yellow-500"
+                  style={{
+                    clipPath:
+                      "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)",
+                  }}
+                />
+                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                  Value
+                </span>
               </div>
-              <span className="text-xs font-medium text-amber-400">
+              <span className="text-[10px] font-mono font-bold text-yellow-400">
                 {formatValuation(card.valuation)}
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-gray-800/50 overflow-hidden">
+            <div className="h-1.5 bg-gray-800 overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-amber-600 to-yellow-400"
+                className="h-full bg-gradient-to-r from-yellow-800 to-yellow-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${(card.valuation / 200) * 100}%` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
               />
             </div>
           </div>
+
+          {/* Card selection corners */}
+          {isSelected && (
+            <>
+              <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-purple-400" />
+              <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-purple-400" />
+              <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-purple-400" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-purple-400" />
+            </>
+          )}
         </div>
 
-        {/* Selection Indicator */}
-        {isSelected && (
-          <motion.div
-            className="absolute inset-0 border-2 rounded-xl"
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: 1,
-              boxShadow: [
-                "0 0 0 rgba(168, 85, 247, 0.4)",
-                "0 0 20px rgba(168, 85, 247, 0.4)",
-                "0 0 0 rgba(168, 85, 247, 0.4)",
-              ],
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10"
-              animate={{
-                opacity: [0.1, 0.2, 0.1],
-              }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-          </motion.div>
-        )}
-
-        {/* Hover Effect */}
+        {/* Hover shine effect */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-pink-500/0"
-          whileHover={{
-            backgroundColor: "rgba(168, 85, 247, 0.05)",
-          }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent z-20"
+          style={{ width: "150%", left: "-25%" }}
+          initial={{ x: "-100%" }}
+          whileHover={{ x: "100%" }}
+          transition={{ duration: 0.5 }}
         />
       </div>
     </motion.div>
@@ -1415,55 +1560,132 @@ function PlayContent() {
         initial="initial"
         animate="animate"
         exit="exit"
-        className="relative w-full max-w-7xl mx-auto px-4 py-8"
+        className="relative w-full max-w-7xl mx-auto px-4 py-8 overflow-hidden"
       >
-        <RetroGrid />
+        {/* Add retro background */}
+        <RetroGridBackground />
 
-        {/* Enhanced header with better visibility and glow effects */}
+        {/* Additional retro VHS effects */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {/* CRT scan line */}
+          <motion.div
+            className="absolute left-0 right-0 h-[3px] bg-purple-500/20"
+            animate={{
+              top: ["0%", "100%"],
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 4,
+              ease: "linear",
+            }}
+          />
+
+          {/* Random glitches */}
+          <motion.div
+            className="absolute inset-0 bg-purple-500/5 mix-blend-overlay"
+            animate={{
+              opacity: [0, 0.05, 0, 0.08, 0],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 10,
+              times: [0, 0.2, 0.3, 0.35, 0.5],
+              repeatType: "reverse",
+            }}
+          />
+        </div>
+
+        {/* Glowing text effect header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 relative"
+          className="text-center mb-12 relative"
         >
-          <h1 className="text-4xl md:text-5xl font-bold relative">
+          <h1 className="font-mono text-5xl md:text-6xl font-bold relative tracking-tight py-2">
             {/* Main text with gradient */}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-purple-100 to-purple-300">
-              Select Your Battle Cards
+            <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-fuchsia-200 to-purple-300">
+              SELECT BATTLE DECK
             </span>
 
-            {/* Glow effect */}
-            <span className="absolute inset-0 blur-[2px] bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-white to-purple-200">
-              Select Your Battle Cards
-            </span>
-
-            {/* Additional glow layer */}
+            {/* Text glow */}
             <motion.span
-              className="absolute inset-0 blur-[4px] bg-clip-text text-transparent bg-gradient-to-r from-purple-400/50 via-white/50 to-purple-400/50"
-              animate={{ opacity: [0.5, 1, 0.5] }}
+              className="absolute inset-0 blur-md bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400 z-0"
+              animate={{ opacity: [0.5, 0.8, 0.5] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              Select Your Battle Cards
+              SELECT BATTLE DECK
             </motion.span>
           </h1>
 
-          {/* Subtitle with enhanced visibility */}
-          <p className="text-lg mt-2 font-medium text-purple-200 relative">
-            Choose 4 cards to build your ultimate deck
-            <motion.span
-              className="absolute inset-0 blur-sm text-purple-300"
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              Choose 4 cards to build your ultimate deck
-            </motion.span>
-          </p>
+          {/* Subtitle with scanline effect */}
+          <div className="relative mt-2">
+            <p className="text-lg font-mono text-purple-200 tracking-wide">
+              CHOOSE 4 STARTUP CARDS FOR YOUR DECK
+            </p>
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-400/20 to-transparent"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            />
+          </div>
+
+          {/* Decorative pixel elements */}
+          <div className="absolute top-0 left-1/2 w-8 h-1 bg-purple-500 -translate-x-1/2 -translate-y-4" />
+          <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-purple-500 -translate-x-1/2 translate-y-4" />
         </motion.div>
 
-        {/* Add game rules */}
-        <GameRules />
+        {/* Add game rules with retro styling */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10 max-w-2xl mx-auto"
+          style={{ boxShadow: "0 0 20px rgba(147, 51, 234, 0.2)" }}
+        >
+          <div
+            className="bg-black/60 backdrop-blur-sm border border-purple-500/40 p-5"
+            style={{ ...pixelBorderStyles }}
+          >
+            <h3 className="text-xl font-mono mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-300">
+              BATTLE RULES
+            </h3>
 
-        {/* Cards grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-6 font-mono text-sm">
+              <div className="space-y-2">
+                <h4 className="flex items-center gap-2 text-green-400 font-bold">
+                  <TrendingUp className="w-4 h-4" />
+                  HIGHER WINS
+                </h4>
+                <ul className="space-y-1 pl-6 text-green-200/80">
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">•</span> VALUATION
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">•</span> POWER LEVEL
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="flex items-center gap-2 text-blue-400 font-bold">
+                  <TrendingDown className="w-4 h-4" />
+                  LOWER WINS
+                </h4>
+                <ul className="space-y-1 pl-6 text-blue-200/80">
+                  <li className="flex items-center gap-2">
+                    <span className="text-blue-400">•</span> TIME TO UNICORN
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-blue-400">•</span> FOUNDED YEAR
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Cards grid with retro styling */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {playerDeck.map((card, index) => (
             <CardComponent
               key={card.name}
@@ -1475,102 +1697,145 @@ function PlayContent() {
           ))}
         </div>
 
-        {/* Selection counter */}
+        {/* Retro pixel footer decoration */}
+        <div className="w-full flex justify-center mt-12 mb-24">
+          <div className="flex space-x-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <motion.div
+                key={`pixel-${i}`}
+                className="h-2 w-2 md:h-3 md:w-3 bg-purple-500"
+                animate={{
+                  opacity: [0.3, 1, 0.3],
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.3,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Enhanced floating counter with retro style */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm px-6 py-3 rounded-full border border-purple-500/20"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ring-2 ring-purple-900",
-                    selectedCards[i]
-                      ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
-                      : "bg-gray-800 text-gray-600"
-                  )}
-                >
-                  {selectedCards[i] ? i + 1 : ""}
-                </div>
-              ))}
+          <div
+            className="bg-black/80 backdrop-blur-sm px-6 py-3 border border-purple-500/30"
+            style={{
+              ...pixelBorderStyles,
+              boxShadow: "0 0 10px rgba(147, 51, 234, 0.3)",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "w-8 h-8 flex items-center justify-center text-sm font-bold relative overflow-hidden",
+                      selectedCards[i]
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                        : "bg-gray-800 text-gray-600"
+                    )}
+                    style={{ ...pixelBorderStyles }}
+                  >
+                    {selectedCards[i] && (
+                      <motion.div
+                        className="absolute inset-0 bg-white/20"
+                        animate={{
+                          x: ["-100%", "100%"],
+                        }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          repeatDelay: 1,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">
+                      {selectedCards[i] ? i + 1 : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="relative">
+                <span className="text-purple-300 font-mono font-bold">
+                  {selectedCards.length}/4 SELECTED
+                </span>
+                {/* Blinking cursor */}
+                <motion.span
+                  className="inline-block w-2 h-4 bg-purple-400 ml-1"
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+              </div>
             </div>
-            <span className="text-purple-300">
-              {selectedCards.length}/4 Selected
-            </span>
           </div>
         </motion.div>
 
-        {/* Start Battle Button */}
+        {/* Enhanced Start Battle Button */}
         <AnimatePresence>
           {selectedCards.length === 4 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50"
+              className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40"
             >
               <motion.button
                 onClick={startGame}
-                className={cn(
-                  "relative px-8 py-4 rounded-xl font-bold text-lg",
-                  "bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue",
-                  "text-white shadow-[0_0_20px_rgba(255,16,240,0.3)]",
-                  "hover:shadow-[0_0_30px_rgba(255,16,240,0.5)]",
-                  "transition-shadow duration-300"
-                )}
-                whileHover={{ scale: 1.05 }}
+                className="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 font-mono font-bold text-lg text-white overflow-hidden"
+                style={{
+                  ...pixelBorderStyles,
+                  boxShadow: "0 0 15px rgba(147, 51, 234, 0.4)",
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 0 20px rgba(147, 51, 234, 0.6)",
+                }}
                 whileTap={{ scale: 0.95 }}
               >
-                {/* Animated border effect */}
-                <div className="absolute inset-0 rounded-xl overflow-hidden">
-                  <motion.div
-                    className="w-full h-full"
-                    animate={{
-                      background: [
-                        "linear-gradient(0deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                        "linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                        "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                        "linear-gradient(270deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                      ],
+                {/* Animated scanlines effect */}
+                <div className="absolute inset-0 overflow-hidden opacity-10">
+                  <div
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(0deg, rgba(255,255,255,0.3) 0px, rgba(255,255,255,0.3) 1px, transparent 1px, transparent 2px)",
+                      backgroundSize: "2px 2px",
+                      height: "100%",
                     }}
-                    transition={{ duration: 4, repeat: Infinity }}
                   />
                 </div>
 
-                {/* Scanlines effect */}
-                <div
-                  className="absolute inset-0 opacity-10"
-                  style={{
-                    backgroundImage:
-                      "repeating-linear-gradient(0deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 2px)",
-                    backgroundSize: "2px 2px",
+                {/* Shine effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  style={{ width: "100%" }}
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    repeatDelay: 2,
                   }}
                 />
 
                 {/* Button content */}
-                <div className="flex items-center gap-3">
+                <div className="relative z-10 flex items-center gap-3">
                   <Swords className="w-6 h-6" />
-                  <span className="relative">
-                    START BATTLE
-                    {/* Text glow effect */}
-                    <motion.span
-                      className="absolute inset-0 text-white blur-[2px]"
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      START BATTLE
-                    </motion.span>
-                  </span>
+                  <span className="tracking-wider">LAUNCH BATTLE</span>
                 </div>
 
                 {/* Pixel corner accents */}
-                <div className="absolute left-0 top-0 w-2 h-2 border-l-2 border-t-2 border-white/30" />
-                <div className="absolute right-0 top-0 w-2 h-2 border-r-2 border-t-2 border-white/30" />
-                <div className="absolute left-0 bottom-0 w-2 h-2 border-l-2 border-b-2 border-white/30" />
-                <div className="absolute right-0 bottom-0 w-2 h-2 border-r-2 border-b-2 border-white/30" />
+                <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white/50" />
+                <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white/50" />
+                <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white/50" />
+                <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-white/50" />
               </motion.button>
             </motion.div>
           )}
@@ -2770,55 +3035,137 @@ Can you beat my score? #StartupCardBattle`;
               initial="initial"
               animate="animate"
               exit="exit"
-              className="relative w-full max-w-7xl mx-auto px-4 py-8"
+              className="relative w-full max-w-7xl mx-auto px-4 py-8 overflow-hidden"
             >
-              <RetroGrid />
+              {/* Add retro background */}
+              <RetroGridBackground />
 
-              {/* Enhanced header with better visibility and glow effects */}
+              {/* Additional retro VHS effects */}
+              <div className="absolute inset-0 pointer-events-none z-0">
+                {/* CRT scan line */}
+                <motion.div
+                  className="absolute left-0 right-0 h-[3px] bg-purple-500/20"
+                  animate={{
+                    top: ["0%", "100%"],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 4,
+                    ease: "linear",
+                  }}
+                />
+
+                {/* Random glitches */}
+                <motion.div
+                  className="absolute inset-0 bg-purple-500/5 mix-blend-overlay"
+                  animate={{
+                    opacity: [0, 0.05, 0, 0.08, 0],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 10,
+                    times: [0, 0.2, 0.3, 0.35, 0.5],
+                    repeatType: "reverse",
+                  }}
+                />
+              </div>
+
+              {/* Glowing text effect header */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-8 relative"
+                className="text-center mb-12 relative"
               >
-                <h1 className="text-4xl md:text-5xl font-bold relative">
+                <h1 className="font-mono text-5xl md:text-6xl font-bold relative tracking-tight py-2">
                   {/* Main text with gradient */}
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-purple-100 to-purple-300">
-                    Select Your Battle Cards
+                  <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-fuchsia-200 to-purple-300">
+                    SELECT BATTLE DECK
                   </span>
 
-                  {/* Glow effect */}
-                  <span className="absolute inset-0 blur-[2px] bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-white to-purple-200">
-                    Select Your Battle Cards
-                  </span>
-
-                  {/* Additional glow layer */}
+                  {/* Text glow */}
                   <motion.span
-                    className="absolute inset-0 blur-[4px] bg-clip-text text-transparent bg-gradient-to-r from-purple-400/50 via-white/50 to-purple-400/50"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    className="absolute inset-0 blur-md bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400 z-0"
+                    animate={{ opacity: [0.5, 0.8, 0.5] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    Select Your Battle Cards
+                    SELECT BATTLE DECK
                   </motion.span>
                 </h1>
 
-                {/* Subtitle with enhanced visibility */}
-                <p className="text-lg mt-2 font-medium text-purple-200 relative">
-                  Choose 4 cards to build your ultimate deck
-                  <motion.span
-                    className="absolute inset-0 blur-sm text-purple-300"
-                    animate={{ opacity: [0.5, 0.8, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    Choose 4 cards to build your ultimate deck
-                  </motion.span>
-                </p>
+                {/* Subtitle with scanline effect */}
+                <div className="relative mt-2">
+                  <p className="text-lg font-mono text-purple-200 tracking-wide">
+                    CHOOSE 4 STARTUP CARDS FOR YOUR DECK
+                  </p>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-400/20 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                    }}
+                  />
+                </div>
+
+                {/* Decorative pixel elements */}
+                <div className="absolute top-0 left-1/2 w-8 h-1 bg-purple-500 -translate-x-1/2 -translate-y-4" />
+                <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-purple-500 -translate-x-1/2 translate-y-4" />
               </motion.div>
 
-              {/* Add game rules */}
-              <GameRules />
+              {/* Add game rules with retro styling */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-10 max-w-2xl mx-auto"
+                style={{ boxShadow: "0 0 20px rgba(147, 51, 234, 0.2)" }}
+              >
+                <div
+                  className="bg-black/60 backdrop-blur-sm border border-purple-500/40 p-5"
+                  style={{ ...pixelBorderStyles }}
+                >
+                  <h3 className="text-xl font-mono mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-300">
+                    BATTLE RULES
+                  </h3>
 
-              {/* Cards grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 gap-6 font-mono text-sm">
+                    <div className="space-y-2">
+                      <h4 className="flex items-center gap-2 text-green-400 font-bold">
+                        <TrendingUp className="w-4 h-4" />
+                        HIGHER WINS
+                      </h4>
+                      <ul className="space-y-1 pl-6 text-green-200/80">
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-400">•</span> VALUATION
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-green-400">•</span> POWER LEVEL
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="flex items-center gap-2 text-blue-400 font-bold">
+                        <TrendingDown className="w-4 h-4" />
+                        LOWER WINS
+                      </h4>
+                      <ul className="space-y-1 pl-6 text-blue-200/80">
+                        <li className="flex items-center gap-2">
+                          <span className="text-blue-400">•</span> TIME TO
+                          UNICORN
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-blue-400">•</span> FOUNDED YEAR
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Cards grid with retro styling */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 {playerDeck.map((card, index) => (
                   <CardComponent
                     key={card.name}
@@ -2830,102 +3177,145 @@ Can you beat my score? #StartupCardBattle`;
                 ))}
               </div>
 
-              {/* Selection counter */}
+              {/* Retro pixel footer decoration */}
+              <div className="w-full flex justify-center mt-12 mb-24">
+                <div className="flex space-x-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <motion.div
+                      key={`pixel-${i}`}
+                      className="h-2 w-2 md:h-3 md:w-3 bg-purple-500"
+                      animate={{
+                        opacity: [0.3, 1, 0.3],
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: i * 0.3,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Enhanced floating counter with retro style */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm px-6 py-3 rounded-full border border-purple-500/20"
+                className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40"
               >
-                <div className="flex items-center gap-4">
-                  <div className="flex -space-x-2">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ring-2 ring-purple-900",
-                          selectedCards[i]
-                            ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
-                            : "bg-gray-800 text-gray-600"
-                        )}
-                      >
-                        {selectedCards[i] ? i + 1 : ""}
-                      </div>
-                    ))}
+                <div
+                  className="bg-black/80 backdrop-blur-sm px-6 py-3 border border-purple-500/30"
+                  style={{
+                    ...pixelBorderStyles,
+                    boxShadow: "0 0 10px rgba(147, 51, 234, 0.3)",
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex -space-x-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "w-8 h-8 flex items-center justify-center text-sm font-bold relative overflow-hidden",
+                            selectedCards[i]
+                              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                              : "bg-gray-800 text-gray-600"
+                          )}
+                          style={{ ...pixelBorderStyles }}
+                        >
+                          {selectedCards[i] && (
+                            <motion.div
+                              className="absolute inset-0 bg-white/20"
+                              animate={{
+                                x: ["-100%", "100%"],
+                              }}
+                              transition={{
+                                duration: 1,
+                                repeat: Infinity,
+                                repeatDelay: 1,
+                              }}
+                            />
+                          )}
+                          <span className="relative z-10">
+                            {selectedCards[i] ? i + 1 : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <span className="text-purple-300 font-mono font-bold">
+                        {selectedCards.length}/4 SELECTED
+                      </span>
+                      {/* Blinking cursor */}
+                      <motion.span
+                        className="inline-block w-2 h-4 bg-purple-400 ml-1"
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                    </div>
                   </div>
-                  <span className="text-purple-300">
-                    {selectedCards.length}/4 Selected
-                  </span>
                 </div>
               </motion.div>
 
-              {/* Start Battle Button */}
+              {/* Enhanced Start Battle Button */}
               <AnimatePresence>
                 {selectedCards.length === 4 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50"
+                    className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40"
                   >
                     <motion.button
                       onClick={startGame}
-                      className={cn(
-                        "relative px-8 py-4 rounded-xl font-bold text-lg",
-                        "bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue",
-                        "text-white shadow-[0_0_20px_rgba(255,16,240,0.3)]",
-                        "hover:shadow-[0_0_30px_rgba(255,16,240,0.5)]",
-                        "transition-shadow duration-300"
-                      )}
-                      whileHover={{ scale: 1.05 }}
+                      className="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 font-mono font-bold text-lg text-white overflow-hidden"
+                      style={{
+                        ...pixelBorderStyles,
+                        boxShadow: "0 0 15px rgba(147, 51, 234, 0.4)",
+                      }}
+                      whileHover={{
+                        scale: 1.05,
+                        boxShadow: "0 0 20px rgba(147, 51, 234, 0.6)",
+                      }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      {/* Animated border effect */}
-                      <div className="absolute inset-0 rounded-xl overflow-hidden">
-                        <motion.div
-                          className="w-full h-full"
-                          animate={{
-                            background: [
-                              "linear-gradient(0deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                              "linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                              "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                              "linear-gradient(270deg, rgba(255,255,255,0.2) 0%, transparent 80%)",
-                            ],
+                      {/* Animated scanlines effect */}
+                      <div className="absolute inset-0 overflow-hidden opacity-10">
+                        <div
+                          style={{
+                            backgroundImage:
+                              "repeating-linear-gradient(0deg, rgba(255,255,255,0.3) 0px, rgba(255,255,255,0.3) 1px, transparent 1px, transparent 2px)",
+                            backgroundSize: "2px 2px",
+                            height: "100%",
                           }}
-                          transition={{ duration: 4, repeat: Infinity }}
                         />
                       </div>
 
-                      {/* Scanlines effect */}
-                      <div
-                        className="absolute inset-0 opacity-10"
-                        style={{
-                          backgroundImage:
-                            "repeating-linear-gradient(0deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 2px)",
-                          backgroundSize: "2px 2px",
+                      {/* Shine effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        style={{ width: "100%" }}
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          repeatDelay: 2,
                         }}
                       />
 
                       {/* Button content */}
-                      <div className="flex items-center gap-3">
+                      <div className="relative z-10 flex items-center gap-3">
                         <Swords className="w-6 h-6" />
-                        <span className="relative">
-                          START BATTLE
-                          {/* Text glow effect */}
-                          <motion.span
-                            className="absolute inset-0 text-white blur-[2px]"
-                            animate={{ opacity: [0.5, 1, 0.5] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            START BATTLE
-                          </motion.span>
-                        </span>
+                        <span className="tracking-wider">LAUNCH BATTLE</span>
                       </div>
 
                       {/* Pixel corner accents */}
-                      <div className="absolute left-0 top-0 w-2 h-2 border-l-2 border-t-2 border-white/30" />
-                      <div className="absolute right-0 top-0 w-2 h-2 border-r-2 border-t-2 border-white/30" />
-                      <div className="absolute left-0 bottom-0 w-2 h-2 border-l-2 border-b-2 border-white/30" />
-                      <div className="absolute right-0 bottom-0 w-2 h-2 border-r-2 border-b-2 border-white/30" />
+                      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white/50" />
+                      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white/50" />
+                      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white/50" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-white/50" />
                     </motion.button>
                   </motion.div>
                 )}
@@ -2939,307 +3329,415 @@ Can you beat my score? #StartupCardBattle`;
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-between h-full w-full max-w-[900px] mx-auto px-4 md:min-h-0 gap-2"
+              className="relative flex flex-col items-center justify-between h-full w-full max-w-[900px] mx-auto px-4 md:min-h-0 gap-2"
             >
-              {/* Hero Result Section - Make it more compact */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-2xl p-4 md:p-6 overflow-hidden"
-              >
-                {/* Background Effects */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-50" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent" />
+              {/* RetroGrid background */}
+              <RetroGridBackground />
 
-                {/* Content */}
-                <div className="relative flex items-center justify-between">
-                  <div className="space-y-2">
-                    <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                      {playerScore > aiScore
-                        ? "Victory!"
-                        : playerScore === aiScore
-                        ? "Draw!"
-                        : "Nice Try!"}
-                    </h2>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-4xl md:text-5xl font-bold text-white">
-                        {playerScore * 100}
-                      </span>
-                      {playerScore > aiScore && (
-                        <span className="text-xl md:text-2xl font-semibold text-green-400">
-                          +50
-                        </span>
-                      )}
-                      <span className="text-base md:text-lg text-gray-400">
-                        points
-                      </span>
+              {/* CRT overlay effects */}
+              <div className="absolute inset-0 pointer-events-none z-50">
+                <div style={retroAnimations.scanlines} />
+                <motion.div
+                  className="absolute left-0 right-0 h-[2px] bg-purple-400/30"
+                  animate={{
+                    top: ["0%", "100%"],
+                    opacity: [0.4, 0.4, 0],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "linear",
+                    times: [0, 0.97, 1],
+                  }}
+                />
+              </div>
+
+              {/* Glowing title */}
+              <motion.div
+                className="w-full text-center mb-2 relative"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h1 className="font-mono text-4xl md:text-5xl font-bold relative">
+                  <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-fuchsia-200 to-purple-300">
+                    BATTLE RESULTS
+                  </span>
+
+                  {/* Text glow */}
+                  <motion.span
+                    className="absolute inset-0 blur-md bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400 z-0"
+                    animate={{ opacity: [0.5, 0.8, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    BATTLE RESULTS
+                  </motion.span>
+                </h1>
+
+                {/* Decorative pixel elements */}
+                <div className="absolute top-0 left-1/2 w-8 h-1 bg-purple-500 -translate-x-1/2 -translate-y-4" />
+                <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-purple-500 -translate-x-1/2 translate-y-4" />
+              </motion.div>
+
+              {/* Terminal-style final score */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-black/60 backdrop-blur-sm border border-purple-500/40 w-full mb-4 overflow-hidden"
+                style={{ ...pixelBorderStyles }}
+              >
+                <div className="font-mono p-4">
+                  <div className="text-teal-400 text-sm mb-1">
+                    // Final battle results
+                  </div>
+                  <div className="flex justify-center gap-8 text-2xl">
+                    <div className="flex flex-col items-center">
+                      <span className="text-purple-400">YOU</span>
+                      <motion.div
+                        className="text-4xl font-bold"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                      >
+                        <span className="text-green-400">{playerScore}</span>
+                      </motion.div>
                     </div>
-                    <div className="flex items-center gap-3 text-gray-400 mt-2">
-                      <span className="text-xl">
-                        Rounds Won:{" "}
-                        <span className="text-blue-400 font-bold">
-                          {
-                            roundAttributes.length > 0 &&
-                            selectedCards.length === 4 &&
-                            aiDeck.length >= 4
-                              ? roundAttributes.reduce((wins, attr, index) => {
-                                  if (!selectedCards[index] || !aiDeck[index])
-                                    return wins;
-                                  return attr === "timeToUnicorn" ||
-                                    attr === "founded"
-                                    ? selectedCards[index][attr] <
-                                      aiDeck[index][attr]
-                                      ? wins + 1
-                                      : wins
-                                    : selectedCards[index][attr] >
-                                      aiDeck[index][attr]
-                                    ? wins + 1
-                                    : wins;
-                                }, 0)
-                              : playerScore // Fallback to playerScore if data isn't ready
-                          }
-                        </span>
-                      </span>
-                      <span className="text-gray-600">•</span>
-                      <span className="text-xl">
-                        AI Won:{" "}
-                        <span className="text-red-400 font-bold">
-                          {
-                            roundAttributes.length > 0 &&
-                            selectedCards.length === 4 &&
-                            aiDeck.length >= 4
-                              ? roundAttributes.reduce((wins, attr, index) => {
-                                  if (!selectedCards[index] || !aiDeck[index])
-                                    return wins;
-                                  return attr === "timeToUnicorn" ||
-                                    attr === "founded"
-                                    ? selectedCards[index][attr] >
-                                      aiDeck[index][attr]
-                                      ? wins + 1
-                                      : wins
-                                    : selectedCards[index][attr] <
-                                      aiDeck[index][attr]
-                                    ? wins + 1
-                                    : wins;
-                                }, 0)
-                              : aiScore // Fallback to aiScore if data isn't ready
-                          }
-                        </span>
-                      </span>
+                    <div className="text-2xl text-white">vs</div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-red-400">AI</span>
+                      <motion.div
+                        className="text-4xl font-bold"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                      >
+                        <span className="text-red-400">{aiScore}</span>
+                      </motion.div>
                     </div>
                   </div>
-
-                  {/* Trophy/Emoji with enhanced animation */}
-                  <div className="relative">
+                  <motion.div
+                    className="text-center text-xl mt-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                  >
                     {playerScore > aiScore ? (
-                      <div className="relative">
-                        <motion.div
-                          animate={{
-                            rotate: [0, -10, 10, -10, 10, 0],
-                            scale: [1, 1.1, 1],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                          }}
-                        >
-                          <Trophy className="w-20 h-20 md:w-28 md:h-28 text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.3)]" />
-                        </motion.div>
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: [0, 1.2, 1] }}
-                          transition={{ delay: 0.8 }}
-                          className="absolute -top-3 -right-3 animate-bounce"
-                        >
-                          <span className="text-2xl md:text-3xl">✨</span>
-                        </motion.div>
-                      </div>
+                      <span className="text-green-400 font-bold">
+                        VICTORY ACHIEVED
+                      </span>
+                    ) : playerScore === aiScore ? (
+                      <span className="text-yellow-400 font-bold">
+                        MATCH DRAW
+                      </span>
                     ) : (
-                      <motion.div
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="text-5xl md:text-6xl"
-                      >
-                        {playerScore === aiScore ? "🤝" : "💪"}
-                      </motion.div>
+                      <span className="text-red-400 font-bold">
+                        DEFEAT RECORDED
+                      </span>
                     )}
+                  </motion.div>
+
+                  {/* Animated dots */}
+                  <div className="mt-2 flex justify-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <motion.div
+                        key={`dot-${i}`}
+                        className="w-2 h-2 bg-purple-500"
+                        animate={{ opacity: [0.2, 1, 0.2] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
               </motion.div>
 
-              {/* Battle Summary Card - Reduce margins */}
-              <Card
+              {/* Battle Rounds Summary */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
                 id="battle-summary"
-                className="w-full bg-gray-900/90 border-gray-800 overflow-hidden backdrop-blur-sm"
+                className="bg-black/60 backdrop-blur-sm border border-purple-500/40 w-full p-4 mb-4"
+                style={{ ...pixelBorderStyles }}
               >
-                <CardHeader className="border-b border-gray-800/50 p-2">
-                  <CardTitle className="text-lg md:text-xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                    Battle Summary
-                  </CardTitle>
-                </CardHeader>
-                <div className="p-2 grid gap-1.5">
-                  {Array.from({ length: 4 }).map((_, i) => {
-                    // Skip if we don't have the data for this round yet
-                    if (
-                      !roundAttributes[i] ||
-                      !selectedCards[i] ||
-                      !aiDeck[i]
-                    ) {
-                      return null;
-                    }
+                <h2 className="font-mono text-xl text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-300 to-cyan-300">
+                  ROUND ANALYSIS
+                </h2>
 
-                    const attribute = roundAttributes[i];
-                    const playerCard = selectedCards[i];
-                    const aiCard = aiDeck[i];
-
-                    // Determine if lower or higher is better for this attribute
-                    const isLowerBetter =
-                      attribute === "timeToUnicorn" || attribute === "founded";
-
-                    // Compare values
-                    const playerValue = playerCard[attribute];
-                    const aiValue = aiCard[attribute];
-                    const isDraw = playerValue === aiValue;
-                    const playerWins = isLowerBetter
-                      ? playerValue < aiValue
-                      : playerValue > aiValue;
-
-                    // Get result and style
-                    const result = isDraw
-                      ? "DRAW"
-                      : playerWins
-                      ? "WIN"
-                      : "LOSS";
-                    const resultStyle = isDraw
-                      ? "from-yellow-500/30 via-yellow-500/20 to-yellow-500/30"
-                      : playerWins
-                      ? "from-green-500/30 via-green-500/20 to-green-500/30"
-                      : "from-red-500/30 via-red-500/20 to-red-500/30";
-
-                    return (
-                      <motion.div
-                        key={`round-${i}-${attribute}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 + i * 0.1 }}
-                        className={cn(
-                          "relative rounded-xl overflow-hidden",
-                          "bg-gradient-to-r p-[1px]",
-                          resultStyle
-                        )}
+                <div className="grid gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <motion.div
+                      key={`round-${i}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + i * 0.2 }}
+                      className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center"
+                    >
+                      {/* Left Card - Player */}
+                      <div
+                        className="relative overflow-hidden p-2 bg-gray-900/80"
+                        style={{ ...pixelBorderStyles }}
                       >
-                        <div className="relative bg-gray-950/90 rounded-xl p-2 md:p-3">
-                          <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2 md:gap-4">
-                            {/* Round Number */}
-                            <div className="flex items-center justify-center w-6 h-6 md:w-10 md:h-10 rounded-lg bg-gray-800/50 font-bold text-gray-400 text-sm md:text-base">
-                              R{i + 1}
-                            </div>
-
-                            {/* Player Side */}
-                            <div className="min-w-0">
-                              <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
-                                {playerCard.name}
-                              </div>
-                              <div className="flex items-center gap-1 md:gap-2">
-                                {renderAttributeIcon(attribute)}
-                                <span className="text-base md:text-2xl font-bold text-blue-400">
-                                  {formatAttributeValue(playerValue, attribute)}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Result Badge */}
-                            <div className="flex items-center justify-center">
-                              <div
-                                className={cn(
-                                  "px-2 py-1 rounded text-sm font-medium",
-                                  result === "WIN"
-                                    ? "bg-green-500/20 text-green-400"
-                                    : result === "LOSS"
-                                    ? "bg-red-500/20 text-red-400"
-                                    : "bg-yellow-500/20 text-yellow-400"
-                                )}
-                              >
-                                {result}
-                              </div>
-                            </div>
-
-                            {/* AI Side */}
-                            <div className="min-w-0 text-right">
-                              <div className="text-sm md:text-lg font-medium text-gray-200 truncate mb-1">
-                                {aiCard.name}
-                              </div>
-                              <div className="flex items-center justify-end gap-1 md:gap-2">
-                                <span className="text-base md:text-2xl font-bold text-red-400">
-                                  {formatAttributeValue(aiValue, attribute)}
-                                </span>
-                                {renderAttributeIcon(attribute)}
-                              </div>
-                            </div>
+                        <div className="font-mono text-sm text-purple-400">
+                          YOUR CARD
+                        </div>
+                        <div className="font-mono font-bold text-white">
+                          {selectedCards[i]?.name || "---"}
+                        </div>
+                        <div className="flex gap-2 items-center mt-1">
+                          <div className="w-2 h-2 bg-purple-500" />
+                          <div className="text-xs text-gray-400">
+                            {selectedCards[i]?.category || "---"}
                           </div>
                         </div>
-                      </motion.div>
-                    );
-                  })}
+
+                        {roundAttributes[i] && (
+                          <div className="mt-1 flex justify-between items-center">
+                            <div className="flex items-center gap-1">
+                              {renderAttributeIcon(roundAttributes[i])}
+                              <span className="text-xs text-gray-300">
+                                {roundAttributes[i]}
+                              </span>
+                            </div>
+                            <span
+                              className={cn(
+                                "text-xs font-bold",
+                                compareAttribute(
+                                  selectedCards[i],
+                                  aiDeck[i],
+                                  roundAttributes[i]
+                                ) === "win"
+                                  ? "text-green-400"
+                                  : compareAttribute(
+                                      selectedCards[i],
+                                      aiDeck[i],
+                                      roundAttributes[i]
+                                    ) === "lose"
+                                  ? "text-red-400"
+                                  : "text-yellow-400"
+                              )}
+                            >
+                              {formatAttributeValue(
+                                selectedCards[i]?.[roundAttributes[i]],
+                                roundAttributes[i]
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Middle Result Indicator */}
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="text-white font-mono">R{i + 1}</div>
+                        {roundAttributes[i] && (
+                          <div
+                            className={cn(
+                              "w-6 h-6 flex items-center justify-center font-bold",
+                              compareAttribute(
+                                selectedCards[i],
+                                aiDeck[i],
+                                roundAttributes[i]
+                              ) === "win"
+                                ? "bg-green-500 text-white"
+                                : compareAttribute(
+                                    selectedCards[i],
+                                    aiDeck[i],
+                                    roundAttributes[i]
+                                  ) === "lose"
+                                ? "bg-red-500 text-white"
+                                : "bg-yellow-500 text-white"
+                            )}
+                            style={{ ...pixelBorderStyles }}
+                          >
+                            {compareAttribute(
+                              selectedCards[i],
+                              aiDeck[i],
+                              roundAttributes[i]
+                            ) === "win"
+                              ? "W"
+                              : compareAttribute(
+                                  selectedCards[i],
+                                  aiDeck[i],
+                                  roundAttributes[i]
+                                ) === "lose"
+                              ? "L"
+                              : "D"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Card - AI */}
+                      <div
+                        className="relative overflow-hidden p-2 bg-gray-900/80"
+                        style={{ ...pixelBorderStyles }}
+                      >
+                        <div className="font-mono text-sm text-red-400">
+                          AI CARD
+                        </div>
+                        <div className="font-mono font-bold text-white">
+                          {aiDeck[i]?.name || "---"}
+                        </div>
+                        <div className="flex gap-2 items-center mt-1">
+                          <div className="w-2 h-2 bg-red-500" />
+                          <div className="text-xs text-gray-400">
+                            {aiDeck[i]?.category || "---"}
+                          </div>
+                        </div>
+
+                        {roundAttributes[i] && (
+                          <div className="mt-1 flex justify-between items-center">
+                            <div className="flex items-center gap-1">
+                              {renderAttributeIcon(roundAttributes[i])}
+                              <span className="text-xs text-gray-300">
+                                {roundAttributes[i]}
+                              </span>
+                            </div>
+                            <span
+                              className={cn(
+                                "text-xs font-bold",
+                                compareAttribute(
+                                  selectedCards[i],
+                                  aiDeck[i],
+                                  roundAttributes[i]
+                                ) === "lose"
+                                  ? "text-green-400"
+                                  : compareAttribute(
+                                      selectedCards[i],
+                                      aiDeck[i],
+                                      roundAttributes[i]
+                                    ) === "win"
+                                  ? "text-red-400"
+                                  : "text-yellow-400"
+                              )}
+                            >
+                              {formatAttributeValue(
+                                aiDeck[i]?.[roundAttributes[i]],
+                                roundAttributes[i]
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </Card>
+              </motion.div>
 
-              {/* Action Buttons - Update positioning */}
-              <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-2">
-                <Button
-                  variant="outline"
-                  className="relative py-2 md:py-4 text-base col-span-1 bg-gray-900 hover:bg-gray-800 border-gray-700 text-gray-100"
+              {/* Action buttons with retro style */}
+              <div className="flex flex-col md:flex-row gap-3 justify-center mt-2">
+                <motion.button
                   onClick={shareResult}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 font-mono font-bold text-white"
+                  style={{ ...pixelBorderStyles }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
                 >
-                  <div className="relative flex items-center justify-center gap-2">
-                    <Share2 className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="font-medium">Share</span>
+                  {/* Animated scanlines effect */}
+                  <div className="absolute inset-0 overflow-hidden opacity-10">
+                    <div
+                      style={{
+                        backgroundImage:
+                          "repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 2px)",
+                        backgroundSize: "2px 2px",
+                        height: "100%",
+                      }}
+                    />
                   </div>
-                </Button>
 
-                <Button
-                  className="col-span-1 py-2 md:py-4 text-base bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
-                  onClick={resetGame}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Swords className="h-4 w-4 md:h-5 md:w-5" />
-                    <span>Play Again</span>
+                  {/* Button content */}
+                  <div className="relative z-10 flex items-center gap-2">
+                    <Share2 className="w-5 h-5" />
+                    <span>SHARE RESULTS</span>
                   </div>
-                </Button>
+
+                  {/* Corner accents */}
+                  <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white/30" />
+                  <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white/30" />
+                  <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white/30" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white/30" />
+                </motion.button>
+
+                <motion.button
+                  onClick={resetGame}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 font-mono font-bold text-white"
+                  style={{ ...pixelBorderStyles }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.4 }}
+                >
+                  {/* Animated scanlines effect */}
+                  <div className="absolute inset-0 overflow-hidden opacity-10">
+                    <div
+                      style={{
+                        backgroundImage:
+                          "repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 2px)",
+                        backgroundSize: "2px 2px",
+                        height: "100%",
+                      }}
+                    />
+                  </div>
+
+                  {/* Shine effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    style={{ width: "100%" }}
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                    }}
+                  />
+
+                  {/* Button content */}
+                  <div className="relative z-10 flex items-center gap-2">
+                    <Swords className="w-5 h-5" />
+                    <span>NEW BATTLE</span>
+                  </div>
+
+                  {/* Corner accents */}
+                  <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white/30" />
+                  <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white/30" />
+                  <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white/30" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white/30" />
+                </motion.button>
               </div>
 
-              {/* Share Prompt with enhanced message */}
+              {/* Floating share success message with retro style */}
               <AnimatePresence>
                 {showSharePrompt && (
                   <motion.div
-                    initial={{ opacity: 0, y: 50 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 50 }}
-                    className="fixed bottom-4 left-4 right-4 bg-black p-4 rounded-lg border border-gray-700 shadow-lg z-50"
+                    exit={{ opacity: 0, y: -20 }}
+                    className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 font-mono"
                   >
-                    <div className="text-center">
-                      <div className="font-bold mb-2">
-                        Battle summary copied to clipboard! 📋
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        Share your results with friends and challenge them to
-                        beat your score!
+                    <div
+                      className="bg-black/80 border border-teal-500 px-4 py-2 text-teal-400"
+                      style={{ ...pixelBorderStyles }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-teal-500 animate-pulse" />
+                        <span>RESULTS COPIED TO CLIPBOARD</span>
                       </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Preview Message */}
-              {currentDay < 1 && (
-                <div className="fixed bottom-4 left-4 right-4 bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg shadow-lg">
-                  <p className="text-center text-white font-bold">
-                    Playing preview version! Official daily challenges launch on
-                    March 31, 2025.
-                  </p>
-                </div>
-              )}
+              {/* Add floating pixel particles */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <RetroPixelParticles count={15} color="bg-purple-400" />
+              </div>
             </motion.div>
           )}
         </main>
@@ -3247,7 +3745,6 @@ Can you beat my score? #StartupCardBattle`;
     </div>
   );
 }
-
 export default function PlayPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -3255,3 +3752,32 @@ export default function PlayPage() {
     </Suspense>
   );
 }
+
+// Add this helper function to compare attributes
+const compareAttribute = (
+  playerCard: StartupCard | undefined,
+  aiCard: StartupCard | undefined,
+  attribute: string
+): "win" | "lose" | "draw" | null => {
+  if (!playerCard || !aiCard || !attribute) return null;
+
+  // Compare values based on attribute type
+  let playerWins = false;
+  let isDraw = false;
+
+  switch (attribute) {
+    case "timeToUnicorn":
+    case "founded":
+      // Lower is better for these attributes
+      playerWins = playerCard[attribute] < aiCard[attribute];
+      isDraw = playerCard[attribute] === aiCard[attribute];
+      break;
+    default:
+      // Higher is better for power and valuation
+      playerWins = playerCard[attribute] > aiCard[attribute];
+      isDraw = playerCard[attribute] === aiCard[attribute];
+  }
+
+  if (isDraw) return "draw";
+  return playerWins ? "win" : "lose";
+};
