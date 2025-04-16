@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { LogoCarousel } from "@/components/ui/logo-carousel";
 import { GradientHeading } from "@/components/ui/gradient-heading";
+import { HowToPlay } from "@/app/components/HowToPlay";
 import type { SVGProps } from "react";
 
 // Indian Startup SVG Icons (unchanged)
@@ -121,6 +122,7 @@ export default function Home() {
   const [screenOn, setScreenOn] = useState(false);
   const [forceMainContentRender, setForceMainContentRender] = useState(false);
   const [scanlineEffect, setScanlineEffect] = useState(true);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   useEffect(() => {
     // Add global CSS for CRT effects
@@ -331,6 +333,18 @@ export default function Home() {
     };
   }, []);
 
+  // Add a key event listener for ESC key to close How To Play modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showHowToPlay) {
+        setShowHowToPlay(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showHowToPlay]);
+
   const toggleMusic = () => {
     if (audio) {
       if (isMusicPlaying) {
@@ -360,6 +374,12 @@ export default function Home() {
       animate={{ opacity: 1 }}
       className="relative min-h-screen bg-[#0A0118] text-white overflow-hidden"
     >
+      {/* How To Play Modal */}
+      <HowToPlay
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+      />
+
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#2C0855,#0A0118_50%)] opacity-70" />
 
@@ -503,13 +523,18 @@ export default function Home() {
               >
                 <pre className="text-green-500 text-xs sm:text-sm leading-tight font-mono">
                   {`
-███████╗████████╗ █████╗ ██████╗ ████████╗██╗   ██╗██████╗     ██████╗  █████╗ ████████╗████████╗██╗     ███████╗
-██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██║   ██║██╔══██╗    ██╔══██╗██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝
-███████╗   ██║   ███████║██████╔╝   ██║   ██║   ██║██████╔╝    ██████╔╝███████║   ██║      ██║   ██║     █████╗  
-╚════██║   ██║   ██╔══██║██╔══██╗   ██║   ██║   ██║██╔═══╝     ██╔══██╗██╔══██║   ██║      ██║   ██║     ██╔══╝  
-███████║   ██║   ██║  ██║██║  ██║   ██║   ╚██████╔╝██║         ██████╔╝██║  ██║   ██║      ██║   ███████╗███████╗
-╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝         ╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝
-`}
+ ███████╗████████╗ █████╗ ██████╗ ████████╗██╗   ██╗██████╗ 
+ ██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██║   ██║██╔══██╗
+ ███████╗   ██║   ███████║██████╔╝   ██║   ██║   ██║██████╔╝
+ ╚════██║   ██║   ██╔══██║██╔══██╗   ██║   ██║   ██║██╔═══╝ 
+ ███████║   ██║   ██║  ██║██║  ██║   ██║   ╚██████╔╝██║     
+ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     
+ ██████╗  █████╗ ████████╗████████╗██╗     ███████╗
+ ██╔══██╗██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝
+ ██████╔╝███████║   ██║      ██║   ██║     █████╗  
+ ██╔══██╗██╔══██║   ██║      ██║   ██║     ██╔══╝  
+ ██████╔╝██║  ██║   ██║      ██║   ███████╗███████╗
+ ╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝`}
                 </pre>
                 <div className="text-sm text-amber-400 mt-2 font-mono">
                   VERSION 3.7 - (C) STARTUP SYSTEMS 2025
@@ -726,6 +751,7 @@ export default function Home() {
               className="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 px-6 rounded-md flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-blue-500/20 border-2 border-blue-700/50 retro-button-hover terminal-text"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => setShowHowToPlay(true)}
             >
               <HelpCircle className="w-5 h-5" />
               <span className="font-mono tracking-wide">HOW TO PLAY</span>
@@ -770,18 +796,18 @@ export default function Home() {
                     }}
                   >
                     {`
-███████╗████████╗ █████╗ ██████╗ ████████╗██╗   ██╗██████╗ 
-██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██║   ██║██╔══██╗
-███████╗   ██║   ███████║██████╔╝   ██║   ██║   ██║██████╔╝
-╚════██║   ██║   ██╔══██║██╔══██╗   ██║   ██║   ██║██╔═══╝ 
-███████║   ██║   ██║  ██║██║  ██║   ██║   ╚██████╔╝██║     
-╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     
-███████╗  █████╗ ████████╗████████╗██╗     ███████╗
-██╔══██╗ ██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝
-██████╔╝ ███████║   ██║      ██║   ██║     █████╗  
-██╔══██╗ ██╔══██║   ██║      ██║   ██║     ██╔══╝  
-██████╔╝ ██║  ██║   ██║      ██║   ███████╗███████╗
-╚═════╝  ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝`}
+ ███████╗████████╗ █████╗ ██████╗ ████████╗██╗   ██╗██████╗ 
+ ██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██║   ██║██╔══██╗
+ ███████╗   ██║   ███████║██████╔╝   ██║   ██║   ██║██████╔╝
+ ╚════██║   ██║   ██╔══██║██╔══██╗   ██║   ██║   ██║██╔═══╝ 
+ ███████║   ██║   ██║  ██║██║  ██║   ██║   ╚██████╔╝██║     
+ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     
+ ██████╗  █████╗ ████████╗████████╗██╗     ███████╗
+ ██╔══██╗██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝
+ ██████╔╝███████║   ██║      ██║   ██║     █████╗  
+ ██╔══██╗██╔══██║   ██║      ██║   ██║     ██╔══╝  
+ ██████╔╝██║  ██║   ██║      ██║   ███████╗███████╗
+ ╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝`}
                   </pre>
 
                   {/* Tagline moved here, after the ASCII art, bright green color */}
@@ -891,9 +917,7 @@ export default function Home() {
                       <div className="text-green-400">
                         Become the ultimate entrepreneur.
                       </div>
-                      <div className="text-green-400 mt-1">
-                        Type BATTLE.EXE to begin...
-                      </div>
+                      <div className="text-green-400 mt-1"></div>
                     </div>
 
                     <div className="flex items-center mt-2">

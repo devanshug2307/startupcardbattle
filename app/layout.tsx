@@ -38,7 +38,7 @@ export default function RootLayout({
             background: "#fff",
             color: "#000",
             textDecoration: "none",
-            zIndex: 10000,
+            zIndex: -10000,
             borderTopLeftRadius: "12px",
             border: "1px solid #fff",
           }}

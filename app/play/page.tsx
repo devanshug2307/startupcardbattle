@@ -32,6 +32,9 @@ import {
   Clock,
   Volume2,
   VolumeX,
+  X,
+  ArrowUpCircle,
+  ArrowDownCircle,
 } from "lucide-react";
 import {
   Card,
@@ -709,23 +712,26 @@ const BattleResultOverlay = ({
           </div>
 
           <motion.div
-            className="mt-4 text-gray-300 text-center pixel-text"
+            className="mt-4 flex justify-center items-center gap-2"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0.5, 1] }}
-            transition={{ delay: 0.5, duration: 1, repeat: Infinity }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
           >
-            PRESS ANY KEY TO CONTINUE
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-white/80 rounded-full"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                }}
+              />
+            ))}
           </motion.div>
         </div>
       </motion.div>
-      <Button
-        onClick={() => {
-          playSfx("button-click", 0.6); // Button click sound
-          onNext();
-        }}
-      >
-        Next
-      </Button>
     </motion.div>
   );
 };
@@ -753,6 +759,7 @@ function PlayContent() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [roundAttributes, setRoundAttributes] = useState<string[]>([]);
   const [currentDay, setCurrentDay] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // Add portal-related state
   const [portalActive, setPortalActive] = useState(false);
@@ -858,14 +865,20 @@ function PlayContent() {
     const isFromPortal = searchParams.get("portal") === "true";
     const refGame = searchParams.get("ref");
     const userName = searchParams.get("username");
+    const showTutorialParam = searchParams.get("tutorial") === "true";
 
     // Add debug logging
     console.log("Portal Debug:", {
       isFromPortal,
       refGame,
       userName,
+      showTutorialParam,
       allParams: Object.fromEntries(searchParams.entries()),
     });
+
+    if (showTutorialParam) {
+      setShowTutorial(true);
+    }
 
     if (isFromPortal && refGame) {
       console.log("Entering from portal:", refGame);
@@ -1423,11 +1436,11 @@ function PlayContent() {
                     clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
                   }}
                 />
-                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                <span className="text-xs font-mono text-gray-300 uppercase">
                   Power
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-green-400">
+              <span className="text-xs md:text-sm font-mono font-bold text-green-400">
                 {formatPower(card.power)}
               </span>
             </div>
@@ -1451,11 +1464,11 @@ function PlayContent() {
                     clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
                   }}
                 />
-                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                <span className="text-xs font-mono text-gray-300 uppercase">
                   Founded
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-blue-400">
+              <span className="text-xs md:text-sm font-mono font-bold text-blue-400">
                 {card.founded}
               </span>
             </div>
@@ -1480,11 +1493,11 @@ function PlayContent() {
                       "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
                   }}
                 />
-                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                <span className="text-xs font-mono text-gray-300 uppercase">
                   Unicorn
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-purple-400">
+              <span className="text-xs md:text-sm font-mono font-bold text-purple-400">
                 {formatTimeToUnicorn(card.timeToUnicorn)}
               </span>
             </div>
@@ -1511,11 +1524,11 @@ function PlayContent() {
                       "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)",
                   }}
                 />
-                <span className="text-[10px] font-mono text-gray-300 uppercase">
+                <span className="text-xs font-mono text-gray-300 uppercase">
                   Value
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-yellow-400">
+              <span className="text-xs md:text-sm font-mono font-bold text-yellow-400">
                 {formatValuation(card.valuation)}
               </span>
             </div>
@@ -1639,54 +1652,33 @@ function PlayContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10 max-w-2xl mx-auto"
+          className="mb-6 max-w-2xl mx-auto"
           style={{ boxShadow: "0 0 20px rgba(147, 51, 234, 0.2)" }}
         >
           <div
-            className="bg-black/60 backdrop-blur-sm border border-purple-500/40 p-5"
+            className="bg-black/60 backdrop-blur-sm border border-purple-500/40 p-3"
             style={{ ...pixelBorderStyles }}
           >
-            <h3 className="text-xl font-mono mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-300">
+            <h3 className="text-xl font-mono mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-300">
               BATTLE RULES
             </h3>
 
-            <div className="grid grid-cols-2 gap-6 font-mono text-sm">
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-green-400 font-bold">
-                  <TrendingUp className="w-4 h-4" />
-                  HIGHER WINS
-                </h4>
-                <ul className="space-y-1 pl-6 text-green-200/80">
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-400">•</span> VALUATION
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-400">•</span> POWER LEVEL
-                  </li>
-                </ul>
+            <div className="flex justify-center gap-8 font-mono">
+              <div className="flex items-center gap-2">
+                <span className="text-green-400 font-bold">HIGHER WINS ↗️</span>
+                <span className="text-green-200/80">VALUATION • POWER</span>
               </div>
-
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-blue-400 font-bold">
-                  <TrendingDown className="w-4 h-4" />
-                  LOWER WINS
-                </h4>
-                <ul className="space-y-1 pl-6 text-blue-200/80">
-                  <li className="flex items-center gap-2">
-                    <span className="text-blue-400">•</span> TIME TO UNICORN
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-blue-400">•</span> FOUNDED YEAR
-                  </li>
-                </ul>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400 font-bold">LOWER WINS ↙️</span>
+                <span className="text-blue-200/80">FOUNDED • UNICORN</span>
               </div>
             </div>
           </div>
         </motion.div>
 
         {/* Cards grid with retro styling */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-          {playerDeck.map((card, index) => (
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6">
+          {playerDeck.slice(0, 8).map((card, index) => (
             <CardComponent
               key={card.name}
               card={card}
@@ -2207,14 +2199,14 @@ Can you beat my score? #StartupCardBattle`;
                 <div className="relative bg-gray-900/90 rounded-lg sm:rounded-xl p-1.5 sm:p-2">
                   <div
                     className={cn(
-                      "flex items-center gap-1 text-[10px] sm:text-xs truncate",
+                      "flex items-center gap-1 text-xs sm:text-sm truncate",
                       attr.textColor
                     )}
                   >
-                    <attr.icon className="w-3 h-3 flex-shrink-0" />
+                    <attr.icon className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">{attr.label}</span>
                   </div>
-                  <div className="font-bold text-[11px] sm:text-sm text-white mt-0.5 sm:mt-1 truncate">
+                  <div className="font-bold text-sm sm:text-base text-white mt-0.5 sm:mt-1 truncate">
                     {!isPlayer && !battleAttribute ? "???" : attr.value}
                   </div>
                 </div>
@@ -2251,15 +2243,18 @@ Can you beat my score? #StartupCardBattle`;
 
     return (
       <motion.div
-        className="relative h-full w-full max-w-5xl mx-auto px-4 py-8"
+        className="relative h-full w-full max-w-5xl mx-auto px-4 py-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        {/* Battle Arena Background */}
+        {/* Retro Grid Background */}
+        <RetroGridBackground />
+
+        {/* Battle Arena Background with improved retro effects */}
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-indigo-900/20">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a0066_1px,transparent_1px),linear-gradient(to_bottom,#2a0066_1px,transparent_1px)] bg-[size:24px_24px] opacity-20" />
 
-          {/* Add animated background particles */}
+          {/* Enhanced animated background particles */}
           <motion.div
             className="absolute inset-0 overflow-hidden"
             initial={{ opacity: 0 }}
@@ -2289,17 +2284,20 @@ Can you beat my score? #StartupCardBattle`;
           </motion.div>
         </div>
 
+        {/* CRT Screen Effect */}
+        <CRTEffect />
+
         {/* Battle HUD */}
         <div className="relative z-10">
           {/* Round & Timer */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <motion.div
               className="pixel-corners bg-gray-900/80 px-4 py-2"
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <span className="text-purple-300 font-bold">
+              <span className="text-purple-300 font-bold pixel-text">
                 ROUND {currentRound}/4
               </span>
             </motion.div>
@@ -2331,507 +2329,476 @@ Can you beat my score? #StartupCardBattle`;
             )}
           </div>
 
-          {/* Battle Guide - Keep existing code */}
+          {/* Battle Rules - Ultra Condensed version for quick reference */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4 md:mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center mb-2 bg-gray-900/70 rounded py-1 pixel-corners"
           >
-            {/* ... existing battle guide code ... */}
-          </motion.div>
-
-          {/* Battle Arena - Updated with enhanced animations */}
-          <div className="flex flex-col md:flex-row md:justify-center gap-4 md:gap-8 items-center">
-            {/* Cards Container */}
-            <div className="relative w-full max-w-md mx-auto flex flex-col gap-4 md:gap-8">
-              {/* Player Card with enhanced animations */}
-              <motion.div
-                variants={cardAnimationVariants.playerCard}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="w-full"
-              >
-                <motion.div
-                  variants={cardAnimationVariants.hover}
-                  animate={
-                    battleResult === "win"
-                      ? enhancedCardAnimations.attack.player.animate
-                      : cardAnimationVariants.hover.animate
-                  }
-                  className="relative"
-                >
-                  {/* Add pixel border effect with improved animation */}
-                  <motion.div
-                    className="absolute -inset-1 rounded-2xl z-0 border-2"
-                    initial={retroAnimations.pixelBorder.initial}
-                    animate={
-                      battleResult === "win"
-                        ? retroAnimations.pixelBorder.win
-                        : battleResult === "lose"
-                        ? retroAnimations.pixelBorder.lose
-                        : retroAnimations.pixelBorder.animate
-                    }
-                  />
-
-                  {/* Add attack pixel effect */}
-                  <PixelAttackEffect
-                    isPlayer={true}
-                    isActive={battleResult === "win"}
-                  />
-
-                  <div className="pixel-corners bg-gradient-to-br from-purple-900/90 to-indigo-900/90 p-3 md:p-6 backdrop-blur relative z-10 overflow-hidden">
-                    {/* Add CRT screen effect */}
-                    <CRTEffect />
-
-                    {/* Retro pixel shine effect */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <RetroPixelParticles count={5} color="bg-white/30" />
-                    </div>
-
-                    {/* Add scanline flicker effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-white/5 pointer-events-none"
-                      animate={{ opacity: [0, 0.1, 0] }}
-                      transition={{
-                        duration: 0.2,
-                        repeat: Infinity,
-                        repeatDelay: 3,
-                      }}
-                    />
-
-                    {/* Card Header with pixel animation */}
-                    <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-4 relative">
-                      {typeof playerCard.icon === "string" ? (
-                        <div className="relative">
-                          <Image
-                            src={playerCard.icon}
-                            alt={playerCard.name}
-                            width={48}
-                            height={48}
-                            className="w-12 h-12 md:w-16 md:h-16 rounded-lg pixel-image"
-                          />
-                          <motion.div
-                            className="absolute inset-0 bg-purple-500/30 rounded-lg"
-                            animate={{ opacity: [0, 0.5, 0] }}
-                            transition={{
-                              duration: 0.5,
-                              repeat: Infinity,
-                              repeatDelay: 2,
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <motion.div
-                          className="w-12 h-12 md:w-16 md:h-16 bg-purple-800/50 rounded-lg flex items-center justify-center relative overflow-hidden"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <span className="text-xl md:text-2xl relative z-10">
-                            {playerCard.name[0]}
-                          </span>
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/30 to-purple-600/0"
-                            animate={{ x: ["-100%", "100%"] }}
-                            transition={{
-                              duration: 1.5,
-                              repeat: Infinity,
-                              repeatDelay: 2,
-                            }}
-                          />
-                        </motion.div>
-                      )}
-                      <div>
-                        <h3 className="text-base md:text-xl font-bold text-white pixel-text">
-                          {playerCard.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-purple-600 text-xs md:text-sm relative overflow-hidden">
-                            {playerCard.category}
-                            <motion.div
-                              className="absolute inset-0 bg-white/20"
-                              animate={{ opacity: [0, 0.5, 0] }}
-                              transition={{
-                                duration: 0.3,
-                                repeat: Infinity,
-                                repeatDelay: 3,
-                              }}
-                            />
-                          </Badge>
-                          <span className="text-purple-300 text-xs md:text-sm">
-                            Lv.{currentRound}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stats Display with improved retro animations */}
-                    <div className="space-y-2 md:space-y-3">
-                      {[
-                        {
-                          key: "power",
-                          label: "Power",
-                          value: formatPower(playerCard.power),
-                        },
-                        {
-                          key: "founded",
-                          label: "Founded",
-                          value: playerCard.founded,
-                        },
-                        {
-                          key: "timeToUnicorn",
-                          label: "Time to Unicorn",
-                          value: formatTimeToUnicorn(playerCard.timeToUnicorn),
-                        },
-                        {
-                          key: "valuation",
-                          label: "Valuation",
-                          value: formatValuation(playerCard.valuation),
-                        },
-                      ].map(({ key, label, value }) => (
-                        <motion.div
-                          key={key}
-                          className={`relative rounded-lg overflow-hidden ${
-                            battleAttribute === key
-                              ? "border-2 border-purple-400"
-                              : ""
-                          }`}
-                          initial="initial"
-                          animate={
-                            battleAttribute === key ? "animate" : "initial"
-                          }
-                          variants={{
-                            initial: { backgroundColor: "rgba(0,0,0,0)" },
-                            animate: {
-                              backgroundColor: [
-                                "rgba(0,0,0,0)",
-                                "rgba(139,92,246,0.3)",
-                                "rgba(0,0,0,0)",
-                              ],
-                              transition: { duration: 0.5, repeat: Infinity },
-                            },
-                          }}
-                        >
-                          {/* Add highlight flash for selected attribute */}
-                          {battleAttribute === key && (
-                            <motion.div
-                              className="absolute inset-0 bg-purple-400/30 z-0"
-                              animate={{ opacity: [0, 0.6, 0] }}
-                              transition={{
-                                duration: 0.3,
-                                repeat: Infinity,
-                                repeatDelay: 0.5,
-                              }}
-                            />
-                          )}
-
-                          <div className="flex items-center justify-between mb-1 px-2 pt-1 relative z-10">
-                            <span className="text-sm text-purple-200 uppercase">
-                              {label}
-                            </span>
-                            <span className="text-sm font-bold text-white">
-                              {value}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-purple-900/50 rounded-full overflow-hidden mx-2 mb-1 relative z-10">
-                            <motion.div
-                              className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
-                              initial={{ width: 0 }}
-                              animate={{
-                                width: `${
-                                  (Number(playerCard[key]) / getMaxValue(key)) *
-                                  100
-                                }%`,
-                              }}
-                              transition={{ duration: 1, delay: 0.5 }}
-                            />
-                            {/* Add pixel loading effect */}
-                            {battleAttribute === key && (
-                              <motion.div
-                                className="absolute inset-y-0 right-0 w-1 bg-white"
-                                animate={{
-                                  opacity: [0, 1, 0],
-                                  x: [0, -2, 0],
-                                }}
-                                transition={{ duration: 0.2, repeat: Infinity }}
-                              />
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-
-              {/* VS Divider with enhanced retro animation */}
-              <div className="relative flex justify-center my-2 md:my-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-10">
-                <div className="relative">
-                  <motion.div
-                    className="text-2xl md:text-4xl font-bold text-purple-300 pixel-text"
-                    style={{
-                      textShadow: "2px 2px 0 #2e1065",
-                      WebkitTextStroke: "1px #2e1065",
-                    }}
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      textShadow: [
-                        "2px 2px 0 #2e1065",
-                        "3px 3px 0 #2e1065",
-                        "2px 2px 0 #2e1065",
-                      ],
-                    }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    VS
-                  </motion.div>
-
-                  {/* Add pixel glitch effect */}
-                  <AnimatePresence>
-                    {battleAttribute && (
-                      <motion.div
-                        className="absolute inset-0 text-2xl md:text-4xl font-bold text-red-300 pixel-text"
-                        style={{
-                          textShadow: "2px 2px 0 #7f1d1d",
-                          WebkitTextStroke: "1px #7f1d1d",
-                          left: "2px",
-                        }}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 0.8, 0] }}
-                        exit={{ opacity: 0 }}
-                        transition={{
-                          duration: 0.2,
-                          repeat: 3,
-                          repeatDelay: 0.1,
-                        }}
-                      >
-                        VS
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Add retro pixel particles around VS */}
-                <div className="absolute inset-0 -m-8">
-                  <RetroPixelParticles count={12} color="bg-purple-400" />
-
-                  {/* Add pixel explosion when attribute is selected */}
-                  <AnimatePresence>
-                    {battleAttribute && (
-                      <motion.div className="absolute inset-0">
-                        {Array.from({ length: 20 }).map((_, i) => (
-                          <motion.div
-                            key={`explosion-${i}`}
-                            className="absolute w-2 h-2 bg-white"
-                            style={{
-                              left: "50%",
-                              top: "50%",
-                              originX: "center",
-                              originY: "center",
-                            }}
-                            initial={{ scale: 0 }}
-                            animate={{
-                              scale: [0, 1, 0],
-                              x: [0, Math.cos((i * Math.PI) / 10) * 50],
-                              y: [0, Math.sin((i * Math.PI) / 10) * 50],
-                              opacity: [1, 0],
-                            }}
-                            transition={{ duration: 0.5 }}
-                            exit={{ opacity: 0 }}
-                          />
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+            <div className="flex justify-center gap-10">
+              <div className="flex items-center gap-2">
+                <span className="inline-block bg-purple-600 rounded-sm w-3.5 h-3.5 flex items-center justify-center text-white text-xs font-bold">
+                  ✓
+                </span>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs text-purple-400 font-bold">
+                    HIGHER WINS
+                  </span>
+                  <span className="text-xs text-white leading-tight">
+                    VALUATION • POWER
+                  </span>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block bg-blue-600 rounded-sm w-3.5 h-3.5 flex items-center justify-center text-white text-xs font-bold">
+                  ✓
+                </span>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs text-blue-400 font-bold">
+                    LOWER WINS
+                  </span>
+                  <span className="text-xs text-white leading-tight">
+                    UNICORN • FOUNDED
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
-              {/* AI Card with similar enhanced animations */}
+          {/* Score Display - New retro style */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center gap-8 mb-4"
+          >
+            <div className="pixel-corners bg-purple-900/80 px-4 py-2 flex items-center gap-2">
+              <span className="text-purple-200 font-bold">YOU:</span>
+              <span className="text-white font-pixel text-lg">
+                {playerScore}
+              </span>
+            </div>
+            <div className="pixel-corners bg-red-900/80 px-4 py-2 flex items-center gap-2">
+              <span className="text-red-200 font-bold">AI:</span>
+              <span className="text-white font-pixel text-lg">{aiScore}</span>
+            </div>
+          </motion.div>
+
+          {/* Battle Arena - Improved layout to prevent scrolling */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-center">
+            {/* Player Card with enhanced animations */}
+            <motion.div
+              variants={cardAnimationVariants.playerCard}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full h-full"
+            >
               <motion.div
-                variants={cardAnimationVariants.aiCard}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="w-full"
+                variants={cardAnimationVariants.hover}
+                animate={
+                  battleResult === "win"
+                    ? enhancedCardAnimations.attack.player.animate
+                    : cardAnimationVariants.hover.animate
+                }
+                className="relative h-full"
               >
+                {/* Add pixel border effect with improved animation */}
                 <motion.div
-                  variants={cardAnimationVariants.hover}
+                  className="absolute -inset-1 rounded-2xl z-0 border-2"
+                  initial={retroAnimations.pixelBorder.initial}
                   animate={
-                    battleResult === "lose"
-                      ? enhancedCardAnimations.attack.ai.animate
-                      : cardAnimationVariants.hover.animate
+                    battleResult === "win"
+                      ? retroAnimations.pixelBorder.win
+                      : battleResult === "lose"
+                      ? retroAnimations.pixelBorder.lose
+                      : retroAnimations.pixelBorder.animate
                   }
-                  className="relative"
-                >
-                  {/* Add glow effect container */}
-                  <motion.div
-                    className="absolute -inset-1 rounded-2xl z-0"
-                    initial={enhancedCardAnimations.glow.initial}
-                    animate={
-                      battleResult === "lose"
-                        ? enhancedCardAnimations.glow.win
-                        : battleResult === "win"
-                        ? enhancedCardAnimations.glow.lose
-                        : enhancedCardAnimations.glow.animate
-                    }
-                  />
+                />
 
-                  <div className="pixel-corners bg-gradient-to-br from-red-900/90 to-pink-900/90 p-3 md:p-6 backdrop-blur relative z-10">
-                    {/* Shine effect overlay */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                      style={{ width: "50%", height: "100%" }}
-                      variants={enhancedCardAnimations.pixelShine}
-                      initial="initial"
-                      animate="animate"
-                    />
+                {/* Add attack pixel effect */}
+                <PixelAttackEffect
+                  isPlayer={true}
+                  isActive={battleResult === "win"}
+                />
 
-                    {/* AI Card Content - Similar to player card with animations */}
-                    <div className="flex items-center gap-4 mb-4">
-                      {typeof aiCard.icon === "string" ? (
+                <div className="pixel-corners bg-gradient-to-br from-purple-900/90 to-indigo-900/90 p-3 md:p-4 backdrop-blur relative z-10 overflow-hidden h-full">
+                  {/* Retro pixel shine effect */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <RetroPixelParticles count={5} color="bg-white/30" />
+                  </div>
+
+                  {/* Add scanline flicker effect */}
+                  <div className="absolute inset-0 bg-scanlines pointer-events-none"></div>
+
+                  {/* Card Header with pixel animation */}
+                  <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-4 relative">
+                    {typeof playerCard.icon === "string" ? (
+                      <div className="relative">
                         <Image
-                          src={aiCard.icon}
-                          alt={aiCard.name}
+                          src={playerCard.icon}
+                          alt={playerCard.name}
                           width={48}
                           height={48}
                           className="w-12 h-12 md:w-16 md:h-16 rounded-lg pixel-image"
                         />
-                      ) : (
                         <motion.div
-                          className="w-12 h-12 md:w-16 md:h-16 bg-red-800/50 rounded-lg flex items-center justify-center"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <span className="text-xl md:text-2xl">
-                            {aiCard.name[0]}
-                          </span>
-                        </motion.div>
-                      )}
-                      <div>
-                        <h3 className="text-base md:text-xl font-bold text-white pixel-text">
-                          {battleAttribute ? aiCard.name : "???"}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-red-600 text-xs md:text-sm">
-                            {battleAttribute ? aiCard.category : "???"}
-                          </Badge>
-                          <span className="text-red-300 text-xs md:text-sm">
-                            Lv.{currentRound}
-                          </span>
-                        </div>
+                          className="absolute inset-0 bg-purple-500/30 rounded-lg"
+                          animate={{ opacity: [0, 0.5, 0] }}
+                          transition={{
+                            duration: 0.5,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <motion.div
+                        className="w-12 h-12 md:w-16 md:h-16 bg-purple-800/50 rounded-lg flex items-center justify-center relative overflow-hidden"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <span className="text-xl md:text-2xl relative z-10">
+                          {playerCard.name[0]}
+                        </span>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/30 to-purple-600/0"
+                          animate={{ x: ["-100%", "100%"] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                    <div>
+                      <h3 className="text-base md:text-xl font-bold text-white pixel-text">
+                        {playerCard.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-purple-600 text-xs md:text-sm">
+                          {playerCard.category}
+                        </Badge>
+                        <span className="text-purple-300 text-xs md:text-sm">
+                          Lv.{currentRound}
+                        </span>
                       </div>
                     </div>
+                  </div>
 
-                    {/* AI Stats Display with animations */}
-                    <div className="space-y-3">
-                      {[
-                        {
-                          key: "power",
-                          label: "Power",
-                          value: formatPower(aiCard.power),
-                        },
-                        {
-                          key: "founded",
-                          label: "Founded",
-                          value: aiCard.founded,
-                        },
-                        {
-                          key: "timeToUnicorn",
-                          label: "Time to Unicorn",
-                          value: formatTimeToUnicorn(aiCard.timeToUnicorn),
-                        },
-                        {
-                          key: "valuation",
-                          label: "Valuation",
-                          value: formatValuation(aiCard.valuation),
-                        },
-                      ].map(({ key, label, value }) => (
-                        <motion.div
-                          key={key}
-                          className={`relative rounded-lg overflow-hidden ${
-                            battleAttribute === key ? "ring-2 ring-red-400" : ""
+                  {/* Player Stats Display with improved retro style */}
+                  <div className="space-y-3">
+                    {[
+                      {
+                        key: "power",
+                        label: "Power",
+                        value: formatPower(playerCard.power),
+                      },
+                      {
+                        key: "founded",
+                        label: "Founded",
+                        value: playerCard.founded,
+                      },
+                      {
+                        key: "timeToUnicorn",
+                        label: "Time to Unicorn",
+                        value: formatTimeToUnicorn(playerCard.timeToUnicorn),
+                      },
+                      {
+                        key: "valuation",
+                        label: "Valuation",
+                        value: formatValuation(playerCard.valuation),
+                      },
+                    ].map(({ key, label, value }) => (
+                      <motion.div
+                        key={key}
+                        className={`relative rounded-lg overflow-hidden ${
+                          battleAttribute === key
+                            ? "ring-2 ring-purple-400"
+                            : ""
+                        }`}
+                        initial="initial"
+                        animate={
+                          battleAttribute === key
+                            ? enhancedCardAnimations.statHighlight.animate
+                            : "initial"
+                        }
+                        variants={enhancedCardAnimations.statHighlight}
+                      >
+                        <div
+                          className={`flex items-center justify-between mb-1 px-2 pt-1 ${
+                            battleAttribute === key ? "bg-purple-900/50" : ""
                           }`}
-                          initial="initial"
-                          animate={
-                            battleAttribute === key
-                              ? enhancedCardAnimations.statHighlight.animate
-                              : "initial"
-                          }
-                          variants={enhancedCardAnimations.statHighlight}
+                          onClick={() => {
+                            if (!battleAttribute) {
+                              handleAttributeSelect(key);
+                            }
+                          }}
                         >
-                          <div className="flex items-center justify-between mb-1 px-2 pt-1">
-                            <span className="text-sm text-red-200 uppercase">
-                              {label}
-                            </span>
-                            <span className="text-sm font-bold text-white">
-                              {battleAttribute ? value : "???"}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-red-900/50 rounded-full overflow-hidden mx-2 mb-1">
-                            <motion.div
-                              className="h-full bg-gradient-to-r from-red-500 to-pink-500"
-                              initial={{ width: 0 }}
-                              animate={
-                                battleAttribute
-                                  ? {
-                                      width: `${
-                                        (Number(aiCard[key]) /
-                                          getMaxValue(key)) *
-                                        100
-                                      }%`,
-                                    }
-                                  : { width: 0 }
-                              }
-                              transition={{ duration: 1, delay: 0.5 }}
-                            />
-                          </div>
-                        </motion.div>
-                      ))}
+                          <span className="text-sm text-purple-200 uppercase pixel-text">
+                            {label}
+                          </span>
+                          <span className="text-sm font-bold text-white">
+                            {value}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-purple-900/50 rounded-full overflow-hidden mx-2 mb-1">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                            initial={{ width: "0%" }}
+                            animate={{
+                              width: `${
+                                (Number(playerCard[key]) / getMaxValue(key)) *
+                                100
+                              }%`,
+                            }}
+                            transition={{ duration: 1 }}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* AI Card with enhanced animations */}
+            <motion.div
+              variants={cardAnimationVariants.aiCard}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full h-full"
+            >
+              <motion.div
+                variants={cardAnimationVariants.hover}
+                animate={
+                  battleResult === "lose"
+                    ? enhancedCardAnimations.attack.ai.animate
+                    : cardAnimationVariants.hover.animate
+                }
+                className="relative h-full"
+              >
+                {/* Add pixel border effect */}
+                <motion.div
+                  className="absolute -inset-1 rounded-2xl z-0 border-2"
+                  initial={retroAnimations.pixelBorder.initial}
+                  animate={
+                    battleResult === "lose"
+                      ? retroAnimations.pixelBorder.win
+                      : battleResult === "win"
+                      ? retroAnimations.pixelBorder.lose
+                      : retroAnimations.pixelBorder.animate
+                  }
+                />
+
+                {/* Add attack pixel effect */}
+                <PixelAttackEffect
+                  isPlayer={false}
+                  isActive={battleResult === "lose"}
+                />
+
+                <div className="pixel-corners bg-gradient-to-br from-red-900/90 to-pink-900/90 p-3 md:p-4 backdrop-blur relative z-10 overflow-hidden h-full">
+                  {/* Retro pixel shine effect */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <RetroPixelParticles count={5} color="bg-white/30" />
+                  </div>
+
+                  {/* Add scanline flicker effect */}
+                  <div className="absolute inset-0 bg-scanlines pointer-events-none"></div>
+
+                  {/* Card Header with pixel animation */}
+                  <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-4 relative">
+                    {typeof aiCard.icon === "string" ? (
+                      <div className="relative">
+                        <Image
+                          src={aiCard.icon}
+                          alt={battleAttribute ? aiCard.name : "???"}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 md:w-16 md:h-16 rounded-lg pixel-image"
+                        />
+                      </div>
+                    ) : (
+                      <motion.div
+                        className="w-12 h-12 md:w-16 md:h-16 bg-red-800/50 rounded-lg flex items-center justify-center"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <span className="text-xl md:text-2xl">
+                          {aiCard.name[0]}
+                        </span>
+                      </motion.div>
+                    )}
+                    <div>
+                      <h3 className="text-base md:text-xl font-bold text-white pixel-text">
+                        {battleAttribute ? aiCard.name : "???"}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-red-600 text-xs md:text-sm">
+                          {battleAttribute ? aiCard.category : "???"}
+                        </Badge>
+                        <span className="text-red-300 text-xs md:text-sm">
+                          Lv.{currentRound}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
+
+                  {/* AI Stats Display with improved retro style */}
+                  <div className="space-y-3">
+                    {[
+                      {
+                        key: "power",
+                        label: "Power",
+                        value: formatPower(aiCard.power),
+                      },
+                      {
+                        key: "founded",
+                        label: "Founded",
+                        value: aiCard.founded,
+                      },
+                      {
+                        key: "timeToUnicorn",
+                        label: "Time to Unicorn",
+                        value: formatTimeToUnicorn(aiCard.timeToUnicorn),
+                      },
+                      {
+                        key: "valuation",
+                        label: "Valuation",
+                        value: formatValuation(aiCard.valuation),
+                      },
+                    ].map(({ key, label, value }) => (
+                      <motion.div
+                        key={key}
+                        className={`relative rounded-lg overflow-hidden ${
+                          battleAttribute === key ? "ring-2 ring-red-400" : ""
+                        }`}
+                        initial="initial"
+                        animate={
+                          battleAttribute === key
+                            ? enhancedCardAnimations.statHighlight.animate
+                            : "initial"
+                        }
+                        variants={enhancedCardAnimations.statHighlight}
+                      >
+                        <div
+                          className={`flex items-center justify-between mb-1 px-2 pt-1 ${
+                            battleAttribute === key ? "bg-red-900/50" : ""
+                          }`}
+                        >
+                          <span className="text-sm text-red-200 uppercase pixel-text">
+                            {label}
+                          </span>
+                          <span className="text-sm font-bold text-white">
+                            {battleAttribute ? value : "???"}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-red-900/50 rounded-full overflow-hidden mx-2 mb-1">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-red-500 to-pink-500"
+                            initial={{ width: 0 }}
+                            animate={
+                              battleAttribute
+                                ? {
+                                    width: `${
+                                      (Number(aiCard[key]) / getMaxValue(key)) *
+                                      100
+                                    }%`,
+                                  }
+                                : { width: 0 }
+                            }
+                            transition={{ duration: 1, delay: 0.5 }}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
               </motion.div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Battle Controls - Keep existing code */}
+          {/* Battle Controls - Improved with new retro styling */}
           {!battleAttribute && !battleResult && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 via-gray-900/95 to-transparent pb-safe pt-6 px-2 md:px-4 z-20"
+              className="mt-6 mb-16 bg-gradient-to-t from-gray-900 via-gray-900/95 to-transparent py-4 px-4 rounded-lg pixel-corners"
             >
-              <div className="max-w-5xl mx-auto">
-                <h3 className="text-center text-purple-200 mb-2 md:mb-3 pixel-text text-sm md:text-base">
-                  Choose your move!
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-3 px-2">
-                  {[
-                    { name: "Power", icon: DollarSign, key: "power" },
-                    { name: "Founded", icon: Calendar, key: "founded" },
-                    {
-                      name: "Time to Unicorn",
-                      icon: Rocket,
-                      key: "timeToUnicorn",
-                    },
-                    { name: "Valuation", icon: TrendingUp, key: "valuation" },
-                  ].map((attr) => (
-                    <motion.button
-                      key={attr.name}
-                      onClick={() => handleAttributeSelect(attr.key)}
-                      className="pixel-corners bg-gradient-to-br from-purple-600 to-indigo-600 
+              <h3 className="text-center text-purple-200 mb-3 pixel-text text-sm md:text-base">
+                SELECT YOUR MOVE!
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                {[
+                  {
+                    name: "Power",
+                    icon: DollarSign,
+                    key: "power",
+                    color: "from-purple-600 to-indigo-600",
+                  },
+                  {
+                    name: "Founded",
+                    icon: Calendar,
+                    key: "founded",
+                    color: "from-blue-600 to-cyan-600",
+                  },
+                  {
+                    name: "Time to Unicorn",
+                    icon: Rocket,
+                    key: "timeToUnicorn",
+                    color: "from-green-600 to-teal-600",
+                  },
+                  {
+                    name: "Valuation",
+                    icon: TrendingUp,
+                    key: "valuation",
+                    color: "from-amber-600 to-yellow-600",
+                  },
+                ].map((attr) => (
+                  <motion.button
+                    key={attr.name}
+                    onClick={() => handleAttributeSelect(attr.key)}
+                    className={`pixel-corners bg-gradient-to-br ${attr.color}
                                hover:from-purple-500 hover:to-indigo-500 p-2 md:px-4 md:py-3 
                                text-white font-medium text-xs md:text-base
-                               shadow-lg shadow-purple-900/20"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center justify-center gap-1 md:gap-2">
-                        <attr.icon className="w-3 h-3 md:w-4 md:h-4" />
-                        <span className="truncate">{attr.name}</span>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
+                             shadow-lg shadow-purple-900/20 relative overflow-hidden`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-white/10"
+                      animate={{ opacity: [0, 0.2, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatDelay: 1,
+                      }}
+                    />
+                    <div className="flex items-center justify-center gap-1 md:gap-2">
+                      <attr.icon className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="truncate">{attr.name}</span>
+                    </div>
+                  </motion.button>
+                ))}
               </div>
+            </motion.div>
+          )}
+
+          {/* Battle VS Animation - Added for more exciting battles */}
+          {battleAttribute && !battleResult && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="text-6xl md:text-8xl font-bold text-white pixel-text"
+                initial={{ scale: 2, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                VS
+              </motion.div>
             </motion.div>
           )}
 
@@ -2928,22 +2895,15 @@ Can you beat my score? #StartupCardBattle`;
 
   // First, add a helper component for the battle guide
   const BattleGuide = () => (
-    <div className="bg-purple-900/80 rounded-lg p-4 mb-4 mx-4">
-      <div className="text-sm text-purple-100">
-        <div className="mb-2 font-bold">
-          Each round, compare card stats to win:
+    <div className="bg-purple-900/80 rounded-lg p-3 mb-4 mx-4">
+      <div className="text-sm text-purple-100 flex justify-center gap-8">
+        <div className="flex items-center gap-2">
+          <div className="text-green-400 font-bold">HIGHER WINS ↗️</div>
+          <div className="text-gray-300">VALUATION • POWER</div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-2">
-            <div className="text-green-400">Higher Wins! ↗️</div>
-            <div className="text-gray-300 text-xs">• Valuation & Power</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="text-blue-400">Lower Wins! ↙️</div>
-            <div className="text-gray-300 text-xs">
-              • Founded Year & Time to Unicorn
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <div className="text-blue-400 font-bold">LOWER WINS ↙️</div>
+          <div className="text-gray-300">FOUNDED • UNICORN</div>
         </div>
       </div>
     </div>
@@ -2985,8 +2945,112 @@ Can you beat my score? #StartupCardBattle`;
     },
   ];
 
+  // Add tutorial modal component
+  const TutorialModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", damping: 20 }}
+        className="bg-gray-900 border-2 border-purple-500 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        style={{ ...pixelBorderStyles }}
+      >
+        <div className="bg-gradient-to-r from-purple-800 to-blue-800 p-3 flex justify-between items-center">
+          <h2 className="text-xl font-mono font-bold text-white">
+            HOW TO PLAY
+          </h2>
+          <button
+            onClick={() => setShowTutorial(false)}
+            className="text-white hover:text-purple-200"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-5 space-y-6 text-white">
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-purple-300">Game Overview</h3>
+            <p>
+              Startup Battle is a strategic card game where you compete against
+              AI using startup company cards.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-purple-300">Game Flow</h3>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>Select 4 startup cards for your battle deck</li>
+              <li>
+                Each round, one card from your deck battles against an AI card
+              </li>
+              <li>Choose a stat to compare (Valuation, Revenue, etc.)</li>
+              <li>The card with the better stat wins the round</li>
+              <li>Win more rounds than the AI to win the battle</li>
+            </ol>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-purple-300">
+              Comparison Rules
+            </h3>
+            <ul className="space-y-4">
+              <li className="flex items-center gap-2">
+                <ArrowUpCircle className="text-green-400 w-6 h-6" />
+                <div>
+                  <div className="font-bold">Higher is Better:</div>
+                  <div className="text-gray-300">Valuation, Revenue, Power</div>
+                </div>
+              </li>
+              <li className="flex items-center gap-2">
+                <ArrowDownCircle className="text-blue-400 w-6 h-6" />
+                <div>
+                  <div className="font-bold">Lower is Better:</div>
+                  <div className="text-gray-300">
+                    Founded Year, Time to Unicorn
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-purple-300">Tips</h3>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Choose cards with strong stats across multiple categories</li>
+              <li>
+                Look for newer startups with high valuations for balanced cards
+              </li>
+              <li>
+                Remember which attributes are better when higher vs. lower
+              </li>
+              <li>
+                Plan your deck to have different strengths for different rounds
+              </li>
+            </ul>
+          </div>
+
+          <motion.button
+            onClick={() => setShowTutorial(false)}
+            className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded font-bold text-white"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            GOT IT! START PLAYING
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
   return (
     <div className="relative min-h-screen bg-gray-900">
+      {/* Show tutorial modal if tutorial parameter is true */}
+      {showTutorial && <TutorialModal />}
+
       {/* Add portal entrance animation if coming from portal */}
       {comingFromPortal && (
         <motion.div
@@ -3002,7 +3066,8 @@ Can you beat my score? #StartupCardBattle`;
         {previousGameUrl && (
           <PortalElement onClick={() => handlePortalTransition(false)} />
         )}
-        <PortalElement isExit onClick={() => handlePortalTransition(true)} />
+        {/* Exit portal temporarily hidden */}
+        {/* <PortalElement isExit onClick={() => handlePortalTransition(true)} /> */}
       </div>
 
       <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
@@ -3118,55 +3183,41 @@ Can you beat my score? #StartupCardBattle`;
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-10 max-w-2xl mx-auto"
+                className="mb-6 max-w-2xl mx-auto"
                 style={{ boxShadow: "0 0 20px rgba(147, 51, 234, 0.2)" }}
               >
                 <div
-                  className="bg-black/60 backdrop-blur-sm border border-purple-500/40 p-5"
+                  className="bg-black/60 backdrop-blur-sm border border-purple-500/40 p-3"
                   style={{ ...pixelBorderStyles }}
                 >
-                  <h3 className="text-xl font-mono mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-300">
+                  <h3 className="text-xl font-mono mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-300">
                     BATTLE RULES
                   </h3>
 
-                  <div className="grid grid-cols-2 gap-6 font-mono text-sm">
-                    <div className="space-y-2">
-                      <h4 className="flex items-center gap-2 text-green-400 font-bold">
-                        <TrendingUp className="w-4 h-4" />
-                        HIGHER WINS
-                      </h4>
-                      <ul className="space-y-1 pl-6 text-green-200/80">
-                        <li className="flex items-center gap-2">
-                          <span className="text-green-400">•</span> VALUATION
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="text-green-400">•</span> POWER LEVEL
-                        </li>
-                      </ul>
+                  <div className="flex justify-center gap-8 font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400 font-bold">
+                        HIGHER WINS ↗️
+                      </span>
+                      <span className="text-green-200/80">
+                        VALUATION • POWER
+                      </span>
                     </div>
-
-                    <div className="space-y-2">
-                      <h4 className="flex items-center gap-2 text-blue-400 font-bold">
-                        <TrendingDown className="w-4 h-4" />
-                        LOWER WINS
-                      </h4>
-                      <ul className="space-y-1 pl-6 text-blue-200/80">
-                        <li className="flex items-center gap-2">
-                          <span className="text-blue-400">•</span> TIME TO
-                          UNICORN
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="text-blue-400">•</span> FOUNDED YEAR
-                        </li>
-                      </ul>
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-bold">
+                        LOWER WINS ↙️
+                      </span>
+                      <span className="text-blue-200/80">
+                        FOUNDED • UNICORN
+                      </span>
                     </div>
                   </div>
                 </div>
               </motion.div>
 
               {/* Cards grid with retro styling */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                {playerDeck.map((card, index) => (
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6">
+                {playerDeck.slice(0, 8).map((card, index) => (
                   <CardComponent
                     key={card.name}
                     card={card}
