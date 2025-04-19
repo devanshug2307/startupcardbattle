@@ -43,7 +43,7 @@ export default function RootLayout({
             border: "1px solid #fff",
           }}
         >
-          🕹️ Vibe Jam 2025
+         
         </a>
       </body>
     </html>

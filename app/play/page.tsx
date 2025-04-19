@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/collapsible";
 import Image from "next/image";
 import { LucideIcon } from "lucide-react";
+import React from "react";
 
 // First, let's add proper type definitions at the top of the file
 type StartupCard = {
@@ -71,7 +72,8 @@ type StartupCard = {
   power: number;
   timeToUnicorn: number;
   valuation: number;
-  [key: string]: string | number; // Add index signature to allow string indexing
+  icon?: string | LucideIcon;
+  [key: string]: string | number | LucideIcon | undefined;
 };
 
 // Add these types at the top of the file
@@ -2236,10 +2238,54 @@ Can you beat my score? #StartupCardBattle`;
     return false;
   };
 
+  // Add type guard for LucideIcon
+  const isLucideIcon = (value: unknown): value is LucideIcon => {
+    return typeof value === 'function' || (typeof value === 'object' && value !== null && 'render' in value);
+  };
+
   // Add this function to render the battle phase
   const renderBattlePhase = () => {
     const playerCard = selectedCards[currentRound - 1];
     const aiCard = aiDeck[currentRound - 1];
+
+    if (!playerCard || !aiCard) return null;
+
+    const renderIcon = (card: StartupCard, isPlayer: boolean) => {
+      const bgColor = isPlayer ? "bg-purple-800" : "bg-red-800";
+      const textColor = isPlayer ? "text-purple-200" : "text-red-200";
+
+      if (!card.icon) {
+        return (
+          <div className={`w-12 h-12 flex items-center justify-center ${bgColor} rounded-lg`}>
+            <Rocket className={`w-6 h-6 ${textColor}`} />
+          </div>
+        );
+      }
+
+      if (typeof card.icon === "string") {
+        return (
+          <div className="relative">
+            <Image
+              src={card.icon}
+              alt={card.name}
+              width={48}
+              height={48}
+              className="rounded-lg"
+            />
+          </div>
+        );
+      }
+
+      if (isLucideIcon(card.icon)) {
+        return (
+          <div className={`w-12 h-12 flex items-center justify-center ${bgColor} rounded-lg`}>
+            <card.icon className={`w-6 h-6 ${textColor}`} />
+          </div>
+        );
+      }
+
+      return null;
+    };
 
     return (
       <motion.div
@@ -2432,44 +2478,7 @@ Can you beat my score? #StartupCardBattle`;
 
                   {/* Card Header with pixel animation */}
                   <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-4 relative">
-                    {typeof playerCard.icon === "string" ? (
-                      <div className="relative">
-                        <Image
-                          src={playerCard.icon}
-                          alt={playerCard.name}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 md:w-16 md:h-16 rounded-lg pixel-image"
-                        />
-                        <motion.div
-                          className="absolute inset-0 bg-purple-500/30 rounded-lg"
-                          animate={{ opacity: [0, 0.5, 0] }}
-                          transition={{
-                            duration: 0.5,
-                            repeat: Infinity,
-                            repeatDelay: 2,
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <motion.div
-                        className="w-12 h-12 md:w-16 md:h-16 bg-purple-800/50 rounded-lg flex items-center justify-center relative overflow-hidden"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <span className="text-xl md:text-2xl relative z-10">
-                          {playerCard.name[0]}
-                        </span>
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/30 to-purple-600/0"
-                          animate={{ x: ["-100%", "100%"] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatDelay: 2,
-                          }}
-                        />
-                      </motion.div>
-                    )}
+                    {renderIcon(playerCard, true)}
                     <div>
                       <h3 className="text-base md:text-xl font-bold text-white pixel-text">
                         {playerCard.name}
@@ -2608,33 +2617,14 @@ Can you beat my score? #StartupCardBattle`;
 
                   {/* Card Header with pixel animation */}
                   <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-4 relative">
-                    {typeof aiCard.icon === "string" ? (
-                      <div className="relative">
-                        <Image
-                          src={aiCard.icon}
-                          alt={battleAttribute ? aiCard.name : "???"}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 md:w-16 md:h-16 rounded-lg pixel-image"
-                        />
-                      </div>
-                    ) : (
-                      <motion.div
-                        className="w-12 h-12 md:w-16 md:h-16 bg-red-800/50 rounded-lg flex items-center justify-center"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <span className="text-xl md:text-2xl">
-                          {aiCard.name[0]}
-                        </span>
-                      </motion.div>
-                    )}
+                    {renderIcon(aiCard, false)}
                     <div>
                       <h3 className="text-base md:text-xl font-bold text-white pixel-text">
-                        {battleAttribute ? aiCard.name : "???"}
+                        {aiCard.name}
                       </h3>
                       <div className="flex items-center gap-2">
                         <Badge className="bg-red-600 text-xs md:text-sm">
-                          {battleAttribute ? aiCard.category : "???"}
+                          {aiCard.category}
                         </Badge>
                         <span className="text-red-300 text-xs md:text-sm">
                           Lv.{currentRound}
@@ -3812,6 +3802,11 @@ const compareAttribute = (
 ): "win" | "lose" | "draw" | null => {
   if (!playerCard || !aiCard || !attribute) return null;
 
+  const playerValue = playerCard[attribute];
+  const aiValue = aiCard[attribute];
+
+  if (typeof playerValue !== 'number' || typeof aiValue !== 'number') return null;
+
   // Compare values based on attribute type
   let playerWins = false;
   let isDraw = false;
@@ -3820,13 +3815,13 @@ const compareAttribute = (
     case "timeToUnicorn":
     case "founded":
       // Lower is better for these attributes
-      playerWins = playerCard[attribute] < aiCard[attribute];
-      isDraw = playerCard[attribute] === aiCard[attribute];
+      playerWins = playerValue < aiValue;
+      isDraw = playerValue === aiValue;
       break;
     default:
       // Higher is better for power and valuation
-      playerWins = playerCard[attribute] > aiCard[attribute];
-      isDraw = playerCard[attribute] === aiCard[attribute];
+      playerWins = playerValue > aiValue;
+      isDraw = playerValue === aiValue;
   }
 
   if (isDraw) return "draw";

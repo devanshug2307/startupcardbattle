@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { LogoCarousel } from "@/components/ui/logo-carousel";
 import { GradientHeading } from "@/components/ui/gradient-heading";
-import { startupLogos } from "@/components/icons/IndianStartups";
 
 interface MainContentProps {
   router: ReturnType<typeof useRouter>;
