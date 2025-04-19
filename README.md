@@ -5,15 +5,29 @@
 ![Next.js](https://img.shields.io/badge/Next.js-15.1.0-black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.x-38B2AC)
 
-A retro-futuristic UI application for participating in startup battles, featuring CRT monitor effects, boot sequences, and various interactive components.
+A retro-futuristic UI application for participating in startup battles, featuring CRT monitor effects, boot sequences, and interactive card battles with a retro computing aesthetic.
 
 ## 🚀 Features
 
 - Authentic retro computer boot sequence animation
 - Interactive UI with CRT monitor effects and scanlines
 - Responsive design optimized for various screen sizes
-- Background music and SFX with auto-play handling
+- Background music and sound effects with toggling options
+- Startup battle card game with attribute comparisons
+- Pixel-perfect retro aesthetics with animations and particles
+- Social sharing capabilities for battle results
 - Accessibility features including keyboard navigation
+
+## 🎮 Game Flow
+
+1. **Boot Sequence**: Users are greeted with an authentic retro computer boot animation
+2. **Main Menu**: After boot, users can access the main menu with options to play, view instructions, or adjust settings
+3. **Startup Battle Game**: 
+   - Select a startup card from the available options
+   - Choose attributes to battle against the AI opponent
+   - Win rounds by having higher attribute values 
+   - Track scores and complete a full battle sequence
+   - Share results on social media
 
 ## 🖥️ Tech Stack
 
@@ -67,21 +81,33 @@ yarn build
 ```
 startup-battle/
 ├── app/              # Next.js app directory
-│   ├── api/          # API routes
-│   ├── components/   # App-specific components
-│   ├── play/         # Game play routes
+│   ├── globals.css   # Global CSS styles
+│   ├── play/         # Game play routes and battle logic
 │   ├── layout.tsx    # Root layout
-│   └── page.tsx      # Home page
+│   └── page.tsx      # Home page with boot sequence
 ├── components/       # Shared React components
-│   ├── icons/        # Icon components
-│   ├── layout/       # Layout components
+│   ├── game/         # Game-specific components
+│   │   ├── ui/       # Game UI components
+│   │   └── ...       # Other game components
 │   ├── page/         # Page-specific components
+│   │   ├── BootSequence.tsx   # Boot animation component
+│   │   ├── HowToPlay.tsx      # Instructions modal
+│   │   └── MainContent.tsx    # Main menu content
 │   └── ui/           # UI components (buttons, cards, etc.)
 ├── hooks/            # Custom React hooks
+│   ├── useCRTEffects.ts       # CRT screen effects
+│   ├── useBootSequence.ts     # Boot animation sequence
+│   ├── useBackgroundMusic.ts  # Music and sound effects
+│   └── ...           # Other utility hooks
 ├── lib/              # Utility functions and shared logic
+│   ├── game-data.ts  # Startup card data
+│   ├── game-utils.ts # Game utility functions
+│   └── utils.ts      # General utility functions
 ├── public/           # Static assets
-├── styles/           # Global styles
-└── types/            # TypeScript type definitions
+│   ├── music/        # Background music files
+│   ├── sfx/          # Sound effects
+│   └── images/       # Images and icons
+└── styles/           # Additional styles
 ```
 
 ## 🧪 Code Quality Tools
@@ -108,3 +134,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Framer Motion](https://www.framer.com/motion/) - For animations
 - [Tailwind CSS](https://tailwindcss.com/) - For styling
 - [Next.js](https://nextjs.org/) - For the React framework
+

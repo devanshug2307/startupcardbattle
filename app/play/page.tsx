@@ -64,6 +64,21 @@ import Image from "next/image";
 import { LucideIcon } from "lucide-react";
 import React from "react";
 import { SelectPhase } from "@/components/game/SelectPhase"; // Import the new component
+import { CRTEffect } from "@/components/game/ui/CRTEffect"; // Import new component
+import { RetroPixelParticles } from "@/components/game/ui/RetroPixelParticles"; // Import new component
+import { RetroGridBackground } from "@/components/game/ui/RetroGridBackground"; // Import new component
+import { PixelAttackEffect } from "@/components/game/ui/PixelAttackEffect"; // Import new component
+import {
+  getDateSeed,
+  deterministicShuffle,
+  getMaxValue,
+  getBattleGuideText,
+  formatAttributeValue,
+  isLucideIcon,
+  compareAttribute,
+  StartupCard, // Import type from new location
+} from "@/lib/game-utils"; // Import from new utils file
+import { BattleRoundsSummary } from "@/components/game/BattleRoundsSummary"; // Import the new component
 
 // First, let's add proper type definitions at the top of the file
 type StartupCard = {
@@ -160,44 +175,15 @@ const cardAnimationVariants = {
   },
 };
 
-// Add these utility functions at the top of your file or in a separate utils file
-function getDateSeed() {
-  const now = new Date();
-  return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-}
-
-function seededRandom(seed: number) {
-  // Simple seedable random function
-  let t = (seed += 0x6d2b79f5);
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-}
-
-function deterministicShuffle(array: any[], seed: number) {
-  // Create a copy of the array to avoid modifying the original
-  const result = [...array];
-  let currentSeed = seed;
-
-  // Fisher-Yates shuffle with seeded random
-  for (let i = result.length - 1; i > 0; i--) {
-    // Generate random index based on the seed
-    currentSeed = Math.floor(seededRandom(currentSeed) * 1000000);
-    const j = Math.floor(seededRandom(currentSeed) * (i + 1));
-    // Swap elements
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-
-  return result;
-}
-
 // Add portal configuration
-const PORTAL_CONFIG = {
-  exitPortalUrl: "http://portal.pieter.com",
-  defaultColor: "purple",
-  defaultSpeed: 1,
-  gameRef: "https://cardbattle.online",
-};
+// REMOVE START
+// const PORTAL_CONFIG = {
+//   exitPortalUrl: "http://portal.pieter.com",
+//   defaultColor: "purple",
+//   defaultSpeed: 1,
+//   gameRef: "https://cardbattle.online",
+// };
+// REMOVE END
 
 // Add these new types near the top of the file
 interface BattleMetric {
@@ -768,10 +754,12 @@ function PlayContent() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   // Add portal-related state
-  const [portalActive, setPortalActive] = useState(false);
-  const [playerName, setPlayerName] = useState<string>("");
-  const [comingFromPortal, setComingFromPortal] = useState(false);
-  const [previousGameUrl, setPreviousGameUrl] = useState<string | null>(null);
+  // REMOVE START
+  // const [portalActive, setPortalActive] = useState(false);
+  // const [playerName, setPlayerName] = useState<string>("");
+  // const [comingFromPortal, setComingFromPortal] = useState(false);
+  // const [previousGameUrl, setPreviousGameUrl] = useState<string | null>(null);
+  // REMOVE END
 
   // Add this state at the top of your component
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
@@ -812,7 +800,8 @@ function PlayContent() {
     const dateSeed = getDateSeed();
 
     // Shuffle using deterministic algorithm based on the date
-    const shuffled = [...startupData].sort(() => 0.5 - Math.random());
+    // const shuffled = [...startupData].sort(() => 0.5 - Math.random()); // Original random shuffle
+    const shuffled = deterministicShuffle(startupData, dateSeed); // Use deterministic shuffle
 
     // Change from 10 to 8 cards for each player
     setPlayerDeck(shuffled.slice(0, 8) as unknown as StartupCard[]);
@@ -866,35 +855,47 @@ function PlayContent() {
   }, [gameState, battleAttribute]);
 
   // Add this near your other useEffect hooks
-  useEffect(() => {
-    // Check if user is coming from portal
-    const isFromPortal = searchParams.get("portal") === "true";
-    const refGame = searchParams.get("ref");
-    const userName = searchParams.get("username");
-    const showTutorialParam = searchParams.get("tutorial") === "true";
+  // REMOVE START
+  // useEffect(() => {
+  //   // Check if user is coming from portal
+  //   const isFromPortal = searchParams.get("portal") === "true";
+  //   const refGame = searchParams.get("ref");
+  //   const userName = searchParams.get("username");
+  //   const showTutorialParam = searchParams.get("tutorial") === "true";
+  //
+  //   // Add debug logging
+  //   console.log("Portal Debug:", {
+  //     isFromPortal,
+  //     refGame,
+  //     userName,
+  //     showTutorialParam,
+  //     allParams: Object.fromEntries(searchParams.entries()),
+  //   });
+  //
+  //   if (showTutorialParam) {
+  //     setShowTutorial(true);
+  //   }
+  //
+  //   if (isFromPortal && refGame) {
+  //     console.log("Entering from portal:", refGame);
+  //     setComingFromPortal(true);
+  //     setPreviousGameUrl(refGame);
+  //     if (userName) setPlayerName(userName);
+  //     // Automatically start game for seamless experience
+  //     startGame();
+  //   }
+  // }, [searchParams]);
+  // REMOVE END
 
-    // Add debug logging
-    console.log("Portal Debug:", {
-      isFromPortal,
-      refGame,
-      userName,
-      showTutorialParam,
-      allParams: Object.fromEntries(searchParams.entries()),
-    });
-
-    if (showTutorialParam) {
-      setShowTutorial(true);
-    }
-
-    if (isFromPortal && refGame) {
-      console.log("Entering from portal:", refGame);
-      setComingFromPortal(true);
-      setPreviousGameUrl(refGame);
-      if (userName) setPlayerName(userName);
-      // Automatically start game for seamless experience
-      startGame();
-    }
-  }, [searchParams]);
+  // REMOVE START
+  // // Use a separate useEffect for tutorial parameter to avoid dependency issues
+  // useEffect(() => {
+  //   const showTutorialParam = searchParams.get("tutorial") === "true";
+  //   if (showTutorialParam) {
+  //     setShowTutorial(true);
+  //   }
+  // }, [searchParams]);
+  // REMOVE END
 
   const startGame = () => {
     if (selectedCards.length < 4) {
@@ -1039,7 +1040,8 @@ function PlayContent() {
               if (!playerCard || !aiCard || !attr) {
                 return `Round ${i + 1}: Data missing`;
               }
-
+              
+              // Re-add playerValue and aiValue for comparison check
               const playerValue = playerCard[attr];
               const aiValue = aiCard[attr];
 
@@ -1049,21 +1051,18 @@ function PlayContent() {
                 return `Round ${i + 1}: Invalid data for ${attr}`;
               }
 
-              const isLowerBetter =
-                attr === "timeToUnicorn" || attr === "founded";
+              // Use imported compareAttribute function
+              const comparisonResult = compareAttribute(playerCard, aiCard, attr);
 
-              // Determine outcome
-              const outcome = isLowerBetter
-                ? playerValue < aiValue
+              // Determine outcome emoji based on comparison result
+              const outcome =
+                comparisonResult === "win"
                   ? "🟩"
-                  : playerValue > aiValue
+                  : comparisonResult === "lose"
                     ? "🟥"
-                    : "🟨"
-                : playerValue > aiValue
-                  ? "🟩"
-                  : playerValue < aiValue
-                    ? "🟥"
-                    : "🟨";
+                    : comparisonResult === "draw"
+                      ? "🟨"
+                      : "❓"; // Add a case for null/error
 
               // Attribute icon
               const attrIcon =
@@ -1109,21 +1108,6 @@ function PlayContent() {
       setTimeout(() => {
         setShowSharePrompt(false);
       }, 3000);
-    }
-  };
-
-  const renderAttributeIcon = (attribute: string) => {
-    switch (attribute) {
-      case "founded":
-        return <Zap className="w-5 h-5" />;
-      case "power":
-        return <TrendingUp className="w-5 h-5" />;
-      case "timeToUnicorn":
-        return <Users className="w-5 h-5" />;
-      case "valuation":
-        return <DollarSign className="w-5 h-5" />;
-      default:
-        return null;
     }
   };
 
@@ -1863,68 +1847,70 @@ function PlayContent() {
   };
 
   // Add portal transition function
-  const handlePortalTransition = (isExit: boolean = false) => {
-    playSfx("portal-transition", 0.8); // Portal transition sound
-    setPortalActive(true);
-
-    // Construct portal URL with parameters
-    const portalParams = new URLSearchParams({
-      username: playerName || "anonymous",
-      color: PORTAL_CONFIG.defaultColor,
-      speed: PORTAL_CONFIG.defaultSpeed.toString(),
-      ref: PORTAL_CONFIG.gameRef,
-    });
-
-    // Add game-specific stats
-    if (playerScore) {
-      portalParams.append("score", (playerScore * 100).toString());
-    }
-
-    const portalUrl = isExit
-      ? `${PORTAL_CONFIG.exitPortalUrl}?${portalParams}`
-      : previousGameUrl || PORTAL_CONFIG.exitPortalUrl;
-
-    // Debug logging
-    console.log("Portal Transition:", {
-      isExit,
-      portalUrl,
-      params: Object.fromEntries(portalParams.entries()),
-    });
-
-    // Animate portal transition
-    setTimeout(() => {
-      router.push(portalUrl);
-    }, 1000);
-  };
-
-  // Add portal UI components
-  const PortalElement = ({
-    isExit = false,
-    onClick,
-  }: {
-    isExit?: boolean;
-    onClick: () => void;
-  }) => (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className={cn(
-        "cursor-pointer relative rounded-full overflow-hidden",
-        "w-16 h-16 md:w-24 md:h-24",
-        "bg-gradient-to-r from-purple-600 to-blue-600",
-        "flex items-center justify-center",
-        "transition-all duration-300",
-        isExit
-          ? "hover:shadow-[0_0_30px_rgba(147,51,234,0.5)]"
-          : "hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]",
-      )}
-      onClick={onClick}
-    >
-      <div className="absolute inset-0 portal-swirl animate-spin-slow" />
-      <div className="relative z-10 text-white font-bold text-sm md:text-base">
-        {isExit ? "Exit Portal" : "Return"}
-      </div>
-    </motion.div>
-  );
+  // REMOVE START
+  // const handlePortalTransition = (isExit: boolean = false) => {
+  //   playSfx("portal-transition", 0.8); // Portal transition sound
+  //   setPortalActive(true);
+  //
+  //   // Construct portal URL with parameters
+  //   const portalParams = new URLSearchParams({
+  //     username: playerName || "anonymous",
+  //     color: PORTAL_CONFIG.defaultColor,
+  //     speed: PORTAL_CONFIG.defaultSpeed.toString(),
+  //     ref: PORTAL_CONFIG.gameRef,
+  //   });
+  //
+  //   // Add game-specific stats
+  //   if (playerScore) {
+  //     portalParams.append("score", (playerScore * 100).toString());
+  //   }
+  //
+  //   const portalUrl = isExit
+  //     ? `${PORTAL_CONFIG.exitPortalUrl}?${portalParams}`
+  //     : previousGameUrl || PORTAL_CONFIG.exitPortalUrl;
+  //
+  //   // Debug logging
+  //   console.log("Portal Transition:", {
+  //     isExit,
+  //     portalUrl,
+  //     params: Object.fromEntries(portalParams.entries()),
+  //   });
+  //
+  //   // Animate portal transition
+  //   setTimeout(() => {
+  //     router.push(portalUrl);
+  //   }, 1000);
+  // };
+  //
+  // // Add portal UI components
+  // const PortalElement = ({
+  //   isExit = false,
+  //   onClick,
+  // }: {
+  //   isExit?: boolean;
+  //   onClick: () => void;
+  // }) => (
+  //   <motion.div
+  //     whileHover={{ scale: 1.05 }}
+  //     className={cn(
+  //       "cursor-pointer relative rounded-full overflow-hidden",
+  //       "w-16 h-16 md:w-24 md:h-24",
+  //       "bg-gradient-to-r from-purple-600 to-blue-600",
+  //       "flex items-center justify-center",
+  //       "transition-all duration-300",
+  //       isExit
+  //         ? "hover:shadow-[0_0_30px_rgba(147,51,234,0.5)]"
+  //         : "hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]",
+  //     )}
+  //     onClick={onClick}
+  //   >
+  //     <div className="absolute inset-0 portal-swirl animate-spin-slow" />
+  //     <div className="relative z-10 text-white font-bold text-sm md:text-base">
+  //       {isExit ? "Exit Portal" : "Return"}
+  //     </div>
+  //   </motion.div>
+  // );
+  // REMOVE END
 
   // First, add a helper component for the battle guide
   const BattleGuide = () => (
@@ -2087,23 +2073,16 @@ function PlayContent() {
       {showTutorial && <TutorialModal />}
 
       {/* Add portal entrance animation if coming from portal */}
-      {comingFromPortal && (
+      {/* REMOVE START */}
+      {/* {comingFromPortal && (
         <motion.div
           initial={{ scale: 0, opacity: 1 }}
           animate={{ scale: 20, opacity: 0 }}
           transition={{ duration: 1 }}
           className="fixed inset-0 bg-purple-600/50 z-50"
         />
-      )}
-
-      {/* Add portals to the game UI */}
-      <div className="fixed top-4 right-4 z-40 flex gap-4">
-        {previousGameUrl && (
-          <PortalElement onClick={() => handlePortalTransition(false)} />
-        )}
-        {/* Exit portal temporarily hidden */}
-        {/* <PortalElement isExit onClick={() => handlePortalTransition(true)} /> */}
-      </div>
+      )} */}
+      {/* REMOVE END */}
 
       <main className="flex-grow px-3 py-2">
         <AnimatePresence mode="wait">
@@ -2254,177 +2233,12 @@ function PlayContent() {
                 </div>
               </motion.div>
 
-              {/* Battle Rounds Summary */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                id="battle-summary"
-                className="bg-black/60 backdrop-blur-sm border border-purple-500/40 w-full p-4 mb-4"
-                style={{ ...pixelBorderStyles }}
-              >
-                <h2 className="font-mono text-xl text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-300 to-cyan-300">
-                  ROUND ANALYSIS
-                </h2>
-
-                <div className="grid gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <motion.div
-                      key={`round-${i}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6 + i * 0.2 }}
-                      className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center"
-                    >
-                      {/* Left Card - Player */}
-                      <div
-                        className="relative overflow-hidden p-2 bg-gray-900/80"
-                        style={{ ...pixelBorderStyles }}
-                      >
-                        <div className="font-mono text-sm text-purple-400">
-                          YOUR CARD
-                        </div>
-                        <div className="font-mono font-bold text-white">
-                          {selectedCards[i]?.name || "---"}
-                        </div>
-                        <div className="flex gap-2 items-center mt-1">
-                          <div className="w-2 h-2 bg-purple-500" />
-                          <div className="text-xs text-gray-400">
-                            {selectedCards[i]?.category || "---"}
-                          </div>
-                        </div>
-
-                        {roundAttributes[i] && (
-                          <div className="mt-1 flex justify-between items-center">
-                            <div className="flex items-center gap-1">
-                              {renderAttributeIcon(roundAttributes[i])}
-                              <span className="text-xs text-gray-300">
-                                {roundAttributes[i]}
-                              </span>
-                            </div>
-                            <span
-                              className={cn(
-                                "text-xs font-bold",
-                                compareAttribute(
-                                  selectedCards[i],
-                                  aiDeck[i],
-                                  roundAttributes[i],
-                                ) === "win"
-                                  ? "text-green-400"
-                                  : compareAttribute(
-                                        selectedCards[i],
-                                        aiDeck[i],
-                                        roundAttributes[i],
-                                      ) === "lose"
-                                    ? "text-red-400"
-                                    : "text-yellow-400",
-                              )}
-                            >
-                              {formatAttributeValue(
-                                selectedCards[i]?.[roundAttributes[i]],
-                                roundAttributes[i],
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Middle Result Indicator */}
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="text-white font-mono">R{i + 1}</div>
-                        {roundAttributes[i] && (
-                          <div
-                            className={cn(
-                              "w-6 h-6 flex items-center justify-center font-bold",
-                              compareAttribute(
-                                selectedCards[i],
-                                aiDeck[i],
-                                roundAttributes[i],
-                              ) === "win"
-                                ? "bg-green-500 text-white"
-                                : compareAttribute(
-                                      selectedCards[i],
-                                      aiDeck[i],
-                                      roundAttributes[i],
-                                    ) === "lose"
-                                  ? "bg-red-500 text-white"
-                                  : "bg-yellow-500 text-white",
-                            )}
-                            style={{ ...pixelBorderStyles }}
-                          >
-                            {compareAttribute(
-                              selectedCards[i],
-                              aiDeck[i],
-                              roundAttributes[i],
-                            ) === "win"
-                              ? "W"
-                              : compareAttribute(
-                                    selectedCards[i],
-                                    aiDeck[i],
-                                    roundAttributes[i],
-                                  ) === "lose"
-                                ? "L"
-                                : "D"}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right Card - AI */}
-                      <div
-                        className="relative overflow-hidden p-2 bg-gray-900/80"
-                        style={{ ...pixelBorderStyles }}
-                      >
-                        <div className="font-mono text-sm text-red-400">
-                          AI CARD
-                        </div>
-                        <div className="font-mono font-bold text-white">
-                          {aiDeck[i]?.name || "---"}
-                        </div>
-                        <div className="flex gap-2 items-center mt-1">
-                          <div className="w-2 h-2 bg-red-500" />
-                          <div className="text-xs text-gray-400">
-                            {aiDeck[i]?.category || "---"}
-                          </div>
-                        </div>
-
-                        {roundAttributes[i] && (
-                          <div className="mt-1 flex justify-between items-center">
-                            <div className="flex items-center gap-1">
-                              {renderAttributeIcon(roundAttributes[i])}
-                              <span className="text-xs text-gray-300">
-                                {roundAttributes[i]}
-                              </span>
-                            </div>
-                            <span
-                              className={cn(
-                                "text-xs font-bold",
-                                compareAttribute(
-                                  selectedCards[i],
-                                  aiDeck[i],
-                                  roundAttributes[i],
-                                ) === "lose"
-                                  ? "text-green-400"
-                                  : compareAttribute(
-                                        selectedCards[i],
-                                        aiDeck[i],
-                                        roundAttributes[i],
-                                      ) === "win"
-                                    ? "text-red-400"
-                                    : "text-yellow-400",
-                              )}
-                            >
-                              {formatAttributeValue(
-                                aiDeck[i]?.[roundAttributes[i]],
-                                roundAttributes[i],
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+              {/* Replace the old summary div with the new component */}
+              <BattleRoundsSummary
+                selectedCards={selectedCards}
+                aiDeck={aiDeck}
+                roundAttributes={roundAttributes}
+              />
 
               {/* Action buttons with retro style */}
               <div className="flex flex-col md:flex-row gap-3 justify-center mt-2">
@@ -2553,41 +2367,4 @@ export default function PlayPage() {
     </Suspense>
   );
 }
-// Add this helper function to compare attributes
-const compareAttribute = (
-  playerCard: StartupCard | undefined,
-  aiCard: StartupCard | undefined,
-  attribute: string,
-): "win" | "lose" | "draw" | null => {
-  if (!playerCard || !aiCard || !attribute) return null;
-
-  const playerValue = playerCard[attribute];
-  const aiValue = aiCard[attribute];
-
-  // Ensure values are numbers before comparing
-  if (typeof playerValue !== 'number' || typeof aiValue !== 'number') {
-    console.warn(`Attempted to compare non-numeric values for attribute: ${attribute}, Player: ${typeof playerValue}, AI: ${typeof aiValue}`);
-    return null; // Return null if types are wrong
-  }
-
-  // Now playerValue and aiValue are confirmed numbers
-  let playerWins = false;
-  let isDraw = false;
-
-  switch (attribute) {
-    case "timeToUnicorn":
-    case "founded":
-      // Lower is better for these attributes
-      playerWins = playerValue < aiValue;
-      isDraw = playerValue === aiValue;
-      break;
-    default:
-      // Higher is better for power and valuation
-      playerWins = playerValue > aiValue;
-      isDraw = playerValue === aiValue;
-  }
-
-  if (isDraw) return "draw";
-  return playerWins ? "win" : "lose";
-};
 
