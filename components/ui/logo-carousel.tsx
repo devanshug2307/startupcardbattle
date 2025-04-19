@@ -57,7 +57,7 @@ const LogoColumn: React.FC<LogoColumnProps> = React.memo(
     const currentIndex = Math.floor(adjustedTime / cycleInterval);
     const CurrentLogo = useMemo(
       () => logos[currentIndex].img,
-      [logos, currentIndex]
+      [logos, currentIndex],
     );
 
     return (
@@ -105,7 +105,7 @@ const LogoColumn: React.FC<LogoColumnProps> = React.memo(
         </AnimatePresence>
       </motion.div>
     );
-  }
+  },
 );
 
 interface LogoCarouselProps {

@@ -37,7 +37,7 @@ export function GradientHeading({
       className={cn(
         gradientHeadingVariants({ size, variant }),
         "bg-clip-text text-transparent",
-        className
+        className,
       )}
       {...props}
     />

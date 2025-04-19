@@ -70,7 +70,7 @@ export function OrbitingCircles({
           key={`trail-${i}`}
           className={cn(
             "absolute rounded-full",
-            hideCircle ? "bg-transparent" : `bg-${glowColor}/30`
+            hideCircle ? "bg-transparent" : `bg-${glowColor}/30`,
           )}
           style={{
             width: i === 0 ? 28 : 16,
@@ -133,7 +133,7 @@ export function OrbitingCircles({
         <motion.div
           className={cn(
             "absolute flex items-center justify-center",
-            glowEffect ? `shadow-md shadow-${glowColor}` : ""
+            glowEffect ? `shadow-md shadow-${glowColor}` : "",
           )}
           style={{
             width: 40,

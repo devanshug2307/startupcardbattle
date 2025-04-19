@@ -112,7 +112,7 @@ export default function Collection() {
                 whileTap={{ scale: 0.97 }}
                 className={cn(
                   "relative rounded-lg overflow-hidden cursor-pointer h-48",
-                  selectedCard === card && "ring-2 ring-yellow-500"
+                  selectedCard === card && "ring-2 ring-yellow-500",
                 )}
                 onClick={() => setSelectedCard(card)}
               >
@@ -250,24 +250,24 @@ export default function Collection() {
                   selectedCard.founded,
                   selectedCard.power,
                   selectedCard.timeToUnicorn,
-                  selectedCard.valuation
+                  selectedCard.valuation,
                 ) === selectedCard.founded
                   ? "Founded"
                   : Math.max(
-                      selectedCard.founded,
-                      selectedCard.power,
-                      selectedCard.timeToUnicorn,
-                      selectedCard.valuation
-                    ) === selectedCard.power
-                  ? "Power"
-                  : Math.max(
-                      selectedCard.founded,
-                      selectedCard.power,
-                      selectedCard.timeToUnicorn,
-                      selectedCard.valuation
-                    ) === selectedCard.timeToUnicorn
-                  ? "Time to Unicorn"
-                  : "Valuation"}
+                        selectedCard.founded,
+                        selectedCard.power,
+                        selectedCard.timeToUnicorn,
+                        selectedCard.valuation,
+                      ) === selectedCard.power
+                    ? "Power"
+                    : Math.max(
+                          selectedCard.founded,
+                          selectedCard.power,
+                          selectedCard.timeToUnicorn,
+                          selectedCard.valuation,
+                        ) === selectedCard.timeToUnicorn
+                      ? "Time to Unicorn"
+                      : "Valuation"}
               </div>
             </div>
 

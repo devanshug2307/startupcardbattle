@@ -506,7 +506,7 @@ const PixelAttackEffect = ({ isPlayer = true, isActive = false }) => (
 // Update the formatAttributeValue function to better handle attribute access
 const formatAttributeValue = (
   value: number | string | undefined,
-  attribute: string
+  attribute: string,
 ): string => {
   // Return placeholder if value is undefined or null
   if (value === undefined || value === null) {
@@ -589,8 +589,8 @@ const BattleResultOverlay = ({
             result === "win"
               ? "#22c55e"
               : result === "lose"
-              ? "#ef4444"
-              : "#eab308",
+                ? "#ef4444"
+                : "#eab308",
         }}
         initial={{ y: -50, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -618,8 +618,8 @@ const BattleResultOverlay = ({
               result === "win"
                 ? "text-green-400"
                 : result === "lose"
-                ? "text-red-400"
-                : "text-yellow-400"
+                  ? "text-red-400"
+                  : "text-yellow-400"
             }`}
             style={{
               textShadow: "3px 3px 0 #000",
@@ -636,8 +636,8 @@ const BattleResultOverlay = ({
             {result === "win"
               ? "VICTORY!"
               : result === "lose"
-              ? "DEFEATED!"
-              : "DRAW!"}
+                ? "DEFEATED!"
+                : "DRAW!"}
           </motion.div>
 
           {/* Attribute Comparison */}
@@ -653,8 +653,8 @@ const BattleResultOverlay = ({
                   result === "win"
                     ? "text-green-400"
                     : result === "lose"
-                    ? "text-red-400"
-                    : "text-yellow-400"
+                      ? "text-red-400"
+                      : "text-yellow-400",
                 )}
               >
                 {formatAttributeValue(playerCard?.[attribute], attribute)}
@@ -671,8 +671,8 @@ const BattleResultOverlay = ({
                   result === "lose"
                     ? "text-green-400"
                     : result === "win"
-                    ? "text-red-400"
-                    : "text-yellow-400"
+                      ? "text-red-400"
+                      : "text-yellow-400",
                 )}
               >
                 {formatAttributeValue(aiCard?.[attribute], attribute)}
@@ -688,8 +688,8 @@ const BattleResultOverlay = ({
                 result === "win"
                   ? "bg-green-400"
                   : result === "lose"
-                  ? "bg-red-400"
-                  : "bg-yellow-400"
+                    ? "bg-red-400"
+                    : "bg-yellow-400"
               }
             />
           </div>
@@ -741,7 +741,7 @@ function PlayContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [gameState, setGameState] = useState<"select" | "battle" | "result">(
-    "select"
+    "select",
   );
   const [playerDeck, setPlayerDeck] = useState<StartupCard[]>([]);
   const [aiDeck, setAiDeck] = useState<StartupCard[]>([]);
@@ -776,7 +776,7 @@ function PlayContent() {
     if (typeof window !== "undefined") {
       localStorage.setItem(
         "unicornBattle_soundEnabled",
-        isSoundEnabled.toString()
+        isSoundEnabled.toString(),
       );
     }
   }, [isSoundEnabled]);
@@ -785,7 +785,7 @@ function PlayContent() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedPreference = localStorage.getItem(
-        "unicornBattle_soundEnabled"
+        "unicornBattle_soundEnabled",
       );
       if (savedPreference !== null) {
         setIsSoundEnabled(savedPreference === "true");
@@ -816,7 +816,7 @@ function PlayContent() {
     const launchDate = new Date("2025-03-31T00:00:00");
     const now = new Date();
     const dayDiff = Math.floor(
-      (now.getTime() - launchDate.getTime()) / 86400000
+      (now.getTime() - launchDate.getTime()) / 86400000,
     );
 
     // If we're before launch date, dayDiff will be negative
@@ -1002,7 +1002,7 @@ function PlayContent() {
       const launchDate = new Date("2025-03-31T00:00:00");
       const now = new Date();
       const daysToLaunch = Math.ceil(
-        (launchDate.getTime() - now.getTime()) / 86400000
+        (launchDate.getTime() - now.getTime()) / 86400000,
       );
 
       return `🚀 Startup Battle launches in ${daysToLaunch} days!\n\nI'm playing the preview version. Join me at startupcards.game #StartupBattle`;
@@ -1019,7 +1019,7 @@ function PlayContent() {
     const validRounds = Math.min(
       roundAttributes.length,
       selectedCards.length,
-      aiDeck.length
+      aiDeck.length,
     );
 
     // Keep the grid generation code the same, but make it safe
@@ -1043,13 +1043,13 @@ function PlayContent() {
                 ? playerValue < aiValue
                   ? "🟩"
                   : playerValue > aiValue
-                  ? "🟥"
-                  : "🟨"
+                    ? "🟥"
+                    : "🟨"
                 : playerValue > aiValue
-                ? "🟩"
-                : playerValue < aiValue
-                ? "🟥"
-                : "🟨";
+                  ? "🟩"
+                  : playerValue < aiValue
+                    ? "🟥"
+                    : "🟨";
 
               // Attribute icon
               const attrIcon =
@@ -1270,7 +1270,7 @@ function PlayContent() {
       onClick={onSelect}
       className={cn(
         "relative cursor-pointer transform-gpu",
-        "transition-all duration-300"
+        "transition-all duration-300",
       )}
     >
       {/* Card Frame with Pixel Corners */}
@@ -1279,7 +1279,7 @@ function PlayContent() {
           "relative overflow-hidden",
           isSelected
             ? "ring-4 ring-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-            : "ring-1 ring-purple-900/50"
+            : "ring-1 ring-purple-900/50",
         )}
         style={{
           clipPath:
@@ -1733,7 +1733,7 @@ function PlayContent() {
                       "w-8 h-8 flex items-center justify-center text-sm font-bold relative overflow-hidden",
                       selectedCards[i]
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                        : "bg-gray-800 text-gray-600"
+                        : "bg-gray-800 text-gray-600",
                     )}
                     style={{ ...pixelBorderStyles }}
                   >
@@ -1897,7 +1897,7 @@ function PlayContent() {
                 isActive ? "bg-gradient-to-b" : "bg-transparent",
                 isActive && category.colors.from,
                 isActive && category.colors.to,
-                isActive ? category.colors.activeText : "text-gray-400"
+                isActive ? category.colors.activeText : "text-gray-400",
               )}
             >
               <div className="relative">
@@ -1914,7 +1914,7 @@ function PlayContent() {
                     className={cn(
                       "p-2 rounded-lg transition-colors duration-300",
                       isActive ? "bg-gray-900/60" : "bg-transparent",
-                      category.colors.iconColor
+                      category.colors.iconColor,
                     )}
                   >
                     <category.icon className="w-5 h-5" />
@@ -1924,7 +1924,7 @@ function PlayContent() {
                   <span
                     className={cn(
                       "text-sm font-medium transition-colors duration-300",
-                      isActive ? "text-white" : "text-gray-400"
+                      isActive ? "text-white" : "text-gray-400",
                     )}
                   >
                     {category.name}
@@ -1941,7 +1941,7 @@ function PlayContent() {
                         "absolute inset-0 opacity-20 blur-xl",
                         "bg-gradient-to-b",
                         category.colors.from,
-                        category.colors.to
+                        category.colors.to,
                       )}
                       transition={{
                         type: "spring",
@@ -1957,7 +1957,7 @@ function PlayContent() {
                         "absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5",
                         "bg-gradient-to-r",
                         category.colors.from,
-                        category.colors.to
+                        category.colors.to,
                       )}
                       transition={{
                         type: "spring",
@@ -2086,7 +2086,7 @@ Can you beat my score? #StartupCardBattle`;
           "ring-4 ring-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]",
         battleResult === "win" &&
           !isPlayer &&
-          "ring-4 ring-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]"
+          "ring-4 ring-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.4)]",
       )}
     >
       {/* Card Frame */}
@@ -2127,7 +2127,7 @@ Can you beat my score? #StartupCardBattle`;
               {Array.from({
                 length: Math.min(
                   5,
-                  Math.ceil((card.power + card.valuation) / 4)
+                  Math.ceil((card.power + card.valuation) / 4),
                 ),
               }).map((_, i) => (
                 <div
@@ -2193,14 +2193,14 @@ Can you beat my score? #StartupCardBattle`;
                   battleAttribute === attr.key && "ring-2 ring-white/50",
                   (!isPlayer || battleAttribute) &&
                     "opacity-90 pointer-events-none",
-                  "z-[6]" // Ensure stats are clickable
+                  "z-[6]", // Ensure stats are clickable
                 )}
               >
                 <div className="relative bg-gray-900/90 rounded-lg sm:rounded-xl p-1.5 sm:p-2">
                   <div
                     className={cn(
                       "flex items-center gap-1 text-xs sm:text-sm truncate",
-                      attr.textColor
+                      attr.textColor,
                     )}
                   >
                     <attr.icon className="w-4 h-4 flex-shrink-0" />
@@ -2410,8 +2410,8 @@ Can you beat my score? #StartupCardBattle`;
                     battleResult === "win"
                       ? retroAnimations.pixelBorder.win
                       : battleResult === "lose"
-                      ? retroAnimations.pixelBorder.lose
-                      : retroAnimations.pixelBorder.animate
+                        ? retroAnimations.pixelBorder.lose
+                        : retroAnimations.pixelBorder.animate
                   }
                 />
 
@@ -2586,8 +2586,8 @@ Can you beat my score? #StartupCardBattle`;
                     battleResult === "lose"
                       ? retroAnimations.pixelBorder.win
                       : battleResult === "win"
-                      ? retroAnimations.pixelBorder.lose
-                      : retroAnimations.pixelBorder.animate
+                        ? retroAnimations.pixelBorder.lose
+                        : retroAnimations.pixelBorder.animate
                   }
                 />
 
@@ -2882,7 +2882,7 @@ Can you beat my score? #StartupCardBattle`;
         "transition-all duration-300",
         isExit
           ? "hover:shadow-[0_0_30px_rgba(147,51,234,0.5)]"
-          : "hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+          : "hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]",
       )}
       onClick={onClick}
     >
@@ -3272,7 +3272,7 @@ Can you beat my score? #StartupCardBattle`;
                             "w-8 h-8 flex items-center justify-center text-sm font-bold relative overflow-hidden",
                             selectedCards[i]
                               ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                              : "bg-gray-800 text-gray-600"
+                              : "bg-gray-800 text-gray-600",
                           )}
                           style={{ ...pixelBorderStyles }}
                         >
@@ -3560,21 +3560,21 @@ Can you beat my score? #StartupCardBattle`;
                                 compareAttribute(
                                   selectedCards[i],
                                   aiDeck[i],
-                                  roundAttributes[i]
+                                  roundAttributes[i],
                                 ) === "win"
                                   ? "text-green-400"
                                   : compareAttribute(
-                                      selectedCards[i],
-                                      aiDeck[i],
-                                      roundAttributes[i]
-                                    ) === "lose"
-                                  ? "text-red-400"
-                                  : "text-yellow-400"
+                                        selectedCards[i],
+                                        aiDeck[i],
+                                        roundAttributes[i],
+                                      ) === "lose"
+                                    ? "text-red-400"
+                                    : "text-yellow-400",
                               )}
                             >
                               {formatAttributeValue(
                                 selectedCards[i]?.[roundAttributes[i]],
-                                roundAttributes[i]
+                                roundAttributes[i],
                               )}
                             </span>
                           </div>
@@ -3591,32 +3591,32 @@ Can you beat my score? #StartupCardBattle`;
                               compareAttribute(
                                 selectedCards[i],
                                 aiDeck[i],
-                                roundAttributes[i]
+                                roundAttributes[i],
                               ) === "win"
                                 ? "bg-green-500 text-white"
                                 : compareAttribute(
-                                    selectedCards[i],
-                                    aiDeck[i],
-                                    roundAttributes[i]
-                                  ) === "lose"
-                                ? "bg-red-500 text-white"
-                                : "bg-yellow-500 text-white"
+                                      selectedCards[i],
+                                      aiDeck[i],
+                                      roundAttributes[i],
+                                    ) === "lose"
+                                  ? "bg-red-500 text-white"
+                                  : "bg-yellow-500 text-white",
                             )}
                             style={{ ...pixelBorderStyles }}
                           >
                             {compareAttribute(
                               selectedCards[i],
                               aiDeck[i],
-                              roundAttributes[i]
+                              roundAttributes[i],
                             ) === "win"
                               ? "W"
                               : compareAttribute(
-                                  selectedCards[i],
-                                  aiDeck[i],
-                                  roundAttributes[i]
-                                ) === "lose"
-                              ? "L"
-                              : "D"}
+                                    selectedCards[i],
+                                    aiDeck[i],
+                                    roundAttributes[i],
+                                  ) === "lose"
+                                ? "L"
+                                : "D"}
                           </div>
                         )}
                       </div>
@@ -3653,21 +3653,21 @@ Can you beat my score? #StartupCardBattle`;
                                 compareAttribute(
                                   selectedCards[i],
                                   aiDeck[i],
-                                  roundAttributes[i]
+                                  roundAttributes[i],
                                 ) === "lose"
                                   ? "text-green-400"
                                   : compareAttribute(
-                                      selectedCards[i],
-                                      aiDeck[i],
-                                      roundAttributes[i]
-                                    ) === "win"
-                                  ? "text-red-400"
-                                  : "text-yellow-400"
+                                        selectedCards[i],
+                                        aiDeck[i],
+                                        roundAttributes[i],
+                                      ) === "win"
+                                    ? "text-red-400"
+                                    : "text-yellow-400",
                               )}
                             >
                               {formatAttributeValue(
                                 aiDeck[i]?.[roundAttributes[i]],
-                                roundAttributes[i]
+                                roundAttributes[i],
                               )}
                             </span>
                           </div>
@@ -3808,7 +3808,7 @@ export default function PlayPage() {
 const compareAttribute = (
   playerCard: StartupCard | undefined,
   aiCard: StartupCard | undefined,
-  attribute: string
+  attribute: string,
 ): "win" | "lose" | "draw" | null => {
   if (!playerCard || !aiCard || !attribute) return null;
 
